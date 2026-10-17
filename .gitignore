@@ -4,3 +4,5 @@ node_modules/
 .impeccable/mocks/
 .impeccable/review/
 .impeccable/*.local.json
+.impeccable/questions/
+.impeccable/hook.cache.json
