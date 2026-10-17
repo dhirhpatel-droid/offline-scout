@@ -1,4 +1,4 @@
-"""Local dev server: python3 scripts/serve.py  →  http://localhost:8000
+"""Local dev server: python3 scripts/serve.py [port]  →  http://localhost:8000
 
 Same as `python3 -m http.server`, but tells the browser not to cache files,
 so edits show up on reload. (The service worker still caches the app: in
@@ -7,6 +7,7 @@ Chrome DevTools > Application > Service workers, tick "Update on reload".)
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import functools
+import sys
 
 
 class NoCacheHandler(SimpleHTTPRequestHandler):
@@ -17,5 +18,6 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
 
 root = Path(__file__).resolve().parent.parent
 handler = functools.partial(NoCacheHandler, directory=str(root))
-print("Serving", root, "at http://localhost:8000")
-ThreadingHTTPServer(("", 8000), handler).serve_forever()
+port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+print("Serving", root, f"at http://localhost:{port}", flush=True)
+ThreadingHTTPServer(("", port), handler).serve_forever()

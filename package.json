@@ -5,6 +5,7 @@
   "description": "Offline-first scouting app for FIRST robotics (FTC and FRC).",
   "scripts": {
     "test": "node --test tests/*.test.js",
+    "test:offline": "node scripts/offline-test.mjs",
     "start": "python3 scripts/serve.py"
   }
 }
