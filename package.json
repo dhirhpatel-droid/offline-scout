@@ -1,0 +1,10 @@
+{
+  "name": "offline-scout",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first scouting app for FIRST robotics (FTC and FRC).",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "python3 -m http.server 8000"
+  }
+}
