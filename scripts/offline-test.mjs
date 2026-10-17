@@ -6,6 +6,10 @@
 //   3. reload the app, scout a match, save it
 //   4. reload again and check the match is still in Saved matches
 //
+// To test the live site instead of a local copy:
+//   APP_URL=https://dhirhpatel-droid.github.io/offline-scout/ npm run test:offline
+// (GitHub can't be switched off, so Chrome's own offline mode is used instead.)
+//
 // Chrome is driven through the DevTools Protocol (the same thing Chrome's
 // developer tools use) over a WebSocket. Node 22+ has WebSocket built in.
 
@@ -16,14 +20,15 @@ import { join } from 'node:path';
 
 const PORT = 8123;
 const DEBUG_PORT = 9333;
-const APP = `http://localhost:${PORT}/`;
+const LIVE = process.env.APP_URL;
+const APP = LIVE ?? `http://localhost:${PORT}/`;
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const step = (msg) => console.log(`• ${msg}`);
 
 // ---- start the web server and Chrome ----
-let server = spawn('python3', ['scripts/serve.py', String(PORT)], { stdio: 'ignore' });
+const server = LIVE ? null : spawn('python3', ['scripts/serve.py', String(PORT)], { stdio: 'ignore' });
 const profile = mkdtempSync(join(tmpdir(), 'scout-chrome-'));
 const chrome = spawn(CHROME, [
   '--headless=new', `--remote-debugging-port=${DEBUG_PORT}`, `--user-data-dir=${profile}`,
@@ -88,11 +93,19 @@ try {
   step(`Service worker active, ${cached} files cached`);
 
   // ---- 2. go offline: stop the server ----
-  server.kill();
-  await sleep(500);
-  const reachable = await fetch(APP).then(() => true, () => false);
-  if (reachable) throw new Error('Server is still running');
-  step('Server stopped — the network is gone (like airplane mode)');
+  if (LIVE) {
+    await send('Network.enable');
+    await send('Network.emulateNetworkConditions', {
+      offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1,
+    });
+    step('Chrome switched to offline mode — the network is gone (like airplane mode)');
+  } else {
+    server.kill();
+    await sleep(500);
+    const reachable = await fetch(APP).then(() => true, () => false);
+    if (reachable) throw new Error('Server is still running');
+    step('Server stopped — the network is gone (like airplane mode)');
+  }
 
   // ---- 3. reload and scout a match ----
   await load(`${APP}?offline-reload#match`);
@@ -134,7 +147,7 @@ try {
 } finally {
   ws?.close();
   chrome.kill();
-  server.kill();
+  server?.kill();
   await sleep(300);
   rmSync(profile, { recursive: true, force: true });
 }
