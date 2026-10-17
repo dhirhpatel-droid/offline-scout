@@ -108,7 +108,7 @@ try {
     type('Scout name', 'Offline Test');
     type('Match number', '42');
     type('Team number', '4069');
-    [...document.querySelectorAll('[role=radio]')].find((b) => b.textContent === 'Blue').click();
+    [...document.querySelectorAll('.segmented button')].find((b) => b.textContent === 'Blue').click();
     document.querySelector('#tab-auto').click();
     document.querySelector('.round.add').click();
     document.querySelector('.round.add').click();

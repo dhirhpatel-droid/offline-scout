@@ -18,11 +18,11 @@ export async function renderSettings() {
   });
 
   const themes = [['system', 'Match phone'], ['light', 'Light'], ['dark', 'Dark']];
-  const themeGroup = h('div', { class: 'segmented wide', role: 'radiogroup', 'aria-labelledby': 'theme-h' });
+  const themeGroup = h('div', { class: 'segmented wide', role: 'group', 'aria-labelledby': 'theme-h' });
   const themeButtons = themes.map(([value, label]) => {
-    const btn = h('button', { type: 'button', role: 'radio', 'aria-checked': String((theme ?? 'system') === value) }, label);
+    const btn = h('button', { type: 'button', 'aria-pressed': String((theme ?? 'system') === value) }, label);
     btn.addEventListener('click', () => {
-      themeButtons.forEach((b) => b.setAttribute('aria-checked', String(b === btn)));
+      themeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       setSetting('theme', value);
       applyTheme(value);
     });

@@ -129,17 +129,17 @@ function textInput(field, value, onChange, attrs, parse) {
   return h('div', { class: cls }, h('label', { class: 'field-label', for: id }, field.label), input);
 }
 
-// A row of buttons where exactly one is selected (ARIA "radiogroup").
+// A row of buttons where one is selected. Each is a toggle button
+// (aria-pressed), so screen readers say "Yes, pressed".
 // Tapping the selected option again clears it, so a mis-tap can be undone.
 function segmented(options, value, labelId, onChange, colored = false) {
-  const group = h('div', { class: 'segmented', role: 'radiogroup', 'aria-labelledby': labelId });
+  const group = h('div', { class: 'segmented', role: 'group', 'aria-labelledby': labelId });
   let current = value;
 
   const buttons = options.map((opt) => {
     const btn = h('button', {
       type: 'button',
-      role: 'radio',
-      'aria-checked': String(opt.value === current),
+      'aria-pressed': String(opt.value === current),
       'data-color': colored ? opt.value : null,
       'data-off': opt.value === false,
     }, opt.label);
@@ -147,7 +147,7 @@ function segmented(options, value, labelId, onChange, colored = false) {
       // Yes/No toggles never go back to "unset"; other choices can be cleared.
       const isToggle = typeof opt.value === 'boolean';
       current = !isToggle && current === opt.value ? null : opt.value;
-      buttons.forEach((b, i) => b.setAttribute('aria-checked', String(options[i].value === current)));
+      buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === current)));
       buzz();
       onChange(current);
     });

@@ -168,7 +168,7 @@ export async function renderMatch({ param }) {
       if (section !== config.sections[sectionIndex]) continue;
       const row = panel.querySelector(`[data-field-id="${field.id}"]`);
       row.classList.add('invalid');
-      row.append(h('p', { class: 'error-text' }, `Needed before saving: ${field.label.toLowerCase()}`));
+      row.append(h('p', { class: 'error-text', role: 'alert' }, `Needed before saving: ${field.label.toLowerCase()}`));
     }
     panel.querySelector('.invalid input, .invalid button')?.focus();
   }

@@ -22,6 +22,7 @@
   --surface: #1a1a1e;
   --surface-2: #27272c;
   --line: #36363d;
+  --control-line: #6b6b75; /* outlines of buttons: 3:1 against --bg (WCAG 1.4.11) */
   --text: #ffffff;
   --text-2: #b9b9c2;
   --text-3: #8f8f99;
@@ -68,6 +69,7 @@
     --surface: #f2f2f5;
     --surface-2: #e4e4ea;
     --line: #d3d3da;
+    --control-line: #8a8a94;
     --text: #0e0e10;
     --text-2: #45454d;
     --text-3: #64646d;
@@ -87,6 +89,7 @@
   --surface: #f2f2f5;
   --surface-2: #e4e4ea;
   --line: #d3d3da;
+  --control-line: #8a8a94;
   --text: #0e0e10;
   --text-2: #45454d;
   --text-3: #64646d;
