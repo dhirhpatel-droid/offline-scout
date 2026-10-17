@@ -38,11 +38,12 @@
       "label": "Teleop",
       "title": "Teleop",
       "durationSec": 120,
+      "note": "Count POLLEN and NECTAR together.",
       "fields": [
         { "id": "hiveTips", "type": "counter", "label": "HIVE TIPs", "points": 20 },
-        { "id": "flower", "type": "counter", "label": "Into a FLOWER", "hint": "POLLEN or NECTAR", "points": 2 },
-        { "id": "garden", "type": "counter", "label": "Into a GARDEN", "hint": "POLLEN or NECTAR", "points": 1 },
-        { "id": "cell", "type": "counter", "label": "Into a CELL", "hint": "POLLEN or NECTAR", "points": 2 },
+        { "id": "flower", "type": "counter", "label": "Into a FLOWER", "points": 2 },
+        { "id": "garden", "type": "counter", "label": "Into a GARDEN", "points": 1 },
+        { "id": "cell", "type": "counter", "label": "Into a CELL", "points": 2 },
         {
           "id": "defense", "type": "choice", "label": "Defense played",
           "options": [
