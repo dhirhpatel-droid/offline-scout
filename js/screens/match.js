@@ -59,7 +59,8 @@ export async function renderMatch({ param }) {
     const allianceText = alliance ? `${alliance[0].toUpperCase()}${alliance.slice(1)} alliance` : 'No alliance yet';
     metaEl.textContent = `${match ? `Match ${match}` : 'Match —'} · ${allianceText}`;
     // When the estimate goes up, the header number jumps too.
-    if (Number(pointsEl.textContent) < entry.points) {
+    // (Not on first draw, when the number is still empty.)
+    if (pointsEl.textContent !== '' && Number(pointsEl.textContent) < entry.points) {
       pointsEl.classList.remove('jump');
       void pointsEl.offsetWidth;
       pointsEl.classList.add('jump');
