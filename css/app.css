@@ -143,7 +143,7 @@ input, textarea { caret-color: var(--text); }
   background: var(--alliance);
   color: var(--on-alliance);
   padding: max(env(safe-area-inset-top), var(--s1)) var(--s3) var(--s3);
-  transition: background-color 200ms ease-out;
+  /* No colour transition: fading red to blue passes through purple. */
 }
 .match-head .row1 {
   display: flex;
@@ -429,5 +429,5 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 @media (prefers-reduced-motion: reduce) {
   .field.flash .value, .match-head .points .value.jump { animation: none; }
   .pill:active, .round:active { transform: none; }
-  .pill, .round, .match-head { transition: none; }
+  .pill, .round { transition: none; }
 }
