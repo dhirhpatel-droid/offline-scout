@@ -1,0 +1,106 @@
+/* Design tokens: every colour, size and font the app uses, in one place.
+   Components in app.css only use these variables, so changing the look
+   (or adding a theme) happens here.
+
+   Themes: the app follows the phone's light/dark setting by default.
+   Settings can force one; that sets data-theme="light" or "dark" on <html>. */
+
+@font-face {
+  font-family: 'Archivo';
+  /* Variable font: one file holds every weight (100–900) and width (62–125%).
+     Self-hosted and cached by the service worker, so it works offline. */
+  src: url('../fonts/archivo-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+
+:root {
+  /* Dark theme values (the default). Contrast checked against --bg:
+     --text 19:1, --text-2 10:1, --text-3 5.6:1 — all pass WCAG AA. */
+  --bg: #0e0e10;
+  --surface: #1a1a1e;
+  --surface-2: #27272c;
+  --line: #36363d;
+  --text: #ffffff;
+  --text-2: #b9b9c2;
+  --text-3: #8f8f99;
+  --primary-bg: #ffffff;      /* main action pill */
+  --primary-text: #0e0e10;
+  --danger: #ff5c5c;
+  --on-danger: #0e0e10;
+  --focus: #ffd60a;
+
+  /* Alliance colours. White text on them passes AA (red 5.0:1, blue 5.3:1). */
+  --red: #d42a36;
+  --blue: #2160e0;
+  --neutral-alliance: #3a3a41; /* before an alliance is picked */
+  --on-alliance: #ffffff;
+  --alliance: var(--neutral-alliance);
+
+  /* Type: one family. Condensed heavy for numbers, normal width for words. */
+  --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-xs: 0.8125rem;  /* 13 */
+  --fs-sm: 0.9375rem;  /* 15 */
+  --fs-md: 1.0625rem;  /* 17 */
+  --fs-lg: 1.25rem;    /* 20 */
+  --fs-xl: 1.5rem;     /* 24 */
+  --fs-2xl: 2rem;      /* 32 */
+  --fs-num: 2.75rem;   /* 44: counter values */
+  --fs-hero: 4rem;     /* 64: team number */
+
+  /* Spacing on a 4px grid */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+
+  /* Touch targets: 56px minimum for anything tapped during a match */
+  --tap: 56px;
+  --tap-lg: 64px;
+  --radius: 14px;
+
+  color-scheme: dark;
+}
+
+/* Light theme: for direct sunlight. Used when the phone is in light mode
+   (unless Settings forces dark), or when Settings forces light. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #ffffff;
+    --surface: #f2f2f5;
+    --surface-2: #e4e4ea;
+    --line: #d3d3da;
+    --text: #0e0e10;
+    --text-2: #45454d;
+    --text-3: #64646d;
+    --primary-bg: #0e0e10;
+    --primary-text: #ffffff;
+    --danger: #c41d2a;
+    --on-danger: #ffffff;
+    --focus: #0e0e10;
+    --red: #c8202d;
+    --blue: #1d56d1;
+    --neutral-alliance: #4a4a52;
+    color-scheme: light;
+  }
+}
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --surface: #f2f2f5;
+  --surface-2: #e4e4ea;
+  --line: #d3d3da;
+  --text: #0e0e10;
+  --text-2: #45454d;
+  --text-3: #64646d;
+  --primary-bg: #0e0e10;
+  --primary-text: #ffffff;
+  --danger: #c41d2a;
+  --on-danger: #ffffff;
+  --focus: #0e0e10;
+  --red: #c8202d;
+  --blue: #1d56d1;
+  --neutral-alliance: #4a4a52;
+  color-scheme: light;
+}
+
+/* The match screen sets data-alliance, which picks the accent colour. */
+[data-alliance='red'] { --alliance: var(--red); }
+[data-alliance='blue'] { --alliance: var(--blue); }
