@@ -58,6 +58,12 @@ export async function renderMatch({ param }) {
     teamEl.classList.toggle('empty', !team);
     const allianceText = alliance ? `${alliance[0].toUpperCase()}${alliance.slice(1)} alliance` : 'No alliance yet';
     metaEl.textContent = `${match ? `Match ${match}` : 'Match —'} · ${allianceText}`;
+    // When the estimate goes up, the header number jumps too.
+    if (Number(pointsEl.textContent) < entry.points) {
+      pointsEl.classList.remove('jump');
+      void pointsEl.offsetWidth;
+      pointsEl.classList.add('jump');
+    }
     pointsEl.textContent = entry.points;
     // Tint the phone's status bar with the alliance colour.
     setThemeColor(getComputedStyle(screen).getPropertyValue('--alliance').trim());
@@ -180,7 +186,7 @@ export async function renderMatch({ param }) {
     panel.removeAttribute('role');
     panel.replaceChildren(h('section', { class: 'done' },
       h('h2', { tabindex: '-1' }, `Match ${match} saved`),
-      h('p', {}, `Team ${team} · ${entry.points} estimated points. Saved on this device.`),
+      h('p', {}, `Team ${team} · ${entry.points} estimated points.`),
       h('div', { class: 'actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: startNext },
           carry.match ? `Scout match ${carry.match}` : 'Scout next match'),

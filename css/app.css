@@ -172,7 +172,7 @@ input, textarea { caret-color: var(--text); }
 }
 .tabs button {
   flex: 1;
-  min-height: 44px;
+  min-height: var(--tap);
   border-radius: 999px;
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -187,9 +187,11 @@ input, textarea { caret-color: var(--text); }
   display: flex;
   align-items: baseline;
   gap: var(--s2);
-  padding: var(--s5) 0 var(--s2);
-  font-size: var(--fs-xl);
+  padding: var(--s4) 0 var(--s2);
+  font-size: var(--fs-2xl);
   font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
 }
 .section-note { margin-top: calc(-1 * var(--s1)); font-size: var(--fs-sm); color: var(--text-2); }
 .section-title .duration { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
@@ -199,7 +201,6 @@ input, textarea { caret-color: var(--text); }
 .field {
   padding: var(--s3) 0;
   border-bottom: 1px solid var(--line);
-  border-radius: 6px;
 }
 .field:last-child { border-bottom: 0; }
 /* The period panel is a 2-column grid: most fields span both columns,
@@ -254,6 +255,8 @@ input, textarea { caret-color: var(--text); }
 }
 .field.flash { animation: row-flash 420ms cubic-bezier(0.16, 1, 0.3, 1); }
 .field.flash .value { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+.match-head .points .value { display: inline-block; transform-origin: right center; }
+.match-head .points .value.jump { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* Segmented buttons (toggles, choices, ratings) */
 .toggle-row {
@@ -322,7 +325,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 .done {
   padding: var(--s6) 0 var(--s5);
 }
-.done h2 { font-size: var(--fs-2xl); font-weight: 800; line-height: 1.1; }
+.done h2 { font-size: 2.75rem; font-weight: 800; font-stretch: 75%; line-height: 1; }
 .done p { color: var(--text-2); margin-top: var(--s2); }
 .done .actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
 
@@ -424,7 +427,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 /* Reduced motion: keep the colour flash (it confirms the tap) but drop
    everything that moves or scales. */
 @media (prefers-reduced-motion: reduce) {
-  .field.flash .value { animation: none; }
+  .field.flash .value, .match-head .points .value.jump { animation: none; }
   .pill:active, .round:active { transform: none; }
   .pill, .round, .match-head { transition: none; }
 }
