@@ -325,7 +325,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 .done {
   padding: var(--s6) 0 var(--s5);
 }
-.done h2 { font-size: 2.75rem; font-weight: 800; font-stretch: 75%; line-height: 1; }
+.done h2 { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
 .done p { color: var(--text-2); margin-top: var(--s2); }
 .done .actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
 

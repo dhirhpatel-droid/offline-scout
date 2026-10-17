@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T00:00:00Z",
+  "title": "Design System: Offline Scout",
+  "extensions": {
+    "colorMeta": {
+      "alliance-red": {
+        "role": "primary",
+        "displayName": "Alliance Red",
+        "canonical": "#d42a36",
+        "oklch": "oklch(56.7% 0.204 24)",
+        "tonalRamp": [
+          "#270000",
+          "#510003",
+          "#7f0416",
+          "#b0212b",
+          "#e23c43",
+          "#ff716e",
+          "#ffa19b",
+          "#ffcfc8"
+        ]
+      },
+      "alliance-blue": {
+        "role": "primary",
+        "displayName": "Alliance Blue",
+        "canonical": "#2160e0",
+        "oklch": "oklch(53.0% 0.206 262)",
+        "tonalRamp": [
+          "#000332",
+          "#001d5f",
+          "#0f3a90",
+          "#2358c5",
+          "#3979fa",
+          "#67a1ff",
+          "#94c8ff",
+          "#c3efff"
+        ]
+      },
+      "alliance-none": {
+        "role": "primary",
+        "displayName": "Unpicked Grey",
+        "canonical": "#3a3a41",
+        "oklch": "oklch(35.1% 0.012 286)",
+        "tonalRamp": [
+          "#0b0a10",
+          "#24242b",
+          "#414148",
+          "#606068",
+          "#818189",
+          "#a4a4ac",
+          "#c8c8d1",
+          "#ededf6"
+        ]
+      },
+      "on-alliance": {
+        "role": "neutral",
+        "displayName": "On Alliance White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "canonical": "#0e0e10",
+        "oklch": "oklch(16.5% 0.004 286)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cc",
+          "#eeeef1"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#1a1a1e",
+        "oklch": "oklch(22.0% 0.008 286)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#252529",
+          "#414146",
+          "#616166",
+          "#828287",
+          "#a4a4aa",
+          "#c8c8ce",
+          "#eeeef4"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Surface 2",
+        "canonical": "#27272c",
+        "oklch": "oklch(27.5% 0.009 286)",
+        "tonalRamp": [
+          "#0b0b0f",
+          "#242429",
+          "#414147",
+          "#606166",
+          "#828288",
+          "#a4a4ab",
+          "#c8c8cf",
+          "#eeeef5"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#36363d",
+        "oklch": "oklch(33.6% 0.012 286)",
+        "tonalRamp": [
+          "#0b0a10",
+          "#24242b",
+          "#414148",
+          "#606068",
+          "#81818a",
+          "#a4a4ad",
+          "#c8c8d1",
+          "#ededf7"
+        ]
+      },
+      "control-line": {
+        "role": "neutral",
+        "displayName": "Control Line",
+        "canonical": "#6b6b75",
+        "oklch": "oklch(53.1% 0.015 286)",
+        "tonalRamp": [
+          "#0a0a11",
+          "#24242c",
+          "#41414a",
+          "#60606a",
+          "#81818b",
+          "#a4a4af",
+          "#c8c8d3",
+          "#ededf9"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Text 2",
+        "canonical": "#b9b9c2",
+        "oklch": "oklch(78.9% 0.013 286)",
+        "tonalRamp": [
+          "#0b0a10",
+          "#24242b",
+          "#414149",
+          "#606068",
+          "#81818a",
+          "#a4a4ad",
+          "#c8c8d1",
+          "#ededf7"
+        ]
+      },
+      "text-3": {
+        "role": "neutral",
+        "displayName": "Text 3",
+        "canonical": "#8f8f99",
+        "oklch": "oklch(65.3% 0.015 286)",
+        "tonalRamp": [
+          "#0a0a11",
+          "#24242c",
+          "#41414a",
+          "#606069",
+          "#81818b",
+          "#a4a4ae",
+          "#c8c8d3",
+          "#ededf8"
+        ]
+      },
+      "primary-bg": {
+        "role": "neutral",
+        "displayName": "Primary Pill",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "primary-text": {
+        "role": "neutral",
+        "displayName": "Primary Pill Text",
+        "canonical": "#0e0e10",
+        "oklch": "oklch(16.5% 0.004 286)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cc",
+          "#eeeef1"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Danger",
+        "canonical": "#ff5c5c",
+        "oklch": "oklch(69.1% 0.199 24)",
+        "tonalRamp": [
+          "#260000",
+          "#500004",
+          "#7e0a17",
+          "#ae252c",
+          "#e03f44",
+          "#fe736f",
+          "#ffa29c",
+          "#ffd0c9"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus Yellow",
+        "canonical": "#ffd60a",
+        "oklch": "oklch(88.5% 0.181 95)",
+        "tonalRamp": [
+          "#160800",
+          "#362100",
+          "#593e00",
+          "#7e5c00",
+          "#a57d00",
+          "#c4a200",
+          "#e4c85e",
+          "#ffee9c"
+        ]
+      },
+      "light-alliance-red": {
+        "role": "primary",
+        "displayName": "Alliance Red (light theme)",
+        "canonical": "#c8202d",
+        "oklch": "oklch(53.8% 0.200 24)",
+        "tonalRamp": [
+          "#270000",
+          "#510003",
+          "#7e0916",
+          "#af242b",
+          "#e03f42",
+          "#fe736e",
+          "#ffa29b",
+          "#ffd0c8"
+        ]
+      },
+      "light-alliance-blue": {
+        "role": "primary",
+        "displayName": "Alliance Blue (light theme)",
+        "canonical": "#1d56d1",
+        "oklch": "oklch(49.7% 0.199 263)",
+        "tonalRamp": [
+          "#000331",
+          "#021d5d",
+          "#133a8e",
+          "#2759c2",
+          "#3e7af6",
+          "#6aa1ff",
+          "#97c8ff",
+          "#c5efff"
+        ]
+      },
+      "light-ground": {
+        "role": "neutral",
+        "displayName": "Ground (light theme)",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "light-surface": {
+        "role": "neutral",
+        "displayName": "Surface (light theme)",
+        "canonical": "#f2f2f5",
+        "oklch": "oklch(96.2% 0.004 286)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cc",
+          "#eeeef1"
+        ]
+      },
+      "light-surface-2": {
+        "role": "neutral",
+        "displayName": "Surface 2 (light theme)",
+        "canonical": "#e4e4ea",
+        "oklch": "oklch(92.1% 0.008 286)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#252529",
+          "#414146",
+          "#616166",
+          "#828287",
+          "#a4a4aa",
+          "#c8c8ce",
+          "#eeeef4"
+        ]
+      },
+      "light-line": {
+        "role": "neutral",
+        "displayName": "Line (light theme)",
+        "canonical": "#d3d3da",
+        "oklch": "oklch(86.9% 0.010 286)",
+        "tonalRamp": [
+          "#0b0b0f",
+          "#24242a",
+          "#414147",
+          "#606067",
+          "#828288",
+          "#a4a4ab",
+          "#c8c8cf",
+          "#eeeef5"
+        ]
+      },
+      "light-control-line": {
+        "role": "neutral",
+        "displayName": "Control Line (light theme)",
+        "canonical": "#8a8a94",
+        "oklch": "oklch(63.7% 0.015 286)",
+        "tonalRamp": [
+          "#0a0a11",
+          "#24242c",
+          "#41414a",
+          "#60606a",
+          "#81818b",
+          "#a4a4ae",
+          "#c8c8d3",
+          "#ededf8"
+        ]
+      },
+      "light-text": {
+        "role": "neutral",
+        "displayName": "Text (light theme)",
+        "canonical": "#0e0e10",
+        "oklch": "oklch(16.5% 0.004 286)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cc",
+          "#eeeef1"
+        ]
+      },
+      "light-text-2": {
+        "role": "neutral",
+        "displayName": "Text 2 (light theme)",
+        "canonical": "#45454d",
+        "oklch": "oklch(39.3% 0.013 286)",
+        "tonalRamp": [
+          "#0b0a11",
+          "#24242b",
+          "#414149",
+          "#606069",
+          "#81818a",
+          "#a4a4ad",
+          "#c8c8d2",
+          "#ededf7"
+        ]
+      },
+      "light-text-3": {
+        "role": "neutral",
+        "displayName": "Text 3 (light theme)",
+        "canonical": "#64646d",
+        "oklch": "oklch(50.6% 0.014 286)",
+        "tonalRamp": [
+          "#0b0a11",
+          "#24242c",
+          "#414149",
+          "#606069",
+          "#81818b",
+          "#a4a4ae",
+          "#c8c8d2",
+          "#ededf8"
+        ]
+      },
+      "light-danger": {
+        "role": "neutral",
+        "displayName": "Danger (light theme)",
+        "canonical": "#c41d2a",
+        "oklch": "oklch(52.8% 0.198 24)",
+        "tonalRamp": [
+          "#260000",
+          "#500003",
+          "#7e0a15",
+          "#ae252b",
+          "#e04042",
+          "#fd746e",
+          "#ffa29b",
+          "#ffd0c8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "Team number in the match header. One per screen."
+      },
+      "number": {
+        "displayName": "Number",
+        "purpose": "Counter values and the match-saved heading."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Period titles and the points total."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Top bar, dialog and empty-state headings; wordmark at 900."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels beside counters and toggles."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Pills, tabs and segments."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Hints, status line, match meta, settings group headings."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Units under numbers (est. points, pts)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 20px 50px rgb(0 0 0 / 0.45)",
+        "purpose": "Confirm bottom sheet only, over a 60% black backdrop."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press-pill",
+        "value": "transform 120ms ease-out, scale(0.97)",
+        "purpose": "Pill press feedback."
+      },
+      {
+        "name": "press-round",
+        "value": "transform 100ms ease-out, scale(0.92)",
+        "purpose": "Plus/minus press feedback."
+      },
+      {
+        "name": "row-flash",
+        "value": "420ms cubic-bezier(0.16, 1, 0.3, 1), alliance 38% to transparent",
+        "purpose": "Signature add moment; kept under reduced motion."
+      },
+      {
+        "name": "value-jump",
+        "value": "260ms cubic-bezier(0.16, 1, 0.3, 1), scale(1.25) to 1",
+        "purpose": "Number jump on add; removed under reduced motion."
+      },
+      {
+        "name": "header-recolour",
+        "value": "background-color 200ms ease-out",
+        "purpose": "Header changes colour when the alliance is picked."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "max-content",
+        "value": "640px"
+      }
+    ],
+    "themes": {
+      "default": "dark",
+      "light": "prefers-color-scheme: light, or data-theme='light' on <html>; light-* colour tokens apply",
+      "alliance": "data-alliance='red'|'blue' sets --alliance"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a screen, usually the next step.",
+      "html": "<button class=\"ds-pill\">Next: End <svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 5l7 7-7 7\"/></svg></button>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); min-height:var(--tap); padding:0 var(--s5); border:0; border-radius:999px; font-family: var(--font); font-weight:700; font-size:var(--fs-md); background:var(--primary-bg); color:var(--primary-text); cursor:pointer; transition:transform 120ms ease-out; } .ds-pill:active { transform:scale(0.97); } .ds-pill:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Secondary Pill",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Other actions next to a primary pill.",
+      "html": "<button class=\"ds-pill-secondary\">Saved matches</button>",
+      "css": ".ds-pill-secondary { display:inline-flex; align-items:center; justify-content:center; min-height:var(--tap); padding:0 var(--s5); border:0; border-radius:999px; font-family: var(--font); font-weight:700; font-size:var(--fs-md); background:var(--surface-2); color:var(--text); cursor:pointer; transition:transform 120ms ease-out; } .ds-pill-secondary:active { transform:scale(0.97); } .ds-pill-secondary:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Counter Row",
+      "kind": "custom",
+      "refersTo": "counter-add",
+      "description": "Signature control: label, outline minus, big number, alliance-filled plus.",
+      "html": "<div class=\"ds-counter\" data-alliance=\"red\"><div><div class=\"ds-counter-label\">HIVE TIPs</div><div class=\"ds-counter-hint\">20 pts each</div></div><button class=\"ds-round\" aria-label=\"Minus\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/></svg></button><div class=\"ds-counter-value\">4</div><button class=\"ds-round ds-round-add\" aria-label=\"Plus\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg></button></div>",
+      "css": ".ds-counter { display:grid; grid-template-columns:1fr var(--tap) 4.5rem var(--tap-lg); align-items:center; gap:var(--s2); padding:var(--s3) var(--s4); background:var(--bg); color:var(--text); font-family: var(--font); } .ds-counter-label { font-weight:650; font-size:var(--fs-md); } .ds-counter-hint { font-size:var(--fs-sm); color:var(--text-3); } .ds-counter-value { font-size:var(--fs-num); font-weight:800; font-stretch:75%; font-variant-numeric:tabular-nums lining-nums; letter-spacing:-0.01em; line-height:1; text-align:center; } .ds-round { display:grid; place-items:center; width:var(--tap); height:var(--tap); border-radius:50%; border:2px solid var(--control-line); background:none; color:var(--text); cursor:pointer; transition:transform 100ms ease-out; } .ds-round-add { width:var(--tap-lg); height:var(--tap-lg); border:0; background:var(--red); color:var(--on-alliance); } .ds-round:active { transform:scale(0.92); } .ds-round:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Match Header with Period Tabs",
+      "kind": "nav",
+      "refersTo": "match-header",
+      "description": "Alliance-colour block: match, points, hero team number, and the pill tab bar.",
+      "html": "<header class=\"ds-head\"><div class=\"ds-head-row\"><span class=\"ds-head-meta\">Match 16 · Red alliance</span><span class=\"ds-head-pts\"><span class=\"ds-head-pts-v\">55</span><br><span class=\"ds-head-pts-l\">est. points</span></span></div><div class=\"ds-head-team\">23810</div><div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\">Pre</button><button role=\"tab\">Auto</button><button role=\"tab\" aria-selected=\"true\">Teleop</button><button role=\"tab\">End</button><button role=\"tab\">Post</button></div></header>",
+      "css": ".ds-head { background:var(--red); color:var(--on-alliance); padding:var(--s1) var(--s3) var(--s3); font-family: var(--font); } .ds-head-row { display:flex; align-items:center; min-height:48px; } .ds-head-meta { flex:1; font-size:var(--fs-sm); font-weight:600; } .ds-head-pts { text-align:right; } .ds-head-pts-v { font-size:var(--fs-2xl); font-weight:800; font-stretch:75%; line-height:1; } .ds-head-pts-l { font-size:var(--fs-xs); font-weight:600; } .ds-head-team { font-size:var(--fs-hero); font-weight:800; font-stretch:75%; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; line-height:0.95; padding:0 var(--s1) var(--s3); } .ds-tabs { display:flex; gap:var(--s1); padding:var(--s1); border-radius:999px; background:rgb(0 0 0 / 0.22); } .ds-tabs button { flex:1; min-height:var(--tap); border:0; border-radius:999px; background:none; font-family: var(--font); font-size:var(--fs-sm); font-weight:700; color:var(--on-alliance); cursor:pointer; } .ds-tabs button[aria-selected='true'] { background:var(--on-alliance); color:var(--red); } .ds-tabs button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Segmented Choice",
+      "kind": "chip",
+      "refersTo": "segmented-option-selected",
+      "description": "Yes/No, ratings and pick-one options; the selected segment takes the alliance colour.",
+      "html": "<div class=\"ds-seg\"><button aria-pressed=\"false\">None</button><button aria-pressed=\"true\">Some</button><button aria-pressed=\"false\">Heavy</button></div>",
+      "css": ".ds-seg { display:flex; gap:var(--s1); padding:var(--s1); border-radius:16px; background:var(--surface); font-family: var(--font); } .ds-seg button { flex:1; min-width:var(--tap); min-height:var(--tap); border:0; border-radius:12px; background:none; font:inherit; font-weight:700; color:var(--text-2); cursor:pointer; } .ds-seg button[aria-pressed='true'] { background:var(--red); color:var(--on-alliance); } .ds-seg button:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Filled field for team and match numbers and notes.",
+      "html": "<input class=\"ds-input\" inputmode=\"numeric\" placeholder=\"Team #\">",
+      "css": ".ds-input { display:block; width:100%; min-height:var(--tap); padding:0 var(--s4); border-radius:var(--radius); border:2px solid transparent; background:var(--surface); color:var(--text); font-family: var(--font); font-size:var(--fs-lg); font-weight:600; } .ds-input::placeholder { color:var(--text-3); font-weight:500; } .ds-input:focus { border-color:var(--text); outline:none; }"
+    },
+    {
+      "name": "List Link",
+      "kind": "card",
+      "refersTo": "list-link",
+      "description": "Tappable Surface row on the home screen, with a count at right.",
+      "html": "<a class=\"ds-list-link\" href=\"#\">Saved matches <span class=\"ds-count\">12</span></a>",
+      "css": ".ds-list-link { display:flex; align-items:center; gap:var(--s3); min-height:var(--tap-lg); padding:0 var(--s4); border-radius:var(--radius); background:var(--surface); color:var(--text); font-family: var(--font); font-weight:700; text-decoration:none; } .ds-count { margin-left:auto; color:var(--text-2); font-weight:600; } .ds-list-link:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }"
+    },
+    {
+      "name": "Alliance Badge",
+      "kind": "custom",
+      "refersTo": "alliance-badge",
+      "description": "Small alliance-coloured square in the saved matches list, with the match number.",
+      "html": "<span class=\"ds-badge\">16</span>",
+      "css": ".ds-badge { display:inline-grid; place-items:center; width:40px; height:40px; border-radius:10px; background:var(--red); color:var(--on-alliance); font-family: var(--font); font-weight:800; font-size:var(--fs-sm); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Alliance Instrument",
+    "overview": "Offline Scout is a counter you hold in the stands. A scout watches a robot, not the phone, so the screen is built to be hit with a thumb and read in half a second: huge condensed numbers, round buttons, and one strong colour that says which alliance you are watching.\n\nThe ground is near-black (or plain white in the light theme) with two slightly raised grey layers. The alliance colour, red or blue, is the only real colour. It fills the match header and every add button. Everything else is white, grey, or black. There is one font, Archivo, used two ways: squeezed and heavy for numbers and headings, normal width for words.\n\nIt is meant to feel bold and sporty, like a music app's now-playing screen, not like a school form. It turns down the white form with grey labels and the long scrolling page.",
+    "keyCharacteristics": [
+      "One committed colour: the alliance (red or blue), everything else is neutral.",
+      "Numbers are the loudest thing on screen.",
+      "Every tap target is a pill or a circle, at least 56px.",
+      "Flat surfaces; depth comes from lighter grey layers, not shadows.",
+      "Light and dark themes share the same layout; only the colours swap."
+    ],
+    "rules": [
+      {
+        "name": "The One Colour Rule",
+        "body": "The alliance colour is the only saturated colour on a scouting screen. Don't add a second accent; use neutrals.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not By Colour Alone Rule",
+        "body": "Wherever the alliance colour appears as meaning, the alliance is also written out in text (\"Red alliance\", the badge letter).",
+        "section": "colors"
+      },
+      {
+        "name": "The Squeeze For Numbers Rule",
+        "body": "Condensed width (75%) is for numbers and big headings only. Words a scout reads, like labels and buttons, stay at normal width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Every number that changes uses tabular, lining digits so it doesn't jump sideways when it counts up.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Ground Rule",
+        "body": "Nothing on the page casts a shadow except the confirm sheet, which floats above everything.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the alliance colour for the add button, the header, and the selected choice, and nothing decorative.",
+      "**Do** keep every in-match control at least 56px, and the add button 64px.",
+      "**Do** set numbers in condensed Archivo 800 with tabular digits.",
+      "**Do** take every colour, size and space from tokens.css so both themes keep working.",
+      "**Do** keep the reduced-motion version: colour flash stays, scaling goes.",
+      "**Do** write the alliance in words next to the colour."
+    ],
+    "donts": [
+      "**Don't** add a second accent colour to scouting screens.",
+      "**Don't** use shadows on cards or rows; use the Surface layers.",
+      "**Don't** use emoji as icons; use the inline SVG set.",
+      "**Don't** add team colours or logos; the app stays team-neutral.",
+      "**Don't** add hover-only effects; everything must work by touch."
+    ]
+  }
+}
