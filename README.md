@@ -26,7 +26,7 @@ No install, no build step. You need Python 3 (already on Macs).
 
 ```bash
 npm start            # = python3 scripts/serve.py → http://localhost:8000
-npm test             # unit tests (scoring, configs, entries)
+npm test             # unit tests (scoring, configs, Submissions)
 npm run test:offline # real offline test in headless Chrome
 ```
 
@@ -40,17 +40,20 @@ css/tokens.css           all colours, sizes, fonts (dark + light themes)
 css/app.css              layout and components
 fonts/                   Archivo, self-hosted so it works offline (OFL licence)
 js/app.js                start-up: theme, service worker, #hash router
-js/db.js                 IndexedDB: saved matches, the current draft, settings
+js/db.js                 IndexedDB: Submissions, the Draft, settings (+ upgrades)
 js/config.js             loads + validates game configs, finds fields by role
 js/scoring.js            estimated points from a config + values (pure function)
-js/entries.js            creating entries, summaries, next-match carry-over
+js/submissions.js        Submissions: creating, summaries, next match, Alliance positions
 js/fields.js             turns a config field into a widget (counter, Yes/No…)
 js/ui.js                 small helpers: h() element builder, icons, dialog
 js/screens/*.js          home, match, saved, settings
 configs/                 one JSON per game + index.json listing them
 tests/                   node --test unit tests
 scripts/                 dev server, offline test, icon generator
-docs/data-format.md      config and entry formats
+docs/data-format.md      Game config and Submission formats
+docs/roadmap.md          milestones and database tables
+docs/adr/                why the big decisions were made
+GLOSSARY.md              the words the app uses
 ```
 
 **Why no framework?** The app is small, it must load offline from a cache, and every
@@ -62,7 +65,7 @@ no internet that fails. `sw.js` saves every file on the first visit and answers 
 copy afterwards.
 
 **Why IndexedDB?** It holds real objects and far more than `localStorage`, and it's what
-installed web apps are meant to use. The match in progress is a *draft* saved on every
+installed web apps are meant to use. The match in progress is a *Draft* saved on every
 tap, so a dead battery or closed tab loses nothing.
 
 ## Shipping an update

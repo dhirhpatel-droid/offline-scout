@@ -39,8 +39,9 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Order:** FTC config first (FTC season is running now, so it can be tested at events
   this winter), FRC 2027 config after kickoff in January.
 
-- **Data format:** decided in Milestone 1, see `docs/data-format.md`. Values keyed
-  `section.field`; entries record `configId` + `configVersion`.
+- **Data format:** see `docs/data-format.md`. Values keyed `section.field`; Submissions
+  record `configId` + `configVersion`, have UUIDs, and carry a `syncedAt` marker.
+  Bump `DB_VERSION` in `js/db.js` (with an upgrade step) whenever stored data changes shape.
 - **Hosting:** GitHub Pages from `main` (https://dhirhpatel-droid.github.io/offline-scout/).
   All paths are relative so it works in that sub-folder.
 - **Look:** chosen with Dhir via the impeccable skill. Bold, Spotify-like: near-black (or
@@ -81,16 +82,19 @@ form would not even open, so we lost scouting data when we needed it most.
   accounts, Scouting groups, Events from FIRST, Assignments, sync through Supabase, Lead
   views, Data checks, Custom questions and Group settings. See PRODUCT.md, GLOSSARY.md,
   docs/adr/ and **docs/roadmap.md** (milestone order and database tables).
-- **Next:** Milestone 2 in docs/roadmap.md.
+- **Milestone 1.5 (done, Oct 17, 2026):** groundwork. Code and phone storage now match
+  GLOSSARY.md (Submissions with UUIDs, Alliance position, Match level, sync marker);
+  Milestone 1 data upgrades on the phone.
+- **Next:** Milestone 2 (accounts and Scouting groups) in docs/roadmap.md.
 
 ## Commands
 - `npm start`: local server at http://localhost:8000 (no browser caching)
-- `npm test`: unit tests (scoring, config validation, entries)
+- `npm test`: unit tests (scoring, config validation, Submissions)
 - `npm run test:offline`: loads the app in headless Chrome, **stops the server**, scouts
   and saves a match, reloads, checks it's still there. Run it before every release.
 
 ## Project rules (for Claude and anyone else)
-- Read `README.md` for the file map and `docs/data-format.md` for configs/entries.
+- Read `README.md` for the file map and `docs/data-format.md` for Game configs and Submissions, and `GLOSSARY.md` for words.
 - Game rules live in `configs/*.json`. Never hard-code a game's fields in JS or HTML.
 - Every new file must be added to `APP_FILES` in `sw.js`, and `VERSION` bumped when
   shipping, or phones won't get it offline.

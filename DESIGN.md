@@ -18,6 +18,8 @@ colors:
   primary-text: "#0e0e10"
   danger: "#ff5c5c"
   focus: "#ffd60a"
+  tab-track: "rgb(0 0 0 / 0.22)"
+  scrim: "rgb(0 0 0 / 0.6)"
   light-alliance-red: "#c8202d"
   light-alliance-blue: "#1d56d1"
   light-ground: "#ffffff"

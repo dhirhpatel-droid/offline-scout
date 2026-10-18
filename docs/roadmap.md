@@ -11,6 +11,7 @@ Each one is useful on its own, and each builds on the one before.
 | # | Milestone | What a user can do when it's done |
 |---|---|---|
 | 1 | Offline core ✅ | Scout BIOBUZZ matches on one phone with no signal. |
+| 1.5 | **Groundwork** | Nothing new to see: the code and phone storage now match GLOSSARY.md. Entries are Submissions with UUIDs, they record the Alliance position (Red 1…) and whether it's a qualification or playoff match, they carry a "not synced yet" marker, and matches already saved on a phone are carried over. |
 | 2 | **Accounts and Scouting groups** | Sign up, log in once and stay logged in offline. Create a group (FTC/FRC + Team number), invite people by email, accept invites, make someone a Lead, remove members. Matches scouted before signing up move into the account. |
 | 3 | **Sync** | Submissions upload by themselves when there's signal. Leads see everyone's Submissions; Scouts see their own (Group setting). Edits keep a history; the newer edit wins. Leads can edit any Submission (Group setting). |
 | 4 | **Events from FIRST** | A Lead searches for an Event and makes it the Current event. Its Teams and qualification schedule download to every member's phone. The match screen fills in the Team from the schedule. |
@@ -53,7 +54,7 @@ FIRST's event data is public, so it is stored once and shared by every group.
 
 | Table | One row is… | Main columns |
 |---|---|---|
-| `submissions` | a Submission | `id` (made on the phone), `group_id`, `event_id`, `match_level`, `match_number`, `team_number`, `scout_id`, `scout_name`, `game_config_id`, `config_version`, `values`, `custom_values`, `estimated_points`, `made_at`, `edited_at` |
+| `submissions` | a Submission | `id` (UUID made on the phone), `group_id`, `event_id`, `match_level`, `match_number`, `team_number`, `alliance_position`, `scout_id`, `scout_name`, `game_config_id`, `config_version`, `values`, `custom_values`, `estimated_points`, `created_at`, `updated_at`, `submitted_at` |
 | `submission_edits` | one change to a Submission | `submission_id`, `edited_by`, `edited_at`, `values_before` |
 | `position_shifts` | a Position shift | `group_id`, `event_id`, `scout_id`, `position` (red1…blue3), `from_match`, `to_match` |
 | `team_watches` | a Team watch | `group_id`, `event_id`, `scout_id`, `team_number` |

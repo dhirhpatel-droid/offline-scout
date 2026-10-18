@@ -56,6 +56,14 @@ _Avoid_: station, slot, seat
 One Scout's record of what one Team did in one Match. It belongs to the Scouting group, so it stays when the Scout leaves. Two Scouts watching the same Team in the same Match make two Submissions; both are kept. One Scout watching two Teams in the same Match also makes two Submissions.
 _Avoid_: entry, report, announcement
 
+**Draft**:
+A Submission still being scouted on a Scout's phone, saved on every tap but not yet submitted. A phone has at most one Draft.
+_Avoid_: in-progress entry, unsaved match
+
+**Match level**:
+Whether a Match is a qualification match or a playoff match.
+_Avoid_: round type, stage
+
 **Assignment**:
 A Lead's instruction that a Scout watches a Team in a Match. Assignments come from a Position shift or a Team watch.
 _Avoid_: task, job
