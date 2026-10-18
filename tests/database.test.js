@@ -93,8 +93,9 @@ test('only a Lead can send an Invite', async () => {
     [groupId, scout.email, lead.id]);
 });
 
-test('the invited person sees their Invite; others do not', async () => {
-  assert.equal((await as(scout, 'select * from public.invites')).length, 1);
+test('the invited person sees their Invite, with who sent it and for which group; others do not', async () => {
+  const mine = await as(scout, 'select group_label, invited_by_name from public.invites');
+  assert.deepEqual(mine, [{ group_label: 'FRC 4069 · Lo-Ellen Robotics', invited_by_name: 'Dhir' }]);
   assert.equal((await as(stranger, 'select * from public.invites')).length, 0);
 });
 

@@ -47,6 +47,10 @@ create table public.invites (
   group_id uuid not null references public.groups (id) on delete cascade,
   email text not null check (email = lower(email) and email like '%_@_%'),
   invited_by uuid references auth.users (id) on delete set null,
+  -- Copies so the invited person can see who invited them to what, before
+  -- they're a member (they can't read the group itself yet). Filled in by a trigger.
+  group_label text,
+  invited_by_name text,
   created_at timestamptz not null default now(),
   expires_at timestamptz not null default now() + interval '7 days',
   accepted_at timestamptz
@@ -192,6 +196,24 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.create_profile_for_new_user();
 
+-- Fills in an Invite's group_label ("FRC 4069 · Lo-Ellen Robotics") and
+-- invited_by_name when it's created.
+create function public.label_invite()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+begin
+  select g.program || ' ' || g.team_number || ' · ' || g.name into new.group_label
+  from public.groups g where g.id = new.group_id;
+  select p.display_name into new.invited_by_name from public.profiles p where p.id = new.invited_by;
+  return new;
+end
+$$;
+create trigger invites_label
+  before insert on public.invites
+  for each row execute function public.label_invite();
+
 -- A group must always keep at least one Lead: block demoting or removing
 -- the last one (unless the whole group is being deleted).
 create function public.keep_one_lead()
@@ -233,4 +255,4 @@ grant insert (group_id, email, invited_by) on public.invites to authenticated;
 
 revoke execute on function public.create_group, public.accept_invite from public, anon;
 grant execute on function public.create_group, public.accept_invite to authenticated;
-revoke execute on function public.create_profile_for_new_user, public.keep_one_lead from public, anon, authenticated;
+revoke execute on function public.create_profile_for_new_user, public.keep_one_lead, public.label_invite from public, anon, authenticated;
