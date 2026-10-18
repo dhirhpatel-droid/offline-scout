@@ -8,58 +8,23 @@
 
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
-import { PGlite } from '@electric-sql/pglite';
-
-const db = new PGlite();
-
-const AUTH_STANDIN = `
-  create role anon nologin;
-  create role authenticated nologin;
-  create schema auth;
-  grant usage on schema auth to anon, authenticated;
-  create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}');
-  create function auth.jwt() returns jsonb language sql stable as
-    $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
-  create function auth.uid() returns uuid language sql stable as
-    $$ select nullif(auth.jwt() ->> 'sub', '')::uuid $$;
-  grant usage on schema public to anon, authenticated;
-`;
+import { freshDatabase } from './helpers/database.js';
 
 // People in the tests
 const lead = { id: '00000000-0000-4000-8000-000000000001', email: 'lead@example.com', name: 'Dhir' };
 const scout = { id: '00000000-0000-4000-8000-000000000002', email: 'maya@example.com', name: 'Maya' };
 const stranger = { id: '00000000-0000-4000-8000-000000000003', email: 'sam@example.com', name: 'Sam' };
 
-// Run SQL as a signed-in person (or as the database owner with no person).
-async function as(person, sql, params = []) {
-  await db.exec('reset role');
-  if (person) {
-    const claims = JSON.stringify({ sub: person.id, email: person.email, role: 'authenticated' });
-    await db.query(`select set_config('request.jwt.claims', $1, false)`, [claims]);
-    await db.exec('set role authenticated');
-  }
-  try {
-    return (await db.query(sql, params)).rows;
-  } finally {
-    await db.exec('reset role');
-    await db.query(`select set_config('request.jwt.claims', '', false)`);
-  }
-}
+let as;
+let db;
 const rejects = (promise, pattern) => assert.rejects(promise, pattern);
 
 let groupId;
 
 before(async () => {
-  await db.exec(AUTH_STANDIN);
-  for (const file of readdirSync(new URL('../supabase/migrations/', import.meta.url)).sort()) {
-    await db.exec(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'));
-  }
-  // Sign-ups (the trigger makes their profiles)
-  for (const p of [lead, scout, stranger]) {
-    await db.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)`,
-      [p.id, p.email, JSON.stringify({ display_name: p.name })]);
-  }
+  const d = await freshDatabase();
+  ({ as, db } = d);
+  for (const p of [lead, scout, stranger]) await d.signUp(p);
   [{ create_group: groupId }] = await as(lead,
     `select public.create_group('frc', 4069, 'Lo-Ellen Robotics', 'frc-2027')`);
 });
