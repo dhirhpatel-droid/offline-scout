@@ -72,7 +72,10 @@ FRC works the same way, with `"robotsPerAlliance": 3`.
   "createdAt": "2026-10-17T00:27:04.120Z",
   "updatedAt": "2026-10-17T00:31:40.512Z",
   "submittedAt": "2026-10-17T00:31:40.512Z",
-  "syncedAt": null
+  "syncedAt": null,
+  "groupId": "…the Scouting group's id…",
+  "scoutId": "…the Scout's account id…",
+  "deletedAt": null
 }
 ```
 
@@ -84,9 +87,22 @@ FRC works the same way, with `"robotsPerAlliance": 3`.
   → `refresh()`), stored so lists don't need to load the config.
 - **configId + configVersion** say exactly which rules it was scouted under.
 - **submittedAt** is `null` while it's still a Draft.
+- **groupId / scoutId** say which group and person it belongs to. Matches made before
+  an account or group existed get claimed by whoever syncs them (`claim()` in
+  `js/sync-rules.js`).
+- **deletedAt**: deleting only marks it, so the delete reaches the group; lists hide it.
 - **syncedAt** is when the server last got this version. A Submission needs syncing when
   it's submitted and `updatedAt` is newer than `syncedAt` (`needsSync()`).
 - Submissions saved by Milestone 1 were upgraded on the phone (`fromMilestone1()`): they
   keep their alliance colour (`"red"`) because the position wasn't recorded then.
+
+## On the server (Supabase `submissions` table)
+
+The same fields in snake_case (`group_id`, `scout_id`, `scout_name`, `match_level`,
+`alliance_position`, `estimated_points`, `updated_at`, …) plus `server_updated_at`, set by
+the database on every change so phones can ask "what changed since…". The phone sends
+with `save_submission()`, which keeps whichever version was edited later on a phone.
+Replaced versions are kept in `submission_edits`. Mapping: `toServer()` / `fromServer()`
+in `js/sync-rules.js`.
 
 Still undecided: the QR payload (QR backup is a later, optional Group setting).

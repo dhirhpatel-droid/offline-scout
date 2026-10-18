@@ -43,6 +43,9 @@ js/app.js                start-up: theme, service worker, sign-in check, #hash r
 js/supabase.js           the connection to Supabase (URL + publishable key only)
 js/account.js            sign in/up, Scouting groups, members, invites (+ phone copy)
 js/group-rules.js        checks for forms and roles (no network, tested)
+js/sync.js               sends and downloads Submissions when there's signal
+js/sync-rules.js         the sync rules: newer edit wins, deletes, claiming (tested)
+js/now-scouting.js       "what am I scouting?" for Home and the unfinished-match bar
 js/db.js                 IndexedDB: Submissions, the Draft, settings (+ upgrades)
 js/config.js             loads + validates game configs, finds fields by role
 js/scoring.js            estimated points from a config + values (pure function)

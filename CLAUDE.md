@@ -88,7 +88,13 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Milestone 2 (built Oct 18, 2026; waiting on Dhir's real-account test):** email
   accounts, Scouting groups, email Invites, roles. Database in `supabase/migrations/`
   (applied), invite emails via `supabase/functions/send-invite` (deployed).
-- **Next:** Milestone 3 (sync of Submissions) in docs/roadmap.md.
+- **Redesign (Oct 18):** every screen reworked after impeccable critiques (24 → 27/40 on
+  two-reviewer rounds). Home is "Now scouting"; 4 match tabs; tap tiles; see DESIGN.md.
+- **Milestone 3 (built Oct 19, 2026):** sync. `submissions` table + rules
+  (migration applied), `js/sync.js` + `js/sync-rules.js`, Mine/Everyone, Group settings.
+  Real two-phone sync not yet tested with real accounts (Dhir's test).
+- **Next:** Milestone 4 (Events from FIRST) in docs/roadmap.md. Re-run the impeccable
+  critique (two isolated reviewers) after every milestone.
 
 ## Commands
 - `npm start`: local server at http://localhost:8000 (no browser caching)
