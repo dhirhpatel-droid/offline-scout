@@ -22,8 +22,8 @@ export async function renderSettings() {
     profile?.email ? `Signed in as ${profile.email}` : null);
   name.input.value = profile?.display_name ?? '';
   // Save only lights up once the name has actually changed.
-  const saveName = h('button', { class: 'pill block', type: 'submit', disabled: true }, 'Save');
-  name.input.addEventListener('input', () => { saveName.disabled = name.input.value.trim() === (profile?.display_name ?? ''); });
+  const saveName = h('button', { class: 'pill block', type: 'submit', hidden: true }, 'Save name');
+  name.input.addEventListener('input', () => { saveName.hidden = name.input.value.trim() === (profile?.display_name ?? ''); });
   const nameForm = h('form', { class: 'form', novalidate: true }, message.el, name.el, h('div', { class: 'actions' }, saveName));
   nameForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -55,7 +55,7 @@ export async function renderSettings() {
 
   // The game the group scouts: Leads choose it, Scouts see it.
   const gameMessage = formMessage();
-  const programMismatch = group && !game.name.startsWith(group.program);
+  const programMismatch = Boolean(group) && !game.name.startsWith(group.program);
   const gameSection = isLead(group) && configs.length > 1
     ? configs.map((c) => {
         const input = h('input', { type: 'radio', name: 'game', value: c.id, checked: c.id === game.id });

@@ -4,7 +4,6 @@
 
 import { h, icon, formField, setThemeColor, confirmDialog } from '../ui.js';
 import { getSetting, setSetting, listSubmissions, clearDraft } from '../db.js';
-import { listConfigs } from '../config.js';
 import { currentGroup } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
@@ -12,11 +11,10 @@ import { whatsNext } from '../now-scouting.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [eventName, submissions, group, next, configs] = await Promise.all([
-    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), listConfigs(),
+  const [eventName, submissions, group, next] = await Promise.all([
+    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(),
   ]);
-  const game = configs.find((c) => c.id === group.game_config_id) ?? configs[0];
-  const mismatch = !game.name.startsWith(group.program);
+
   const unsent = submissions.filter(needsSync).length;
   const lead = isLead(group);
 
@@ -34,19 +32,18 @@ export async function renderHome() {
         h('li', {}, h('a', { class: 'row', href: '#group' },
           h('div', {},
             h('div', { class: 'title' }, group.name),
-            h('div', { class: 'sub' }, `${groupLabel(group)} · You’re a ${lead ? 'Lead' : 'Scout'} · ${game.name}`)),
+            h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
         h('li', {}, eventRow(eventName, lead)),
       ),
-      mismatch ? h('p', { class: 'notice' },
-        `Your group is ${group.program}, so ${group.program} positions and scoring arrive with the ${group.program} game after kickoff. Until then, matches use ${game.name}.`) : null,
+
       submissions.length ? h('section', {},
         h('h2', { class: 'section-h' }, 'Recent'),
         h('ul', { class: 'submission-list' }, submissions.slice(0, 3).map((s) => h('li', {}, submissionRow(s, submissions))))) : null,
     ),
     h('footer', { class: 'bottombar' },
       h('p', { class: 'status' }, icon('device', 18),
-        h('span', {}, 'Works with no signal'))),
+        h('span', {}, submissions.length ? `${submissions.length} on this phone${unsent ? ' · not sent yet' : ''}` : 'Works with no signal'))),
   );
 
   // The phone's status bar matches the block's colour.
@@ -87,7 +84,7 @@ function nowBlock(next) {
 }
 
 function discardLink() {
-  const btn = h('button', { class: 'now-discard', type: 'button' }, 'Discard this match');
+  const btn = h('button', { class: 'now-discard', type: 'button' }, h('span', { class: 'icon-label' }, icon('trash', 20), 'Discard this match'));
   btn.addEventListener('click', async () => {
     const ok = await confirmDialog({
       title: 'Discard this match?',
@@ -107,7 +104,7 @@ function eventRow(eventName, lead) {
   const view = h('div', { class: 'row' },
     h('div', {},
       h('div', { class: 'title' }, eventName || 'No event set'),
-      h('div', { class: 'sub' }, lead ? 'Event · set by Leads' : 'Event · your Lead sets this')),
+      h('div', { class: 'sub' }, lead ? 'Event' : 'Event · set by your Lead')),
     lead ? h('button', { class: 'small-btn', type: 'button' }, eventName ? 'Change' : 'Set event') : null);
   if (!lead) return view;
 

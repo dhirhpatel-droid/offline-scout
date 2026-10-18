@@ -57,7 +57,8 @@
           "label": "Team number",
           "role": "teamNumber",
           "required": true,
-          "width": "full"
+          "width": "full",
+          "hint": "From the match schedule, or the number on the robot"
         },
         {
           "id": "position",
@@ -69,7 +70,7 @@
         {
           "id": "noShow",
           "type": "toggle",
-          "label": "Robot didn't show up",
+          "label": "Robot didn’t show up",
           "role": "noShow"
         }
       ]
@@ -106,7 +107,7 @@
       "label": "Teleop",
       "title": "Teleop",
       "durationSec": 120,
-      "note": "Count POLLEN and NECTAR together.",
+      "note": "Each row counts POLLEN and NECTAR together.",
       "fields": [
         {
           "id": "hiveTips",

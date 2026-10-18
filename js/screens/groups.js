@@ -5,7 +5,7 @@
 import { h, icon, formField, formMessage, busy } from '../ui.js';
 import {
   cachedGroups, currentGroup, setCurrentGroup, myPendingInvites, acceptInvite, createGroup, cachedProfile,
-  refreshAccount,
+  refreshAccount, signOut,
 } from '../account.js';
 import { checkNewGroup, groupLabel, PROGRAMS } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
@@ -62,11 +62,16 @@ export async function renderGroups({ param }) {
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
       groups.length ? h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')) : null,
-      h('h1', { tabindex: '-1' }, empty ? 'Join your Scouting group' : 'Scouting groups')),
+      h('h1', { tabindex: '-1' }, empty ? 'Join your Scouting group' : 'Scouting groups'),
+      h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings and account' }, icon('account'))),
     h('main', { class: 'content' },
       empty ? h('div', { class: 'join-hero' },
         h('p', { class: 'lede' }, 'Your Lead adds you by email. Ask them to send the invite to:'),
-        h('p', { class: 'join-email' }, profile?.email ?? 'your email'),
+        profile?.email ? h('p', { class: 'join-email' }, profile.email) : null,
+        h('button', { class: 'link-btn', type: 'button', onclick: async () => {
+          await signOut();
+          location.hash = '#auth';
+        } }, 'Not you? Sign out'),
         h('p', { class: 'plain' }, 'Then tap Check for invites below (needs signal).')) : null,
       message.el,
       invitesSection,

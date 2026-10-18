@@ -7,7 +7,7 @@
 //   none  – nothing yet: start scouting
 
 import { h, icon } from './ui.js';
-import { getDraft, getSetting } from './db.js';
+import { getDraft, getSetting, listSubmissions } from './db.js';
 import { matchCode, positionLabel, allianceOf } from './submissions.js';
 
 export async function whatsNext() {
@@ -32,6 +32,16 @@ export async function whatsNext() {
       code: matchCode({ level: carry.level, match: carry.match }),
       position: carry.position,
       alliance: allianceOf(carry.position),
+    };
+  }
+  // No carry-over (e.g. a new phone): continue from the last saved match.
+  const [last] = await listSubmissions();
+  if (last?.summary?.match) {
+    return {
+      kind: 'next',
+      code: matchCode({ level: last.summary.level, match: last.summary.match + 1 }),
+      position: last.summary.position,
+      alliance: allianceOf(last.summary.position),
     };
   }
   return { kind: 'none' };

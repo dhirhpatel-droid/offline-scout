@@ -161,10 +161,17 @@ export async function renderMatch({ param }) {
       b.tabIndex = j === i ? 0 : -1;
     });
     panel.setAttribute('aria-labelledby', `tab-${section.id}`);
-    panel.replaceChildren(
-      ...sectionBlock(section, false),
-      ...guestsOf(section).flatMap((g) => sectionBlock(g, true)),
-    );
+    const guests = guestsOf(section);
+    const host = sectionBlock(section, false);
+    // A pointer under the title, so nobody misses a section further down.
+    if (guests.length) {
+      const pointer = h('a', { class: 'guest-link', href: `#guest-${guests[0].id}`, onclick: (e) => {
+        e.preventDefault();
+        panel.querySelector(`#guest-${guests[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
+      host.splice(section.note ? 2 : 1, 0, pointer);
+    }
+    panel.replaceChildren(...host, ...guests.flatMap((g) => sectionBlock(g, true)));
     if (i === 0 && submission.summary.scout) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }
@@ -222,7 +229,7 @@ export async function renderMatch({ param }) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
         `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     }
-    bottombar.replaceChildren(savedStatus('Saved on this phone'), action);
+    bottombar.replaceChildren(savedStatus('Saved'), action);
   }
 
   // ---------- submit / next match ----------
@@ -272,6 +279,7 @@ export async function renderMatch({ param }) {
         h('span', { class: 'part-label' }, s.label)));
     tabs.hidden = true;
     backBtn.hidden = true; // the buttons below say where to go next
+    metaEl.textContent = positionLabel(submission.summary.position ?? ''); // "Q18" is in the result below
     screen.classList.add('finished');
     panel.removeAttribute('role');
     panel.removeAttribute('aria-labelledby');

@@ -46,7 +46,7 @@ export function icon(name, size = 24) {
 
 // The "Saved on this device" line. Never mentions the internet, because the
 // app never needs it.
-export function savedStatus(text = 'Saved on this device') {
+export function savedStatus(text = 'Saved on this phone') {
   return h('p', { class: 'status', role: 'status' }, icon('device', 18), h('span', {}, text));
 }
 

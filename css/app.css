@@ -127,7 +127,7 @@ input, textarea { caret-color: var(--text); }
   transition: transform 120ms ease-out;
 }
 .pill:active { transform: scale(0.97); }
-.pill.secondary { background: var(--surface-2); color: var(--text); }
+.pill.secondary { background: var(--surface-2); color: var(--text); border: 2px solid var(--control-line); } /* edge 3:1 */
 .pill.block { display: flex; width: 100%; }
 .pill.big { min-height: var(--tap-lg); font-size: var(--fs-lg); }
 
@@ -147,13 +147,14 @@ input, textarea { caret-color: var(--text); }
   z-index: 2;
   background: var(--alliance);
   color: var(--on-alliance);
-  padding: max(env(safe-area-inset-top), var(--s1)) var(--s3) var(--s3);
+  padding: max(env(safe-area-inset-top), var(--s1)) var(--s4) var(--s3);
   /* No colour transition: fading red to blue passes through purple. */
 }
 .match-head .row1 {
   display: flex;
   align-items: center;
   gap: var(--s1);
+  margin-left: calc(-1 * var(--s3)); /* the back arrow's icon lines up with the text below */
   min-height: 48px;
 }
 .match-head .meta { flex: 1; font-size: var(--fs-sm); font-weight: 600; }
@@ -246,7 +247,7 @@ input, textarea { caret-color: var(--text); }
   color: var(--on-alliance);
 }
 .round:active { transform: scale(0.92); }
-.round:disabled { color: var(--text-3); border-style: dashed; } /* nothing to undo */
+.round:disabled { color: var(--text-3); } /* nothing to undo yet (dashed outlines mean 'disabled' only) */
 
 /* Signature moment: adding flashes the row in the alliance colour and the
    number jumps. Skipped for people who turn off motion in their phone settings. */
@@ -279,6 +280,7 @@ input, textarea { caret-color: var(--text); }
 .segmented button {
   flex: 1;
   border: 2px solid var(--control-line); /* unselected: hollow, with a visible edge */
+  color: var(--text); /* full contrast: readable in sunlight */
   min-width: var(--tap);
   min-height: var(--tap);
   border-radius: 12px;
@@ -464,9 +466,9 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 .reveal {
   position: absolute;
   right: var(--s1);
-  top: calc(50% + var(--s2) / 2); /* middle of the box (the box has an 8px gap above it) */
-  transform: translateY(-50%);
-  min-height: 48px;
+  top: var(--s2); /* the box has an 8px gap above it */
+  height: var(--tap);
+  min-height: var(--tap);
   min-width: 72px;
   border-radius: 10px;
   font-weight: 700;
@@ -544,12 +546,13 @@ a.row { color: inherit; }
   min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
+  border: 2px solid var(--control-line);
   background: var(--surface-2);
   font-weight: 700;
   font-size: var(--fs-sm);
 }
-.small-btn.danger { color: var(--danger); background: transparent; }
-.small-btn.primary { background: var(--primary-bg); color: var(--primary-text); }
+.small-btn.danger { color: var(--danger); background: transparent; border-color: transparent; }
+.small-btn.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
 .group-footer { display: grid; gap: var(--s3); }
 .group-footer .text-btn { justify-self: start; padding-left: 0; }
 .group-lede { color: var(--text-2); font-weight: 600; margin: var(--s1) 0 var(--s3); }
@@ -649,7 +652,7 @@ a.row { color: inherit; }
 .now-meta { font-size: var(--fs-lg); font-weight: 700; }
 .now-hero { font-size: var(--fs-display); font-weight: 800; font-stretch: 75%; line-height: 0.9; letter-spacing: -0.02em; }
 .now-hero:not(.num) { font-size: var(--fs-display-words); line-height: 1; }
-.now-sub { font-weight: 600; opacity: 0.9; max-width: 34ch; }
+.now-sub { font-weight: 600; max-width: 34ch; }
 .now-go { margin-top: var(--s4); }
 .now:not([data-alliance='none']) .now-go { background: var(--on-alliance); color: var(--alliance); }
 
@@ -674,7 +677,7 @@ a.row { color: inherit; }
 }
 .now-bar[data-alliance='none'] { background: var(--primary-bg); color: var(--primary-text); }
 .now-bar-text { display: grid; }
-.now-bar-label { font-size: var(--fs-xs); font-weight: 700; opacity: 0.9; }
+.now-bar-label { font-size: var(--fs-xs); font-weight: 700; }
 .now-bar-where { font-size: var(--fs-lg); }
 .now-bar-go {
   display: inline-flex;
@@ -700,16 +703,15 @@ a.row { color: inherit; }
 .auth-hero .now-hero { font-size: var(--fs-num); }
 .auth-hero + .content { padding-top: var(--s3); }
 
-.finish-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; opacity: 0.9; }
-.now-bar-go { background: color-mix(in srgb, currentColor 18%, transparent); }
+.finish-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; }
+.now-bar-go { background: var(--on-alliance); color: var(--alliance); }
+.now-bar[data-alliance='none'] .now-bar-go { background: var(--primary-text); color: var(--primary-bg); }
 
 .now-discard {
-  justify-self: center;
+  justify-self: start;
   min-height: var(--tap);
-  padding: 0 var(--s3);
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: inherit;
 }
 .notice {
   margin-top: var(--s3);
@@ -723,3 +725,18 @@ a.row { color: inherit; }
 /* A choice nobody has answered yet says so (so "None" and "skipped" differ). */
 .answer-state { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
 .answer-state[data-answered='true'] { display: none; }
+
+/* Alliance position options carry their alliance colour on the edge, even before they're picked. */
+.position-grid .segmented button[data-color='red'] { border-color: var(--red); }
+.position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
+
+.guest-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  min-height: 48px;
+  margin-top: var(--s1);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-2);
+}
