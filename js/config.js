@@ -62,11 +62,29 @@ export function validateConfig(config) {
       if (field.type === 'rating' && !(field.min < field.max)) {
         fail(`Rating "${where}" needs "min" smaller than "max"`);
       }
+      if (field.type === 'rating' && field.labels && field.labels.length !== field.max - field.min + 1) {
+        fail(`Rating "${where}" needs one label per step (${field.max - field.min + 1})`);
+      }
+      if (field.hidden !== undefined && typeof field.hidden !== 'boolean') {
+        fail(`Field "${where}" has non-true/false "hidden"`);
+      }
+      if (field.hidden && field.required && !field.role) {
+        fail(`Field "${where}" is hidden and required but has no role to fill it in`);
+      }
       if (field.role) {
         if (!ROLES.includes(field.role)) fail(`Field "${where}" has unknown role "${field.role}"`);
         if (rolesSeen.has(field.role)) fail(`Role "${field.role}" is used twice`);
         rolesSeen.add(field.role);
       }
+    }
+  }
+
+  // "showWith" shows a section inside another section's tab (e.g. Endgame in Teleop).
+  for (const section of config.sections) {
+    if (section.showWith !== undefined) {
+      const host = config.sections.find((x) => x.id === section.showWith);
+      if (!host) fail(`Section "${section.id}" has "showWith" "${section.showWith}", which isn't a section`);
+      else if (host.showWith) fail(`Section "${section.id}" can't show with "${host.id}", which is itself shown with another`);
     }
   }
 

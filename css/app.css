@@ -61,8 +61,9 @@ input, textarea { caret-color: var(--text); }
 }
 .topbar > h1:first-child, .topbar > .wordmark:first-child { padding-left: var(--s2); }
 .topbar h1 {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   font-weight: 800;
+  font-stretch: 75%;
   flex: 1;
   min-width: 0;
   line-height: 1.15;
@@ -77,7 +78,7 @@ input, textarea { caret-color: var(--text); }
 }
 
 .icon-btn {
-  width: 48px; height: 48px;
+  width: var(--tap); height: var(--tap);
   display: grid; place-items: center;
   border-radius: 50%;
   color: inherit;
@@ -131,7 +132,7 @@ input, textarea { caret-color: var(--text); }
 .pill.big { min-height: var(--tap-lg); font-size: var(--fs-lg); }
 
 .text-btn {
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0 var(--s3);
   font-weight: 600;
   color: var(--text-2);
@@ -271,15 +272,13 @@ input, textarea { caret-color: var(--text); }
 }
 .segmented {
   display: flex;
-  gap: var(--s1);
-  padding: var(--s1);
-  border-radius: 16px;
-  background: var(--surface);
+  gap: var(--s2);
 }
 .segmented.wide { margin-top: var(--s2); }
 .field.half .segmented button { min-width: 0; }
 .segmented button {
   flex: 1;
+  border: 2px solid var(--control-line); /* unselected: hollow, with a visible edge */
   min-width: var(--tap);
   min-height: var(--tap);
   border-radius: 12px;
@@ -288,30 +287,23 @@ input, textarea { caret-color: var(--text); }
 }
 .segmented button[aria-pressed='true'] {
   background: var(--alliance);
+  border-color: var(--alliance);
   color: var(--on-alliance);
 }
-.toggle-row .segmented button { min-width: 72px; }
 /* Outside the match screen there's no alliance colour: selections use the
    strong main colour so they're easy to tell apart. */
-.screen:not([data-alliance]) .segmented button[aria-pressed='true'] {
-  background: var(--primary-bg);
-  color: var(--primary-text);
-}
-/* "No" on a Yes/No toggle is the resting state, so it stays neutral. */
-.segmented button[data-off][aria-pressed='true'] {
-  background: var(--surface-2);
-  color: var(--text);
-}
-/* Before an alliance is picked, selections use the neutral strong colour. */
+.screen:not([data-alliance]) .segmented button[aria-pressed='true'],
 [data-alliance='none'] .segmented button[aria-pressed='true'] {
   background: var(--primary-bg);
+  border-color: var(--primary-bg);
   color: var(--primary-text);
 }
 /* Alliance position: one row of buttons per alliance, each in its own colour. */
-.position-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s2); margin-top: var(--s2); }
+.position-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s4); margin-top: var(--s2); }
 .position-grid .segmented button { min-width: 0; padding: 0 var(--s1); }
-.segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); color: var(--on-alliance); }
-.segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); color: var(--on-alliance); }
+.segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); border-color: var(--red); color: var(--on-alliance); }
+.segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--on-alliance); }
+.segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: var(--card-yellow); color: #0e0e10; }
 
 /* Text inputs */
 .input {
@@ -321,7 +313,7 @@ input, textarea { caret-color: var(--text); }
   margin-top: var(--s2);
   padding: 0 var(--s4);
   border-radius: var(--radius);
-  border: 2px solid transparent;
+  border: 2px solid var(--control-line); /* 3:1 edge so the box is visible in sunlight */
   background: var(--surface);
   font-size: var(--fs-lg);
   font-weight: 600;
@@ -365,7 +357,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 }
 .list-link .count { margin-left: auto; color: var(--text-2); font-weight: 600; }
 
-/* ---------- Saved matches list ---------- */
+/* ---------- My matches ---------- */
 
 .submission-list { list-style: none; padding: 0; }
 .submission-row {
@@ -374,7 +366,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
   align-items: center;
   gap: var(--s3);
   width: 100%;
-  min-height: 76px;
+  min-height: 80px;
   padding: var(--s2) 0;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -382,20 +374,31 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 .badge {
   display: grid;
   place-items: center;
-  width: 40px; height: 40px;
-  border-radius: 10px;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--radius);
   font-weight: 800;
-  font-size: var(--fs-sm);
+  font-stretch: 75%;
+  font-size: var(--fs-xl);
   color: var(--on-alliance);
   background: var(--neutral-alliance);
 }
 .badge.red { background: var(--red); }
 .badge.blue { background: var(--blue); }
-.submission-row .team { font-size: var(--fs-xl); line-height: 1.1; }
+.submission-main { display: grid; min-width: 0; }
+.submission-title { font-size: var(--fs-xl); line-height: 1.15; }
 .submission-row .sub { font-size: var(--fs-sm); color: var(--text-2); }
-.submission-row .pts { text-align: right; }
+.submission-row .pts { display: grid; justify-items: end; gap: 2px; }
 .submission-row .pts .value { font-size: var(--fs-2xl); line-height: 1; }
-.submission-row .pts .label { font-size: var(--fs-xs); color: var(--text-3); }
+.sync-chip {
+  padding: 2px var(--s2);
+  border-radius: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.sync-chip.sent { background: var(--primary-bg); color: var(--primary-text); }
 
 .empty-state { padding: var(--s6) 0; }
 .empty-state h2 { font-size: var(--fs-xl); font-weight: 800; }
@@ -405,6 +408,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .group { margin-top: var(--s5); }
 .group h2 { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin-bottom: var(--s2); }
+.setting-value { font-size: var(--fs-lg); font-weight: 700; }
 .radio-row {
   display: flex;
   align-items: center;
@@ -480,7 +484,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 .form-message[data-kind='error'] { color: var(--danger); }
 
 .link-btn {
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0;
   font-weight: 600;
   color: var(--text-2);
@@ -496,7 +500,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
   background: var(--surface);
@@ -530,7 +534,7 @@ a.row { color: inherit; }
   vertical-align: 2px;
 }
 .small-btn {
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
   background: var(--surface-2);
@@ -539,6 +543,152 @@ a.row { color: inherit; }
 }
 .small-btn.danger { color: var(--danger); background: transparent; }
 .small-btn.primary { background: var(--primary-bg); color: var(--primary-text); }
-.group-footer { display: grid; justify-items: start; gap: var(--s1); margin-top: var(--s5); }
-.group-footer .text-btn { padding-left: 0; }
+.group-footer { display: grid; gap: var(--s3); }
+.group-footer .text-btn { justify-self: start; padding-left: 0; }
+.group-lede { color: var(--text-2); font-weight: 600; margin: var(--s1) 0 var(--s3); }
 .section-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin: var(--s5) 0 var(--s1); }
+
+/* ---------- Tap tiles (Yes/No questions) ---------- */
+
+/* The whole row is one button: off = hollow with an empty check box,
+   on = filled with the alliance colour and a check. */
+.field.tile {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 72px;
+  margin: var(--s2) 0;
+  padding: var(--s2) var(--s4);
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius);
+  text-align: left;
+  transition: background-color 120ms ease-out, transform 100ms ease-out;
+}
+.field.tile + .field.tile { margin-top: 0; }
+.tile-text { display: grid; }
+.tile-check {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid var(--control-line);
+  color: transparent;
+}
+.field.tile[aria-pressed='true'] {
+  background: var(--alliance);
+  border-color: var(--alliance);
+  color: var(--on-alliance);
+}
+.field.tile[aria-pressed='true'] .field-hint { color: inherit; opacity: 0.85; }
+.field.tile[aria-pressed='true'] .tile-check { background: var(--on-alliance); border-color: var(--on-alliance); color: var(--alliance); }
+[data-alliance='none'] .field.tile[aria-pressed='true'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+[data-alliance='none'] .field.tile[aria-pressed='true'] .tile-check { color: var(--primary-bg); background: var(--primary-text); border-color: var(--primary-text); }
+.field.tile:active { transform: scale(0.99); }
+
+.section-title.sub { font-size: var(--fs-xl); padding-top: var(--s5); }
+.scouting-as { margin-top: var(--s4); }
+.danger-zone { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
+
+/* ---------- Finish ("Q18 saved") ---------- */
+
+/* The alliance colour carries on from the header into the result. */
+.finished .match-head { padding-bottom: 0; }
+.finished .match-head .points { visibility: hidden; } /* the result below shows the points */
+.finished .content { padding: 0; }
+.finish {
+  background: var(--alliance);
+  color: var(--on-alliance);
+  padding: var(--s2) var(--s4) var(--s5);
+}
+.finish-title { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.finish-total { display: flex; align-items: baseline; gap: var(--s2); margin-top: var(--s4); font-weight: 700; }
+.finish-total .num { font-size: var(--fs-hero); line-height: 0.9; }
+.parts { display: flex; gap: var(--s5); margin-top: var(--s3); }
+.part { display: grid; }
+.part-value { font-size: var(--fs-2xl); line-height: 1; }
+.part-label { font-size: var(--fs-sm); font-weight: 600; }
+.finish-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s4);
+  padding: var(--s2) var(--s3);
+  border-radius: 999px;
+  background: var(--tab-track);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.finish-actions { display: grid; gap: var(--s3); padding: var(--s5) var(--s4); }
+.finish-actions .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+
+/* ---------- Home: "Now scouting" ---------- */
+
+/* The top block is the "cover art": the match you're on, in its alliance
+   colour, big enough to read from arm's length. */
+.now {
+  display: grid;
+  gap: var(--s2);
+  background: var(--alliance);
+  color: var(--on-alliance);
+  padding: max(env(safe-area-inset-top), var(--s2)) var(--s4) var(--s5);
+}
+.now[data-alliance='none'] { background: var(--surface); color: var(--text); }
+.now-top { display: flex; align-items: center; justify-content: space-between; margin: 0 calc(-1 * var(--s2)) var(--s4) 0; }
+.now-top .wordmark { font-stretch: 75%; font-weight: 900; font-size: var(--fs-xl); }
+.now-meta { font-size: var(--fs-lg); font-weight: 700; }
+.now-hero { font-size: var(--fs-display); font-weight: 800; font-stretch: 75%; line-height: 0.9; letter-spacing: -0.02em; }
+.now-hero:not(.num) { font-size: var(--fs-display-words); line-height: 1; }
+.now-sub { font-weight: 600; opacity: 0.9; max-width: 34ch; }
+.now-go { margin-top: var(--s4); }
+.now:not([data-alliance='none']) .now-go { background: var(--on-alliance); color: var(--alliance); }
+
+.home-rows .row { min-height: 76px; }
+.row-end { display: inline-flex; align-items: center; gap: var(--s2); }
+.row-count { font-size: var(--fs-2xl); line-height: 1; }
+.event-form { padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+
+/* ---------- Now-scouting bar (other screens, while a match is unfinished) ---------- */
+
+.now-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: var(--tap-lg);
+  margin: 0 var(--s4) var(--s2);
+  padding: var(--s2) var(--s2) var(--s2) var(--s4);
+  border-radius: var(--radius);
+  background: var(--alliance);
+  color: var(--on-alliance);
+}
+.now-bar[data-alliance='none'] { background: var(--primary-bg); color: var(--primary-text); }
+.now-bar-text { display: grid; }
+.now-bar-label { font-size: var(--fs-xs); font-weight: 700; opacity: 0.9; }
+.now-bar-where { font-size: var(--fs-lg); }
+.now-bar-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  min-height: 48px;
+  padding: 0 var(--s3);
+  border-radius: 999px;
+  background: var(--tab-track);
+  font-weight: 700;
+}
+
+/* ---------- Joining a group ---------- */
+.join-hero { padding: var(--s4) 0 var(--s2); }
+.join-email {
+  margin: var(--s2) 0;
+  font-size: var(--fs-2xl);
+  font-stretch: 75%;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.auth-hero .now-hero { font-size: var(--fs-num); }
+.auth-hero + .content { padding-top: var(--s3); }

@@ -101,3 +101,16 @@ test('a Milestone 1 entry becomes a Submission without losing anything', () => {
   assert.equal(s.syncedAt, null);
   assert.equal(needsSync(s), true);
 });
+
+test('matches are described as Q18 / P3, and the sync status says where the data is', async () => {
+  const { matchCode, syncStatus } = await import('../js/submissions.js');
+  assert.equal(matchCode({ level: 'qual', match: 18 }), 'Q18');
+  assert.equal(matchCode({ level: 'playoff', match: 3 }), 'P3');
+  assert.equal(matchCode({ level: 'qual', match: null }), 'Q—');
+  const s = newSubmission(biobuzz, { match: 18 });
+  assert.equal(syncStatus(s).state, 'draft');
+  s.submittedAt = s.updatedAt;
+  assert.equal(syncStatus(s).state, 'local');
+  s.syncedAt = s.updatedAt;
+  assert.equal(syncStatus(s).state, 'sent');
+});

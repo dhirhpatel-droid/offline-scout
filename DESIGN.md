@@ -32,6 +32,20 @@ colors:
   light-text-3: "#64646d"
   light-danger: "#c41d2a"
 typography:
+  display:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "5rem"
+    fontWeight: 800
+    lineHeight: 0.9
+    letterSpacing: "-0.02em"
+    fontVariation: "'wdth' 75"
+    fontFeature: "'tnum', 'lnum'"
+  display-words:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "3.5rem"
+    fontWeight: 800
+    lineHeight: 1
+    fontVariation: "'wdth' 75"
   hero:
     fontFamily: "Archivo, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
     fontSize: "4rem"

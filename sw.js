@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -28,6 +28,7 @@ const APP_FILES = [
   'js/supabase.js',
   'js/account.js',
   'js/group-rules.js',
+  'js/now-scouting.js',
   'vendor/supabase-2.117.2.js',
   'js/ui.js',
   'js/db.js',

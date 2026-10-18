@@ -26,7 +26,7 @@ export function renderField(field, value, onChange, config) {
 function pointsHint(field) {
   if (!field.points) return field.hint ?? null;
   const unit = field.points === 1 ? 'pt' : 'pts';
-  const pts = field.type === 'counter' ? `${field.points} ${unit} each` : `${field.points} ${unit}`;
+  const pts = field.type === 'counter' ? `${field.points} ${unit} each` : `+${field.points} ${unit}`;
   return field.hint ? `${pts} · ${field.hint}` : pts;
 }
 
@@ -68,17 +68,27 @@ const RENDERERS = {
     return row;
   },
 
-  // Yes / No as two big buttons (easier to hit than a small switch).
+  // A tap tile: the whole row is one big button. Off until tapped; tapping
+  // again turns it off (the undo). Clearer in bright light than a Yes/No pair,
+  // where a selected "No" and an unanswered question looked the same.
   toggle(field, value, onChange) {
-    const labelId = nextId();
-    const seg = segmented(
-      [{ value: false, label: 'No' }, { value: true, label: 'Yes' }],
-      value === true, labelId, onChange,
-    );
-    return h('div', { class: 'field toggle-row' }, labelBlock(field, labelId), seg);
+    let on = value === true;
+    const hint = pointsHint(field);
+    const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on) },
+      h('span', { class: 'tile-text' },
+        h('span', { class: 'field-label' }, field.label),
+        hint && h('span', { class: 'field-hint' }, hint)),
+      h('span', { class: 'tile-check', 'aria-hidden': 'true' }, icon('check', 26)));
+    tile.addEventListener('click', () => {
+      on = !on;
+      tile.setAttribute('aria-pressed', String(on));
+      buzz();
+      onChange(on);
+    });
+    return tile;
   },
 
-  // One of several options, e.g. Defense: None / Some / Heavy.
+  // One of several options, e.g. Played defense: None / Some / A lot.
   choice(field, value, onChange) {
     const labelId = nextId();
     const seg = segmented(field.options, value, labelId, onChange);
@@ -114,11 +124,13 @@ const RENDERERS = {
       h('div', { class: 'position-grid', role: 'group', 'aria-labelledby': labelId }, rows));
   },
 
-  // 1–5 as five buttons.
+  // A scale as buttons, with words if the config gives them (Weak … Great).
   rating(field, value, onChange) {
     const labelId = nextId();
     const options = [];
-    for (let n = field.min; n <= field.max; n++) options.push({ value: n, label: String(n) });
+    for (let n = field.min; n <= field.max; n++) {
+      options.push({ value: n, label: field.labels?.[n - field.min] ?? String(n) });
+    }
     const seg = segmented(options, value, labelId, onChange);
     seg.classList.add('wide');
     return h('div', { class: 'field' }, labelBlock(field, labelId), seg);
@@ -156,8 +168,8 @@ function textInput(field, value, onChange, attrs, parse) {
     if (attrs.inputmode === 'numeric') input.value = input.value.replace(/\D/g, '').slice(0, 6);
     onChange(parse(input.value));
   });
-  // Number fields are short, so two sit side by side (match + team).
-  const cls = attrs.inputmode === 'numeric' ? 'field half' : 'field';
+  // Number fields are short, so two sit side by side unless "width": "full".
+  const cls = attrs.inputmode === 'numeric' && field.width !== 'full' ? 'field half' : 'field';
   return h('div', { class: cls }, h('label', { class: 'field-label', for: id }, field.label), input);
 }
 
@@ -172,12 +184,10 @@ function segmented(options, value, labelId, onChange) {
     const btn = h('button', {
       type: 'button',
       'aria-pressed': String(opt.value === current),
-      'data-off': opt.value === false,
+      'data-color': opt.color, // e.g. a yellow card shows in yellow
     }, opt.label);
     btn.addEventListener('click', () => {
-      // Yes/No toggles never go back to "unset"; other choices can be cleared.
-      const isToggle = typeof opt.value === 'boolean';
-      current = !isToggle && current === opt.value ? null : opt.value;
+      current = current === opt.value ? null : opt.value;
       buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i].value === current)));
       buzz();
       onChange(current);

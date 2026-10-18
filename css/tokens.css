@@ -34,6 +34,7 @@
 
   /* Alliance colours. White text on them passes AA (red 5.0:1, blue 5.3:1). */
   --red: #d42a36;
+  --card-yellow: #f5c400; /* a yellow card, shown in its real colour (dark text on it: 12:1) */
   --blue: #2160e0;
   --neutral-alliance: #3a3a41; /* before an alliance is picked */
   --on-alliance: #ffffff;
@@ -51,6 +52,8 @@
   --fs-2xl: 2rem;      /* 32 */
   --fs-num: 2.75rem;   /* 44: counter values */
   --fs-hero: 4rem;     /* 64: team number */
+  --fs-display: 5rem;  /* 80: the match or team on Home's "Now scouting" block */
+  --fs-display-words: 3.5rem; /* 56: big words there ("Ready to scout") */
 
   /* Spacing on a 4px grid */
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;

@@ -56,3 +56,12 @@ test('findRole finds the field behind each role', () => {
   assert.equal(findRole(biobuzz, 'alliancePosition').field.type, 'position');
   assert.equal(findRole(biobuzz, 'matchLevel').key, 'pre.level');
 });
+
+test('showWith must point at a real tab, and rating labels must match the steps', () => {
+  const broken = structuredClone(biobuzz);
+  broken.sections.find((x) => x.id === 'end').showWith = 'nowhere';
+  broken.sections.find((x) => x.id === 'post').fields.find((f) => f.id === 'driverSkill').labels = ['Only one'];
+  const errors = validateConfig(broken);
+  assert.ok(errors.some((e) => e.includes('"showWith" "nowhere"')));
+  assert.ok(errors.some((e) => e.includes('one label per step')));
+});

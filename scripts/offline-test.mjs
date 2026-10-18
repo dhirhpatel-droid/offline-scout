@@ -151,14 +151,14 @@ try {
   `);
   await sleep(300);
   await run(`[...document.querySelectorAll('.bottombar .pill')].at(-1).click()`);
-  await waitFor(`return document.querySelector('.done h2')?.textContent === 'Match 42 saved'`, 'save confirmation');
-  step('Scouted and saved match 42 offline');
+  await waitFor(`return document.querySelector('.finish-title')?.textContent === 'Q42 saved'`, 'save confirmation');
+  step('Scouted and saved Q42 offline');
 
   // ---- 4. reload, still offline, and check it is there ----
   await load(`${APP}?second-reload#saved`);
   await waitFor(`return document.querySelectorAll('.submission-row').length > 0`, 'saved list');
   const first = await run(`return document.querySelector('.submission-row').getAttribute('aria-label')`);
-  if (!first.includes('Match 42') || !first.includes('team 4069') || !first.includes('Blue 1') || !first.includes('40 estimated points')) {
+  if (!first.includes('Q42') || !first.includes('team 4069') || !first.includes('Blue 1') || !first.includes('40 estimated points')) {
     throw new Error(`Unexpected saved Submission: ${first}`);
   }
   step(`After reloading offline, Saved matches shows: "${first}"`);

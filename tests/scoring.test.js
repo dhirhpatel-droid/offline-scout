@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { estimatePoints } from '../js/scoring.js';
+import { estimatePoints, pointsBySection } from '../js/scoring.js';
 
 const biobuzz = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
 
@@ -50,4 +50,12 @@ test('choice options can carry points (for future games)', () => {
     }],
   };
   assert.equal(estimatePoints(config, { 'end.climb': 'deep' }), 12);
+});
+
+test('points are broken down by section and add up to the total', () => {
+  const values = { 'auto.leave': true, 'auto.hiveTips': 1, 'teleop.flower': 3, 'end.park': true };
+  const parts = pointsBySection(biobuzz, values);
+  assert.deepEqual(parts, { pre: 0, auto: 23, teleop: 6, end: 5, post: 0 });
+  assert.equal(Object.values(parts).reduce((a, b) => a + b, 0), estimatePoints(biobuzz, values));
+  assert.equal(pointsBySection(biobuzz, { ...values, 'pre.noShow': true }).auto, 0);
 });

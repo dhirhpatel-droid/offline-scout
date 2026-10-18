@@ -146,3 +146,19 @@ export function fromMilestone1(entry, newId = crypto.randomUUID()) {
     syncedAt: null,
   };
 }
+
+// ---------- how a Submission is described on screen ----------
+
+// "Q18" for qualification 18, "P3" for playoff 3, "Q—" when not filled in yet.
+export function matchCode(summary) {
+  const prefix = summary?.level === 'playoff' ? 'P' : 'Q';
+  return `${prefix}${summary?.match ?? '—'}`;
+}
+
+// Where this Submission's data is. Sending arrives with sync (Milestone 3);
+// until then everything is honestly "on this phone".
+export function syncStatus(submission) {
+  if (!submission.submittedAt) return { state: 'draft', text: 'Not saved yet' };
+  if (needsSync(submission)) return { state: 'local', text: 'On this phone · not sent yet' };
+  return { state: 'sent', text: 'Sent to your group' };
+}

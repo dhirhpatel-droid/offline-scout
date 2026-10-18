@@ -9,6 +9,7 @@ import {
 } from '../account.js';
 import { groupLabel, isLead, isLastLead, sortMembers, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
+import { nowScoutingBar } from '../now-scouting.js';
 
 export async function renderGroup() {
   const group = await currentGroup();
@@ -23,9 +24,11 @@ export async function renderGroup() {
   const invitesList = h('ul', { class: 'rows', 'aria-label': 'Open invites' });
   const invitesSection = h('section', { hidden: true }, h('h2', { class: 'section-h' }, 'Waiting to join'), invitesList);
 
+  const membersNote = h('p', { class: 'plain', hidden: true });
   async function load() {
     if (!isOnline()) {
-      message.show('No connection: members and invites show once you have signal.', 'info');
+      membersNote.textContent = 'Members show here once you have signal.';
+      membersNote.hidden = false;
       return;
     }
     try {
@@ -93,9 +96,9 @@ export async function renderGroup() {
   // Invite form (Leads only)
   let inviteForm = null;
   if (lead) {
-    const email = formField('Invite by email', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off' },
-      'They’ll join as a Scout. You can make them a Lead after.');
-    const send = h('button', { class: 'pill block', type: 'submit' }, 'Send invite');
+    const email = formField('Invite a scout', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'their email' },
+      'They get an email with a link. They join as a Scout; you can make them a Lead after.');
+    const send = h('button', { class: 'pill block', type: 'submit', disabled: !isOnline() }, isOnline() ? 'Send invite' : 'Send invite (needs signal)');
     inviteForm = h('form', { class: 'form', novalidate: true }, email.el, h('div', { class: 'actions' }, send));
     inviteForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -136,17 +139,19 @@ export async function renderGroup() {
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
       h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
-      h('h1', { tabindex: '-1' }, h('span', { class: 'num' }, groupLabel(group)), ` · ${group.name}`)),
+      h('h1', { tabindex: '-1' }, group.name)),
     h('main', { class: 'content' },
-      h('p', { class: 'plain' }, `You’re a ${lead ? 'Lead' : 'Scout'} in this group.`),
+      h('p', { class: 'group-lede' }, h('span', { class: 'num' }, groupLabel(group)), ` · You’re a ${lead ? 'Lead' : 'Scout'}`),
       message.el,
       inviteForm,
       invitesSection,
       h('h2', { class: 'section-h' }, 'Members'),
+      membersNote,
       membersList,
-      h('div', { class: 'group-footer' },
-        h('a', { class: 'link-btn', href: '#groups' }, 'Switch or create groups'),
+      h('div', { class: 'danger-zone group-footer' },
+        h('a', { class: 'pill secondary block', href: '#groups' }, 'Your groups'),
         leave)),
+    await nowScoutingBar(),
   );
   load();
   return { el };

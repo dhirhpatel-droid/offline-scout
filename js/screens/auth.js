@@ -34,12 +34,20 @@ export async function renderAuth({ param }) {
   }
 
   const body = h('main', { class: 'content' },
-    h('h1', { class: 'screen-title', tabindex: '-1' }, TITLES[mode]),
+    mode === 'signin' ? null : h('h1', { class: 'screen-title', tabindex: '-1' }, TITLES[mode]),
     await FORMS[mode](message),
   );
 
+  // Sign in opens with what the app is for; the other steps keep it short.
+  const top = mode === 'signin'
+    ? h('section', { class: 'now auth-hero', 'data-alliance': 'none' },
+        h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout')),
+        h('h1', { class: 'now-hero', tabindex: '-1' }, 'Scout every match. Even with no signal.'),
+        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so bad gym wifi never costs you data.'))
+    : h('header', { class: 'topbar' }, h('span', { class: 'wordmark' }, 'Offline Scout'));
+
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' }, h('span', { class: 'wordmark' }, 'Offline Scout')),
+    top,
     body,
     h('footer', { class: 'bottombar' },
       h('p', { class: 'status' }, 'You need signal to sign in once. After that, Offline Scout works with none.')),
@@ -64,7 +72,7 @@ const FORMS = {
       message.el, email.el, password.el,
       h('div', { class: 'actions' },
         submit,
-        h('a', { class: 'pill secondary block', href: '#auth/signup' }, 'Create an account'),
+        h('a', { class: 'pill secondary block', href: '#auth/signup' }, 'Create account'),
         h('a', { class: 'link-btn', href: '#auth/forgot' }, 'Forgot your password?')));
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

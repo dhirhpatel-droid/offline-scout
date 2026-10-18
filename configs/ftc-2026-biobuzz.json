@@ -1,26 +1,77 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 2,
+  "version": 3,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
-  "alliance": { "colors": ["red", "blue"], "robotsPerAlliance": 2 },
+  "alliance": {
+    "colors": [
+      "red",
+      "blue"
+    ],
+    "robotsPerAlliance": 2
+  },
   "notes": "Flower ownership and the bottom-nectar bonus are scored per alliance, not per robot, so they are not scouted here.",
   "sections": [
     {
       "id": "pre",
-      "label": "Pre",
-      "title": "Pre-match",
+      "label": "Setup",
+      "title": "Setup",
       "fields": [
-        { "id": "scout", "type": "text", "label": "Scout name", "role": "scoutName", "required": true, "width": "half" },
         {
-          "id": "level", "type": "choice", "label": "Match level", "role": "matchLevel", "required": true, "width": "half",
-          "options": [ { "value": "qual", "label": "Qual" }, { "value": "playoff", "label": "Playoff" } ]
+          "id": "scout",
+          "type": "text",
+          "label": "Scout",
+          "role": "scoutName",
+          "required": true,
+          "hidden": true
         },
-        { "id": "match", "type": "number", "label": "Match number", "role": "matchNumber", "required": true },
-        { "id": "team", "type": "number", "label": "Team number", "role": "teamNumber", "required": true },
-        { "id": "position", "type": "position", "label": "Alliance position", "role": "alliancePosition", "required": true },
-        { "id": "noShow", "type": "toggle", "label": "Robot no-show", "role": "noShow" }
+        {
+          "id": "level",
+          "type": "choice",
+          "label": "Match level",
+          "role": "matchLevel",
+          "required": true,
+          "width": "half",
+          "options": [
+            {
+              "value": "qual",
+              "label": "Qual"
+            },
+            {
+              "value": "playoff",
+              "label": "Playoff"
+            }
+          ]
+        },
+        {
+          "id": "match",
+          "type": "number",
+          "label": "Match number",
+          "role": "matchNumber",
+          "required": true
+        },
+        {
+          "id": "team",
+          "type": "number",
+          "label": "Team number",
+          "role": "teamNumber",
+          "required": true,
+          "width": "full"
+        },
+        {
+          "id": "position",
+          "type": "position",
+          "label": "Alliance position",
+          "role": "alliancePosition",
+          "required": true
+        },
+        {
+          "id": "noShow",
+          "type": "toggle",
+          "label": "Robot didn't show up",
+          "role": "noShow"
+        }
       ]
     },
     {
@@ -29,9 +80,25 @@
       "title": "Auto",
       "durationSec": 30,
       "fields": [
-        { "id": "leave", "type": "toggle", "label": "LEAVE", "points": 3 },
-        { "id": "hiveTips", "type": "counter", "label": "HIVE TIPs", "points": 20 },
-        { "id": "park", "type": "toggle", "label": "PARK in loading zone", "points": 5 }
+        {
+          "id": "leave",
+          "type": "toggle",
+          "label": "LEAVE",
+          "points": 3
+        },
+        {
+          "id": "hiveTips",
+          "type": "counter",
+          "label": "HIVE TIPs",
+          "points": 20
+        },
+        {
+          "id": "park",
+          "type": "toggle",
+          "label": "PARK in loading zone",
+          "points": 5,
+          "hint": "At the end of Auto"
+        }
       ]
     },
     {
@@ -41,46 +108,125 @@
       "durationSec": 120,
       "note": "Count POLLEN and NECTAR together.",
       "fields": [
-        { "id": "hiveTips", "type": "counter", "label": "HIVE TIPs", "points": 20 },
-        { "id": "flower", "type": "counter", "label": "Into a FLOWER", "points": 2 },
-        { "id": "garden", "type": "counter", "label": "Into a GARDEN", "points": 1 },
-        { "id": "cell", "type": "counter", "label": "Into a CELL", "points": 2 },
         {
-          "id": "defense", "type": "choice", "label": "Defense played",
+          "id": "hiveTips",
+          "type": "counter",
+          "label": "HIVE TIPs",
+          "points": 20
+        },
+        {
+          "id": "flower",
+          "type": "counter",
+          "label": "Into a FLOWER",
+          "points": 2
+        },
+        {
+          "id": "garden",
+          "type": "counter",
+          "label": "Into a GARDEN",
+          "points": 1
+        },
+        {
+          "id": "cell",
+          "type": "counter",
+          "label": "Into a CELL",
+          "points": 2
+        },
+        {
+          "id": "defense",
+          "type": "choice",
+          "label": "Played defense",
           "options": [
-            { "value": "none", "label": "None" },
-            { "value": "some", "label": "Some" },
-            { "value": "heavy", "label": "Heavy" }
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "some",
+              "label": "Some"
+            },
+            {
+              "value": "heavy",
+              "label": "A lot"
+            }
           ]
         }
       ]
     },
     {
       "id": "end",
-      "label": "End",
-      "title": "End game",
+      "label": "Endgame",
+      "title": "Endgame",
       "fields": [
-        { "id": "park", "type": "toggle", "label": "PARK in loading zone", "points": 5 }
-      ]
+        {
+          "id": "park",
+          "type": "toggle",
+          "label": "PARK in loading zone",
+          "points": 5,
+          "hint": "At the end of the match"
+        }
+      ],
+      "showWith": "teleop"
     },
     {
       "id": "post",
-      "label": "Post",
-      "title": "Post-match",
+      "label": "After",
+      "title": "After the match",
       "fields": [
-        { "id": "driverSkill", "type": "rating", "label": "Driver skill", "min": 1, "max": 5 },
-        { "id": "broke", "type": "toggle", "label": "Robot broke or was disabled" },
-        { "id": "minorFouls", "type": "counter", "label": "Minor fouls" },
-        { "id": "majorFouls", "type": "counter", "label": "Major fouls" },
         {
-          "id": "card", "type": "choice", "label": "Card",
-          "options": [
-            { "value": "none", "label": "None" },
-            { "value": "yellow", "label": "Yellow" },
-            { "value": "red", "label": "Red" }
+          "id": "driverSkill",
+          "type": "rating",
+          "label": "Driver skill",
+          "min": 1,
+          "max": 4,
+          "labels": [
+            "Weak",
+            "OK",
+            "Good",
+            "Great"
           ]
         },
-        { "id": "notes", "type": "notes", "label": "Notes" }
+        {
+          "id": "broke",
+          "type": "toggle",
+          "label": "Robot broke or stopped moving"
+        },
+        {
+          "id": "minorFouls",
+          "type": "counter",
+          "label": "Minor fouls caused"
+        },
+        {
+          "id": "majorFouls",
+          "type": "counter",
+          "label": "Major fouls caused"
+        },
+        {
+          "id": "card",
+          "type": "choice",
+          "label": "Card received",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "yellow",
+              "label": "Yellow",
+              "color": "yellow"
+            },
+            {
+              "value": "red",
+              "label": "Red",
+              "color": "red"
+            }
+          ]
+        },
+        {
+          "id": "notes",
+          "type": "notes",
+          "label": "Notes"
+        }
       ]
     }
   ]

@@ -107,6 +107,12 @@ export async function createGroup({ program, teamNumber, name }) {
   return id;
 }
 
+// A Lead changes which game config the group scouts.
+export async function setGroupGame(groupId, gameConfigId) {
+  must(await sb.from('groups').update({ game_config_id: gameConfigId }).eq('id', groupId));
+  await refreshAccount();
+}
+
 // Members of a group, with their names. (Needs signal.)
 export async function listMembers(groupId) {
   const rows = must(await sb.from('memberships').select('user_id, role, joined_at').eq('group_id', groupId));

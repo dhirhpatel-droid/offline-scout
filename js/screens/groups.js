@@ -49,30 +49,42 @@ export async function renderGroups({ param }) {
 
   const empty = !groups.length;
 
+  // "Check for invites": asks the server again, with feedback either way.
+  const check = h('button', { class: `pill ${empty ? 'big' : 'secondary'} block`, type: 'button' }, 'Check for invites');
+  check.addEventListener('click', () => busy(check, 'Checking…', async () => {
+    if (!isOnline()) return message.show('No connection right now. Checking for invites needs signal.', 'error');
+    const invites = await myPendingInvites().catch((err) => { message.show(friendlyError(err), 'error'); return null; });
+    if (invites === null) return;
+    showInvites(invites);
+    message.show(invites.length ? `${invites.length} invite${invites.length > 1 ? 's' : ''} found.` : 'No invites yet. Ask your Lead to invite your email.', 'info');
+  }));
+
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
       groups.length ? h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')) : null,
-      h('h1', { tabindex: '-1' }, 'Scouting groups')),
+      h('h1', { tabindex: '-1' }, empty ? 'Join your team' : 'Scouting groups')),
     h('main', { class: 'content' },
+      empty ? h('div', { class: 'join-hero' },
+        h('p', { class: 'lede' }, 'Your Lead invites you to your team’s Scouting group. Ask them to send the invite to:'),
+        h('p', { class: 'join-email' }, profile?.email ?? 'your email'),
+        h('p', { class: 'plain' }, 'Invites show up here.')) : null,
       message.el,
       invitesSection,
       groups.length ? [h('h2', { class: 'section-h' }, 'Your groups'), h('ul', { class: 'rows' }, groupRows)] : null,
-      empty ? h('div', { class: 'empty-state' },
-        h('h2', {}, 'You’re not in a Scouting group yet'),
-        h('p', {}, `Create one for your team, or ask your Lead to invite ${profile?.email ?? 'your email'}. Invites show up here.`)) : null,
       h('div', { class: 'home-actions' },
-        h('a', { class: `pill ${empty ? 'big' : 'secondary'} block`, href: '#groups/new' }, 'Create a group'),
-        !isOnline() ? h('p', { class: 'plain' }, 'No connection: new invites will show once you have signal.') : null),
+        check,
+        h('a', { class: 'pill secondary block', href: '#groups/new' }, empty ? 'I’m a Lead: create a group' : 'Create another group')),
     ),
   );
 
+  function showInvites(invites) {
+    invitesSection.hidden = !invites.length;
+    invitesSection.replaceChildren(h('h2', { class: 'section-h' }, 'Invites for you'), h('ul', { class: 'rows' }, invites.map(inviteRow)));
+  }
+
   // With signal: look for new Invites, and redraw if your groups changed
   // (e.g. a Lead removed you or you joined somewhere on another phone).
-  myPendingInvites().then((invites) => {
-    if (!invites.length) return;
-    invitesSection.replaceChildren(h('h2', { class: 'section-h' }, 'Invites for you'), h('ul', { class: 'rows' }, invites.map(inviteRow)));
-    invitesSection.hidden = false;
-  }).catch(() => {});
+  myPendingInvites().then(showInvites).catch(() => {});
   refreshAccount().then(async (refreshed) => {
     if (refreshed && JSON.stringify(await cachedGroups()) !== JSON.stringify(groups) && location.hash === '#groups') {
       window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -83,12 +95,13 @@ export async function renderGroups({ param }) {
 
 function renderNewGroup() {
   const message = formMessage();
-  let program = 'FTC';
+  let program = null; // the Lead must choose: FTC and FRC team numbers are different
   const programGroup = h('div', { class: 'segmented wide', role: 'group', 'aria-labelledby': 'program-label' });
   const programButtons = PROGRAMS.map((p) => {
     const b = h('button', { type: 'button', 'aria-pressed': String(p === program) }, p);
     b.addEventListener('click', () => {
       program = p;
+      programError.hidden = true;
       programButtons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     });
     return b;
@@ -101,12 +114,13 @@ function renderNewGroup() {
   team.input.addEventListener('input', () => { team.input.value = team.input.value.replace(/\D/g, ''); });
   const name = formField('Group name', { type: 'text', autocapitalize: 'words', maxlength: 60, autocomplete: 'off' },
     'Usually your team’s name, e.g. Lo-Ellen Robotics.');
-  const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Create group');
+  const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Create group and become Lead');
+  const programError = h('p', { class: 'error-text', role: 'alert', hidden: true });
 
   const form = h('form', { class: 'form', novalidate: true },
     h('p', { class: 'lede' }, 'You’ll be its Lead: you invite your scouts and plan who watches what.'),
     message.el,
-    h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'program-label' }, 'Program'), programGroup),
+    h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'program-label' }, 'Program'), programGroup, programError),
     team.el, name.el,
     h('div', { class: 'actions' }, submit));
 
@@ -114,6 +128,8 @@ function renderNewGroup() {
     e.preventDefault();
     const values = { program, teamNumber: team.input.value, name: name.input.value };
     const errors = checkNewGroup(values);
+    programError.textContent = errors.program ?? '';
+    programError.hidden = !errors.program;
     team.setError(errors.teamNumber);
     name.setError(errors.name);
     if (Object.keys(errors).length) return;
@@ -131,7 +147,7 @@ function renderNewGroup() {
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
       h('a', { class: 'icon-btn', href: '#groups', 'aria-label': 'Back to groups' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'New Scouting group')),
+      h('h1', { tabindex: '-1' }, 'New group')),
     h('main', { class: 'content' }, form));
   return { el };
 }

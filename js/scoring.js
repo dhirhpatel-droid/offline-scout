@@ -25,6 +25,18 @@ export function estimatePoints(config, values) {
   return total;
 }
 
+// Estimated points per section, e.g. { pre: 0, auto: 23, teleop: 26, end: 5, post: 0 }.
+// Used for the breakdown on the "saved" screen. A no-show scores 0 everywhere.
+export function pointsBySection(config, values) {
+  const total = estimatePoints(config, values);
+  const result = {};
+  for (const section of config.sections) {
+    result[section.id] = total === 0 ? 0 : section.fields.reduce(
+      (sum, field) => sum + pointsForField(field, values[fieldKey(section.id, field.id)]), 0);
+  }
+  return result;
+}
+
 function pointsForField(field, value) {
   switch (field.type) {
     case 'toggle':
