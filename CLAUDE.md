@@ -26,7 +26,15 @@ form would not even open, so we lost scouting data when we needed it most.
 ## Decisions so far
 - **Platform:** installable web app (PWA): HTML/CSS/JavaScript. Dhir already knows web dev.
 - **Offline:** service worker caches the app; scouting data stored on-device (IndexedDB).
-- **Sync:** QR code export/import between devices.
+- **Sync:** through **Supabase** whenever there is signal (normally before entering and
+  after leaving the gym). The phone keeps the main copy. QR backup is a later, optional
+  Group setting (docs/adr/0001).
+- **Accounts:** email + password (Supabase Auth), required to scout. Leads invite by email;
+  no join codes (docs/adr/0002).
+- **Event data:** fetched by a Supabase server function, never from the app directly,
+  because the official FIRST APIs need secret keys (docs/adr/0003).
+- **Vocabulary:** GLOSSARY.md is the source of truth for words (Team, Scouting group,
+  Lead, Scout, Submission, Assignment...). Use those words in code, UI and docs.
 - **Game configs:** one config per season/program. FRC alliances = 3 robots, FTC = 2.
 - **Order:** FTC config first (FTC season is running now, so it can be tested at events
   this winter), FRC 2027 config after kickoff in January.
@@ -40,17 +48,17 @@ form would not even open, so we lost scouting data when we needed it most.
   huge condensed numbers (Archivo, self-hosted). One match period on screen at a time.
   Light theme for sunlight. Banned: purple gradients, card grids, emoji icons, centred
   heroes, spaced-out ALL-CAPS labels (Dhir: these "look AI").
-- **Scout lead (planned):** the lead creates the scouting group and assigns robots/matches
-  to each scout. Assignments must reach phones without internet (likely QR).
+- **Lead planning:** Leads assign by Position shift or Team watch; the app shows Coverage
+  but never assigns by itself, and shows only scheduled times (no running-late estimate
+  unless a Group setting turns it on).
 
 ## Not decided yet
-- QR payload format and size limits (how many matches per code)
-- How the lead scout merges data from many devices
-- How scout-lead assignments are delivered to phones
-- UI layout for match scouting vs pit scouting
+- QR payload format (QR backup is a later, optional Group setting)
+- Pit scouting layout (later)
+- Which FRC data source to use for FRC 2027 (official FRC Events API or The Blue Alliance)
 
 ## Timeline
-- Oct–Dec 2026: v1 — offline core, one FTC config, QR sync
+- Oct–Dec 2026: v1 — offline core, one FTC config, accounts + groups + sync, events and assignments
 - Winter 2026–27: test at FTC events
 - Jan 2027: add FRC 2027 config after kickoff
 - Feb–Apr 2027: use at FRC events, fix what breaks
@@ -67,9 +75,13 @@ form would not even open, so we lost scouting data when we needed it most.
   confirm the data is still there.
 
 ## Status
-- **Milestone 1 (done, Oct 2026):** offline core + FTC BIOBUZZ match scouting. Home, match
-  scouting, saved matches (edit/delete), settings. PWA, IndexedDB, works in airplane mode.
-- **Next:** QR export/import; scout-lead assignments; FRC 2027 config after kickoff.
+- **Milestone 1 (done, Oct 2026):** offline core + FTC BIOBUZZ match scouting on one phone.
+  Live at https://dhirhpatel-droid.github.io/offline-scout/
+- **Product vision agreed (Oct 17, 2026):** a Lead-planned scouting system with email
+  accounts, Scouting groups, Events from FIRST, Assignments, sync through Supabase, Lead
+  views, Data checks, Custom questions and Group settings. See PRODUCT.md, GLOSSARY.md,
+  docs/adr/ and **docs/roadmap.md** (milestone order and database tables).
+- **Next:** Milestone 2 in docs/roadmap.md.
 
 ## Commands
 - `npm start`: local server at http://localhost:8000 (no browser caching)
@@ -85,8 +97,13 @@ form would not even open, so we lost scouting data when we needed it most.
 - Never show text that implies internet is needed. The status line says "Saved on this device".
 - Colours and sizes only from `css/tokens.css`. Text contrast ≥ 4.5:1, control outlines
   ≥ 3:1, in-match targets ≥ 56px.
-- Design decisions go through the impeccable skill (`PRODUCT.md`, `.impeccable/`, and
-  `DESIGN.md` once written). ui-ux-pro-max is only for UX/accessibility checks.
+- **Every UI change goes through the impeccable skill** (`PRODUCT.md`, `DESIGN.md`,
+  `.impeccable/`) and is checked with **ui-ux-pro-max** for UX/accessibility before it
+  ships. ui-ux-pro-max never picks the visual style.
+- Never put secret keys (Supabase secret/service_role key, FIRST API keys) in the app or
+  the repo. Only the Supabase URL and publishable key go in the app.
+- Database changes are SQL migration files in `supabase/migrations/`, applied with
+  `npx supabase db push`. Every table has Row Level Security.
 - The in-app browser pane can't run service workers; test offline with `npm run test:offline`
   or on a real phone.
 
