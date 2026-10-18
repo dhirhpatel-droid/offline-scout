@@ -80,14 +80,26 @@ async function run(storeName, mode, makeRequest) {
   });
 }
 
-// Saved Submissions
+// Saved Submissions. A deleted one is kept (with deletedAt) until the group
+// has heard about the delete, but never shown.
 export const putSubmission = (sub) => run('submissions', 'readwrite', (s) => s.put(sub));
 export const getSubmission = (id) => run('submissions', 'readonly', (s) => s.get(id));
-export const deleteSubmission = (id) => run('submissions', 'readwrite', (s) => s.delete(id));
-export const countSubmissions = () => run('submissions', 'readonly', (s) => s.count());
-export async function listSubmissions() {
+export const removeSubmission = (id) => run('submissions', 'readwrite', (s) => s.delete(id));
+export async function listAllSubmissions() {
   const all = await run('submissions', 'readonly', (s) => s.getAll());
   return all.sort((a, b) => b.createdAt.localeCompare(a.createdAt)); // newest first
+}
+export async function listSubmissions() {
+  return (await listAllSubmissions()).filter((s) => !s.deletedAt);
+}
+export const countSubmissions = async () => (await listSubmissions()).length;
+
+// Deleting marks it, so the delete reaches the group on the next sync.
+export async function deleteSubmission(id) {
+  const sub = await getSubmission(id);
+  if (!sub) return;
+  const now = new Date().toISOString();
+  await putSubmission({ ...sub, deletedAt: now, updatedAt: now });
 }
 
 // The Draft (at most one at a time)

@@ -113,6 +113,14 @@ export async function setGroupGame(groupId, gameConfigId) {
   await refreshAccount();
 }
 
+// A Lead changes one Group setting (stored in groups.settings).
+export async function setGroupSetting(groupId, key, value) {
+  const group = (await cachedGroups()).find((g) => g.id === groupId);
+  const settings = { ...(group?.settings ?? {}), [key]: value };
+  must(await sb.from('groups').update({ settings }).eq('id', groupId));
+  await refreshAccount();
+}
+
 // Members of a group, with their names. (Needs signal.)
 export async function listMembers(groupId) {
   const rows = must(await sb.from('memberships').select('user_id, role, joined_at').eq('group_id', groupId));

@@ -17,7 +17,9 @@ import {
   newSubmission, refresh, missingRequired, nextMatchCarry, positionLabel, matchCode, syncStatus,
 } from '../submissions.js';
 import * as db from '../db.js';
-import { currentGroup, cachedProfile } from '../account.js';
+import { currentGroup, cachedProfile, currentUser } from '../account.js';
+import { syncNow } from '../sync.js';
+import { isLead } from '../group-rules.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -36,6 +38,12 @@ export async function renderMatch({ param }) {
     submission.values['pre.scout'] = profile.display_name;
     refresh(config, submission);
   }
+
+  // Someone else's match: Leads may edit it if the group allows; Scouts only view it.
+  const me = await currentUser();
+  const group = await currentGroup();
+  const othersMatch = editing && submission.scoutId && me && submission.scoutId !== me.id;
+  const readOnly = othersMatch && !(isLead(group) && (group.settings?.leadsCanEdit ?? true));
 
   // Tabs: sections that aren't shown inside another one.
   const tabSections = config.sections.filter((s) => !s.showWith);
@@ -70,7 +78,7 @@ export async function renderMatch({ param }) {
     tabs,
   );
 
-  const panel = h('main', { class: 'content period', role: 'tabpanel', id: 'period-panel' });
+  const panel = h('main', { class: `content period${readOnly ? ' read-only' : ''}`, role: 'tabpanel', id: 'period-panel', inert: readOnly });
   const bottombar = h('footer', { class: 'bottombar' });
   screen.append(header, panel, bottombar);
 
@@ -175,7 +183,11 @@ export async function renderMatch({ param }) {
     if (i === 0 && submission.summary.scout) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }
-    if (editing && i === tabSections.length - 1) panel.append(deleteButton());
+    if (readOnly) {
+      panel.prepend(h('p', { class: 'notice' }, `View only: ${submission.summary.scout ?? 'another scout'} scouted this match.`));
+    } else if (editing && i === tabSections.length - 1) {
+      panel.append(deleteButton());
+    }
     if (!editing && i === 0) panel.append(discardButton());
     screen.dataset.firstTab = String(i === 0); // points are hidden on Setup
     watchGuests(section);
@@ -215,7 +227,12 @@ export async function renderMatch({ param }) {
       && submission.values[`${sec.id}.${f.id}`] === true));
     const guest = unseenGuest();
     let action;
-    if (last || (noShow && !editing)) {
+    if (readOnly) {
+      action = last
+        ? h('a', { class: 'pill', href: '#saved' }, 'Back to matches')
+        : h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
+            `Next: ${tabSections[current + 1].label}`, icon('next', 20));
+    } else if (last || (noShow && !editing)) {
       // A robot that didn't show up has nothing more to record: save straight away.
       action = h('button', { class: 'pill', type: 'button', onclick: submit },
         editing ? 'Save changes' : noShow && !last ? `Save ${code} (no-show)` : `Save ${code}`);
@@ -244,6 +261,7 @@ export async function renderMatch({ param }) {
     await db.putSubmission(submission);
 
     if (editing) {
+      syncNow();
       location.hash = '#saved';
       return;
     }
@@ -270,6 +288,15 @@ export async function renderMatch({ param }) {
   function showFinish() {
     const code = matchCode(submission.summary);
     const carry = nextMatchCarry(submission);
+    // Starts as "On this phone"; becomes "Sent to your group" once the server has it.
+    const statusEl = h('p', { class: 'finish-status', role: 'status' }, icon('device', 18), h('span', {}, syncStatus(submission).text));
+    syncNow().then(async () => {
+      const latest = await db.getSubmission(submission.id);
+      if (!latest) return;
+      const st = syncStatus(latest);
+      statusEl.replaceChildren(icon(st.state === 'sent' ? 'check' : 'device', 18),
+        h('span', {}, st.state === 'sent' ? 'Sent to your group' : `${st.text} · sends when you have signal`));
+    });
     const nextCode = carry.match ? matchCode({ level: carry.level, match: carry.match }) : null;
     const parts = pointsBySection(config, submission.values);
     const breakdown = config.sections
@@ -290,7 +317,7 @@ export async function renderMatch({ param }) {
           h('span', { class: 'num' }, submission.estimatedPoints), h('span', {}, 'est. pts')),
         h('div', { class: 'parts' }, breakdown),
         h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
-        h('p', { class: 'finish-status' }, icon('device', 18), syncStatus(submission).text)),
+        statusEl),
       h('div', { class: 'finish-actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: startNext },
           nextCode ? `Scout ${nextCode}` : 'Scout the next match', icon('next', 22)),
@@ -363,6 +390,9 @@ export async function startNewMatch() {
   const config = await loadConfig(group?.game_config_id ?? configId);
   const scout = profile?.display_name || carry?.scout;
   const submission = newSubmission(config, { ...carry, scout, event: event ?? carry?.event });
+  // Whose match this is and which group it's for (used when it syncs).
+  submission.groupId = group?.id;
+  submission.scoutId = profile?.id;
   await db.putDraft(submission);
   return submission;
 }

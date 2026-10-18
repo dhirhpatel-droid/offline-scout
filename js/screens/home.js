@@ -4,16 +4,18 @@
 
 import { h, icon, formField, setThemeColor, confirmDialog } from '../ui.js';
 import { getSetting, setSetting, listSubmissions, clearDraft } from '../db.js';
-import { currentGroup } from '../account.js';
+import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
 import { whatsNext } from '../now-scouting.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [eventName, submissions, group, next] = await Promise.all([
-    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(),
+  const [eventName, all, group, next, me] = await Promise.all([
+    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), currentUser(),
   ]);
+  // My matches in this group (matches from before accounts existed count as mine).
+  const submissions = all.filter((s) => (!s.scoutId || s.scoutId === me?.id) && (!s.groupId || s.groupId === group.id));
 
   const unsent = submissions.filter(needsSync).length;
   const lead = isLead(group);
@@ -26,7 +28,7 @@ export async function renderHome() {
           h('div', {},
             h('div', { class: 'title' }, 'My matches'),
             h('div', { class: 'sub' }, submissions.length
-              ? `${submissions.length} on this phone${unsent ? ' · not sent yet' : ''}`
+              ? (unsent ? `${unsent} waiting to send` : 'All sent to your group')
               : 'None yet. Matches you save show up here.')),
           h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, submissions.length), icon('next', 20)))),
         h('li', {}, h('a', { class: 'row', href: '#group' },
@@ -43,7 +45,7 @@ export async function renderHome() {
     ),
     h('footer', { class: 'bottombar' },
       h('p', { class: 'status' }, icon('device', 18),
-        h('span', {}, submissions.length ? `${submissions.length} on this phone${unsent ? ' · not sent yet' : ''}` : 'Works with no signal'))),
+        h('span', {}, unsent ? `${unsent} waiting to send · sends when you have signal` : 'Works with no signal'))),
   );
 
   // The phone's status bar matches the block's colour.

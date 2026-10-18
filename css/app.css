@@ -740,3 +740,19 @@ a.row { color: inherit; }
   font-weight: 700;
   color: var(--text-2);
 }
+
+/* Mine / Everyone on the matches list */
+.list-switch { margin: var(--s2) 0 var(--s3); }
+.seg-link {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: var(--tap);
+  border-radius: 12px;
+  border: 2px solid var(--control-line);
+  font-weight: 700;
+}
+.seg-link[aria-pressed='true'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+.field.tile:disabled { border-style: dashed; color: var(--text-3); }
+/* Someone else's match, view only */
+.read-only .field, .read-only .field.tile { opacity: 0.85; }

@@ -62,6 +62,7 @@ export function needsSync(submission) {
   if (!submission.submittedAt) return false; // Drafts never sync
   return !submission.syncedAt || submission.updatedAt > submission.syncedAt;
 }
+// (js/sync-rules.js uses the same rule under the name hasUnsentChanges.)
 
 // Fields with "required": true that are still empty. Returns [{ section, field }].
 export function missingRequired(config, submission) {

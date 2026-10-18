@@ -6,6 +6,7 @@
 import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
 import {
   currentGroup, currentUser, listMembers, setRole, removeMember, listGroupInvites, cancelInvite, sendInvite,
+  setGroupSetting,
 } from '../account.js';
 import { groupLabel, isLead, isLastLead, sortMembers, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
@@ -122,6 +123,30 @@ export async function renderGroup() {
     });
   }
 
+  // Group settings (Leads only): how this group scouts.
+  const SETTINGS = [
+    ['scoutsSeeAll', false, 'Scouts see everyone’s matches', 'Off: Scouts see only what they scouted.'],
+    ['leadsCanEdit', true, 'Leads can edit scouts’ matches', 'Every change is kept, so nothing is lost.'],
+  ];
+  const settingsSection = lead ? h('section', {},
+    h('h2', { class: 'section-title sub' }, 'Group settings'),
+    ...SETTINGS.map(([key, fallback, label, hint]) => {
+      let on = group.settings?.[key] ?? fallback;
+      const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on), disabled: !isOnline() },
+        h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, isOnline() ? hint : 'Changing this needs signal')),
+        h('span', { class: 'tile-check', 'aria-hidden': 'true' }, icon('check', 26)));
+      tile.addEventListener('click', async () => {
+        on = !on;
+        tile.setAttribute('aria-pressed', String(on));
+        try { await setGroupSetting(group.id, key, on); } catch (err) {
+          on = !on;
+          tile.setAttribute('aria-pressed', String(on));
+          message.show(friendlyError(err), 'error');
+        }
+      });
+      return tile;
+    })) : null;
+
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');
   leave.addEventListener('click', async () => {
     const ok = await confirmDialog({
@@ -148,6 +173,7 @@ export async function renderGroup() {
       h('h2', { class: 'section-title sub' }, 'Members'),
       membersNote,
       membersList,
+      settingsSection,
       h('div', { class: 'danger-zone group-footer' },
         h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),

@@ -9,6 +9,7 @@ import { getSetting, setSetting, requestPersistentStorage } from './db.js';
 import { setThemeColor, applyTheme } from './ui.js';
 import { sb } from './supabase.js';
 import { currentUser, currentGroup, refreshAccount } from './account.js';
+import { startAutoSync } from './sync.js';
 import { renderHome } from './screens/home.js';
 import { renderMatch } from './screens/match.js';
 import { renderSaved } from './screens/saved.js';
@@ -108,4 +109,11 @@ window.addEventListener('hashchange', route);
 route();
 registerServiceWorker();
 requestPersistentStorage();
-refreshAccount(); // pick up group changes whenever there's signal
+startAutoSync(); // send and receive Submissions whenever there's signal
+
+// When a sync brings in or sends something, redraw lists that show it.
+window.addEventListener('scout-sync', (e) => {
+  const { sent, received } = e.detail;
+  const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
+  if ((sent || received) && ['home', 'saved'].includes(name)) route();
+});
