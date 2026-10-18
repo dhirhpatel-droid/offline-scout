@@ -59,10 +59,14 @@ input, textarea { caret-color: var(--text); }
   min-height: 60px;
   padding: max(env(safe-area-inset-top), var(--s2)) var(--s2) var(--s2);
 }
+.topbar > h1:first-child, .topbar > .wordmark:first-child { padding-left: var(--s2); }
 .topbar h1 {
   font-size: var(--fs-xl);
   font-weight: 800;
   flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 .topbar .wordmark {
   font-stretch: 75%;
@@ -287,6 +291,12 @@ input, textarea { caret-color: var(--text); }
   color: var(--on-alliance);
 }
 .toggle-row .segmented button { min-width: 72px; }
+/* Outside the match screen there's no alliance colour: selections use the
+   strong main colour so they're easy to tell apart. */
+.screen:not([data-alliance]) .segmented button[aria-pressed='true'] {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+}
 /* "No" on a Yes/No toggle is the resting state, so it stays neutral. */
 .segmented button[data-off][aria-pressed='true'] {
   background: var(--surface-2);
@@ -334,6 +344,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 /* ---------- Home ---------- */
 
+.home-group { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s2); }
 .home-event { padding-top: var(--s4); }
 .home .field { border-bottom: 0; }
 .home-actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
@@ -434,3 +445,100 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   .pill:active, .round:active { transform: none; }
   .pill, .round { transition: none; }
 }
+
+/* ---------- Forms: sign in, groups, invites ---------- */
+
+.form { display: grid; gap: var(--s1); }
+.form .field { border-bottom: 0; padding: var(--s2) 0; }
+.form .actions { display: grid; gap: var(--s3); margin-top: var(--s4); }
+.screen-title { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; padding: var(--s4) 0 var(--s2); }
+.lede { color: var(--text-2); margin-bottom: var(--s3); max-width: 36ch; }
+
+/* Show/Hide sits inside the password box, on the right. */
+.input-wrap { position: relative; }
+.input-wrap .input { padding-right: 88px; }
+.reveal {
+  position: absolute;
+  right: var(--s1);
+  top: calc(50% + var(--s2) / 2); /* middle of the box (the box has an 8px gap above it) */
+  transform: translateY(-50%);
+  min-height: 48px;
+  min-width: 72px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.form-message {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+.form-message[data-kind='error'] { color: var(--danger); }
+
+.link-btn {
+  min-height: 48px;
+  padding: 0;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pill:disabled { opacity: 0.6; }
+
+/* ---------- Groups and members ---------- */
+
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 48px;
+  padding: 0 var(--s3);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.group-chip .num { font-size: var(--fs-md); }
+
+.rows { list-style: none; padding: 0; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 64px;
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.row .title { font-weight: 700; }
+.row .sub { font-size: var(--fs-sm); color: var(--text-2); }
+.row .row-actions { display: flex; gap: var(--s2); }
+a.row { color: inherit; }
+.role-tag {
+  display: inline-block;
+  margin-left: var(--s2);
+  padding: 2px var(--s2);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  vertical-align: 2px;
+}
+.small-btn {
+  min-height: 48px;
+  padding: 0 var(--s3);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.small-btn.danger { color: var(--danger); background: transparent; }
+.small-btn.primary { background: var(--primary-bg); color: var(--primary-text); }
+.group-footer { display: grid; justify-items: start; gap: var(--s1); margin-top: var(--s5); }
+.group-footer .text-btn { padding-left: 0; }
+.section-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin: var(--s5) 0 var(--s1); }

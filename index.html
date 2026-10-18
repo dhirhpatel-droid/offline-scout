@@ -20,6 +20,19 @@
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/app.css">
+  <script>
+    // Email links (confirm, invite, password reset) come back as
+    // #access_token=...&type=invite (or #error=...). Remember what kind of link
+    // it was before supabase-js reads and removes it. See js/app.js.
+    (function () {
+      var p = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
+      if (p.get('access_token') || p.get('error')) {
+        window.__authLink = { type: p.get('type'), error: p.get('error_description') || p.get('error') };
+      }
+    })();
+  </script>
+  <!-- Supabase's library (sign-in and the shared database), kept in vendor/ so it works offline -->
+  <script src="vendor/supabase-2.117.2.js"></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>

@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -25,6 +25,10 @@ const APP_FILES = [
   'css/app.css',
   'fonts/archivo-latin.woff2',
   'js/app.js',
+  'js/supabase.js',
+  'js/account.js',
+  'js/group-rules.js',
+  'vendor/supabase-2.117.2.js',
   'js/ui.js',
   'js/db.js',
   'js/config.js',
@@ -35,6 +39,9 @@ const APP_FILES = [
   'js/screens/match.js',
   'js/screens/saved.js',
   'js/screens/settings.js',
+  'js/screens/auth.js',
+  'js/screens/groups.js',
+  'js/screens/group.js',
   'configs/index.json',
   'configs/ftc-2026-biobuzz.json',
   'icons/icon-192.png',
@@ -72,6 +79,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(caches.match('index.html').then((cached) => cached || fetch(request)));
     return;
   }
+
+  // Calls to Supabase (sign-in, the database) always go to the network:
+  // caching them would show stale or someone else's data.
+  if (new URL(request.url).origin !== self.location.origin) return;
 
   // Everything else: cache first, network as a fallback.
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));

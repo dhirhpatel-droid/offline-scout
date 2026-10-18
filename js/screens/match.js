@@ -11,6 +11,7 @@ import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { newSubmission, refresh, missingRequired, nextMatchCarry, positionLabel } from '../submissions.js';
 import * as db from '../db.js';
+import { currentGroup, cachedProfile } from '../account.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -229,12 +230,14 @@ export async function renderMatch({ param }) {
 }
 
 // Creates and saves a fresh draft, pre-filled from settings and the last match.
+// The scout's name comes from their account; the game config from their group.
 async function startNewMatch() {
-  const [configId, scout, event, carry] = await Promise.all([
-    db.getSetting('configId'), db.getSetting('scoutName'), db.getSetting('eventName'), db.getSetting('nextCarry'),
+  const [group, profile, configId, event, carry] = await Promise.all([
+    currentGroup(), cachedProfile(), db.getSetting('configId'), db.getSetting('eventName'), db.getSetting('nextCarry'),
   ]);
-  const config = await loadConfig(configId);
-  const submission = newSubmission(config, { ...carry, scout: scout || carry?.scout, event: event ?? carry?.event });
+  const config = await loadConfig(group?.game_config_id ?? configId);
+  const scout = profile?.display_name || carry?.scout;
+  const submission = newSubmission(config, { ...carry, scout, event: event ?? carry?.event });
   await db.putDraft(submission);
   return submission;
 }

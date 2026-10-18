@@ -87,6 +87,29 @@ try {
   // ---- 1. first visit, online ----
   step('Opening the app online (first visit)');
   await load(APP);
+  // The app needs a signed-in person with a Scouting group. A test can't create
+  // real accounts, so it saves a pretend login and group on this "phone",
+  // exactly where supabase-js and js/account.js keep them. Nothing here talks to
+  // the server: everything after this point happens offline anyway.
+  await run(`
+    const ref = 'mfjuzvfdoaqztxzencot';
+    const user = { id: '00000000-0000-4000-8000-0000000000aa', email: 'offline-test@example.com', aud: 'authenticated', role: 'authenticated', user_metadata: { display_name: 'Offline Test' } };
+    localStorage.setItem('sb-' + ref + '-auth-token', JSON.stringify({
+      access_token: 'offline-test', refresh_token: 'offline-test', token_type: 'bearer',
+      expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 365 * 86400, user,
+    }));
+    const db = await new Promise((ok, fail) => { const r = indexedDB.open('offline-scout'); r.onsuccess = () => ok(r.result); r.onerror = () => fail(r.error); });
+    await new Promise((ok, fail) => {
+      const tx = db.transaction('settings', 'readwrite');
+      const s = tx.objectStore('settings');
+      s.put({ id: user.id, email: user.email, display_name: 'Offline Test' }, 'profile');
+      s.put([{ id: 'test-group', program: 'FTC', team_number: 4069, name: 'Test group', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {} }], 'groups');
+      s.put('test-group', 'currentGroupId');
+      tx.oncomplete = ok; tx.onerror = () => fail(tx.error);
+    });
+    db.close();
+    return true;
+  `);
   await waitFor('await navigator.serviceWorker.ready; return true', 'service worker');
   await load(APP); // second load: now the service worker controls the page
   const cached = await run(`const c = await caches.open((await caches.keys())[0]); return (await c.keys()).length`);
@@ -118,7 +141,6 @@ try {
       input.value = value;
       input.dispatchEvent(new Event('input'));
     };
-    type('Scout name', 'Offline Test');
     type('Match number', '42');
     type('Team number', '4069');
     [...document.querySelectorAll('.segmented button')].find((b) => b.textContent === 'Blue 1').click();

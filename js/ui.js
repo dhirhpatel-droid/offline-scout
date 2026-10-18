@@ -90,3 +90,76 @@ export function applyTheme(theme) {
   else delete document.documentElement.dataset.theme;
   setThemeColor(null);
 }
+
+// ---------- forms (sign in, create group, invite) ----------
+
+let formUid = 0;
+
+// A labelled input with room for an error message. Returns { el, input, setError }.
+// attrs go on the <input> (type, autocomplete, inputmode...).
+export function formField(label, attrs = {}, hint = null) {
+  const id = `ff${++formUid}`;
+  const errorId = `${id}-err`;
+  const input = h('input', { id, class: 'input', 'aria-describedby': errorId, ...attrs });
+  const error = h('p', { id: errorId, class: 'error-text', hidden: true });
+  const el = h('div', { class: 'field' },
+    h('label', { class: 'field-label', for: id }, label),
+    hint && h('p', { class: 'field-hint' }, hint),
+    input, error);
+  function setError(message) {
+    // The first field with a problem gets focus, so it's easy to fix.
+    if (message && !document.querySelector('.field.invalid')) queueMicrotask(() => input.focus());
+    el.classList.toggle('invalid', Boolean(message));
+    input.setAttribute('aria-invalid', String(Boolean(message)));
+    error.textContent = message ?? '';
+    error.hidden = !message;
+  }
+  input.addEventListener('input', () => setError(null));
+  return { el, input, setError };
+}
+
+// A password field with a Show/Hide button (easier to type right on a phone).
+export function passwordField(label, autocomplete) {
+  const f = formField(label, { type: 'password', autocomplete, minlength: 8, autocapitalize: 'off', spellcheck: 'false' });
+  const toggle = h('button', { type: 'button', class: 'reveal', 'aria-pressed': 'false' }, 'Show');
+  toggle.addEventListener('click', () => {
+    const show = f.input.type === 'password';
+    f.input.type = show ? 'text' : 'password';
+    toggle.textContent = show ? 'Hide' : 'Show';
+    toggle.setAttribute('aria-pressed', String(show));
+    toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  });
+  toggle.setAttribute('aria-label', 'Show password');
+  const wrap = h('div', { class: 'input-wrap' });
+  f.input.replaceWith(wrap);
+  wrap.append(f.input, toggle);
+  return f;
+}
+
+// A message box for a whole form ("Check your email", "No connection").
+// kind: 'error' (announced right away) or 'info'.
+export function formMessage() {
+  const el = h('p', { class: 'form-message', hidden: true });
+  function show(text, kind = 'info') {
+    el.textContent = text ?? '';
+    el.hidden = !text;
+    el.dataset.kind = kind;
+    el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+  }
+  return { el, show };
+}
+
+// Disables a button and swaps its text while something is saving.
+export async function busy(button, text, task) {
+  const before = button.textContent;
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  button.textContent = text;
+  try {
+    return await task();
+  } finally {
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    button.textContent = before;
+  }
+}
