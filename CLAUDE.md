@@ -85,11 +85,17 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Milestone 1.5 (done, Oct 17, 2026):** groundwork. Code and phone storage now match
   GLOSSARY.md (Submissions with UUIDs, Alliance position, Match level, sync marker);
   Milestone 1 data upgrades on the phone.
-- **Next:** Milestone 2 (accounts and Scouting groups) in docs/roadmap.md.
+- **Milestone 2 (built Oct 18, 2026; waiting on Dhir's real-account test):** email
+  accounts, Scouting groups, email Invites, roles. Database in `supabase/migrations/`
+  (applied), invite emails via `supabase/functions/send-invite` (deployed).
+- **Next:** Milestone 3 (sync of Submissions) in docs/roadmap.md.
 
 ## Commands
 - `npm start`: local server at http://localhost:8000 (no browser caching)
 - `npm test`: unit tests (scoring, config validation, Submissions)
+- `npx supabase db push`: apply new migrations to the real database (dry run first with
+  `--dry-run`). `npx supabase functions deploy <name> --use-api`: deploy a server function.
+- Database rules are tested in `tests/database.test.js` (PGlite, no real data touched).
 - `npm run test:offline`: loads the app in headless Chrome, **stops the server**, scouts
   and saves a match, reloads, checks it's still there. Run it before every release.
 
@@ -108,6 +114,8 @@ form would not even open, so we lost scouting data when we needed it most.
   the repo. Only the Supabase URL and publishable key go in the app.
 - Database changes are SQL migration files in `supabase/migrations/`, applied with
   `npx supabase db push`. Every table has Row Level Security.
+- Claude can't create real accounts on the live Supabase project; real sign-up/invite
+  testing is done by Dhir. The offline test uses a pretend saved login.
 - The in-app browser pane can't run service workers; test offline with `npm run test:offline`
   or on a real phone.
 

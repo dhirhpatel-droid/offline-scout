@@ -26,7 +26,7 @@ No install, no build step. You need Python 3 (already on Macs).
 
 ```bash
 npm start            # = python3 scripts/serve.py → http://localhost:8000
-npm test             # unit tests (scoring, configs, Submissions)
+npm test             # unit tests + database rule tests
 npm run test:offline # real offline test in headless Chrome
 ```
 
@@ -39,14 +39,20 @@ sw.js                    service worker: caches every file → works offline
 css/tokens.css           all colours, sizes, fonts (dark + light themes)
 css/app.css              layout and components
 fonts/                   Archivo, self-hosted so it works offline (OFL licence)
-js/app.js                start-up: theme, service worker, #hash router
+js/app.js                start-up: theme, service worker, sign-in check, #hash router
+js/supabase.js           the connection to Supabase (URL + publishable key only)
+js/account.js            sign in/up, Scouting groups, members, invites (+ phone copy)
+js/group-rules.js        checks for forms and roles (no network, tested)
 js/db.js                 IndexedDB: Submissions, the Draft, settings (+ upgrades)
 js/config.js             loads + validates game configs, finds fields by role
 js/scoring.js            estimated points from a config + values (pure function)
 js/submissions.js        Submissions: creating, summaries, next match, Alliance positions
 js/fields.js             turns a config field into a widget (counter, Yes/No…)
 js/ui.js                 small helpers: h() element builder, icons, dialog
-js/screens/*.js          home, match, saved, settings
+js/screens/*.js          home, match, saved, settings, auth, groups, group
+vendor/                  supabase-js, kept in the repo so it works offline
+supabase/migrations/     database tables and security rules (SQL)
+supabase/functions/      server code that needs secret keys (sending invites)
 configs/                 one JSON per game + index.json listing them
 tests/                   node --test unit tests
 scripts/                 dev server, offline test, icon generator
