@@ -37,6 +37,8 @@
   --blue: #2160e0;
   --neutral-alliance: #3a3a41; /* before an alliance is picked */
   --on-alliance: #ffffff;
+  --tab-track: rgb(0 0 0 / 0.22); /* darkens the alliance colour behind the period tabs */
+  --scrim: rgb(0 0 0 / 0.6);      /* dims the screen behind the confirm sheet */
   --alliance: var(--neutral-alliance);
 
   /* Type: one family. Condensed heavy for numbers, normal width for words. */

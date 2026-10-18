@@ -5,31 +5,66 @@
 // objects, holds far more, and is what installed web apps are expected to use.
 //
 // Three "object stores" (like tables):
-//   entries  – submitted matches, keyed by entry.id
-//   drafts   – the match being scouted right now, autosaved on every tap
-//   settings – small key/value things: scout name, event name, theme, game config
+//   submissions – saved Submissions, keyed by submission.id
+//   drafts      – the Draft being scouted right now, autosaved on every tap
+//   settings    – small key/value things: scout name, event name, theme, game config
+
+import { fromMilestone1 } from './submissions.js';
 
 const DB_NAME = 'offline-scout';
-const DB_VERSION = 1;
+// Version history:
+//   1 – Milestone 1: "entries" store
+//   2 – Milestone 1.5: "entries" became "submissions" (UUIDs, Alliance position)
+const DB_VERSION = 2;
 
 let dbPromise;
 
 function openDb() {
   dbPromise ??= new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    // Runs the first time, or when DB_VERSION goes up: create the stores.
-    request.onupgradeneeded = () => {
+    // Runs the first time, or when DB_VERSION goes up. "oldVersion" says what
+    // the phone had before (0 = brand new), so each step upgrades from there.
+    request.onupgradeneeded = (event) => {
       const db = request.result;
-      if (!db.objectStoreNames.contains('entries')) {
-        db.createObjectStore('entries', { keyPath: 'id' }).createIndex('createdAt', 'createdAt');
+      const tx = request.transaction;
+      if (event.oldVersion < 1) {
+        db.createObjectStore('drafts');
+        db.createObjectStore('settings');
       }
-      if (!db.objectStoreNames.contains('drafts')) db.createObjectStore('drafts');
-      if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
+      if (event.oldVersion < 2) {
+        db.createObjectStore('submissions', { keyPath: 'id' }).createIndex('createdAt', 'createdAt');
+        if (event.oldVersion >= 1) upgradeFromMilestone1(db, tx);
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+    // Another open tab still has the old version: ask the user to close it.
+    request.onblocked = () => console.warn('Close other Offline Scout tabs to finish updating.');
   });
   return dbPromise;
+}
+
+// Copies every Milestone 1 entry (and the Draft) into the new format, then
+// removes the old store. Runs inside the upgrade, so it's all-or-nothing:
+// if anything fails, the phone keeps version 1 and nothing is lost.
+function upgradeFromMilestone1(db, tx) {
+  const entries = tx.objectStore('entries');
+  const submissions = tx.objectStore('submissions');
+  entries.openCursor().onsuccess = (e) => {
+    const cursor = e.target.result;
+    if (cursor) {
+      submissions.put(fromMilestone1(cursor.value));
+      cursor.continue();
+    } else {
+      db.deleteObjectStore('entries');
+    }
+  };
+  const drafts = tx.objectStore('drafts');
+  drafts.get('current').onsuccess = (e) => {
+    if (e.target.result) drafts.put(fromMilestone1(e.target.result), 'current');
+  };
+  // "Next match" memory used the old alliance colour; start fresh.
+  tx.objectStore('settings').delete('nextCarry');
 }
 
 // Runs one request inside a transaction and waits until the data is really
@@ -45,19 +80,19 @@ async function run(storeName, mode, makeRequest) {
   });
 }
 
-// Saved matches
-export const putEntry = (entry) => run('entries', 'readwrite', (s) => s.put(entry));
-export const getEntry = (id) => run('entries', 'readonly', (s) => s.get(id));
-export const deleteEntry = (id) => run('entries', 'readwrite', (s) => s.delete(id));
-export const countEntries = () => run('entries', 'readonly', (s) => s.count());
-export async function listEntries() {
-  const all = await run('entries', 'readonly', (s) => s.getAll());
+// Saved Submissions
+export const putSubmission = (sub) => run('submissions', 'readwrite', (s) => s.put(sub));
+export const getSubmission = (id) => run('submissions', 'readonly', (s) => s.get(id));
+export const deleteSubmission = (id) => run('submissions', 'readwrite', (s) => s.delete(id));
+export const countSubmissions = () => run('submissions', 'readonly', (s) => s.count());
+export async function listSubmissions() {
+  const all = await run('submissions', 'readonly', (s) => s.getAll());
   return all.sort((a, b) => b.createdAt.localeCompare(a.createdAt)); // newest first
 }
 
-// The in-progress match (one at a time)
+// The Draft (at most one at a time)
 export const getDraft = () => run('drafts', 'readonly', (s) => s.get('current'));
-export const putDraft = (entry) => run('drafts', 'readwrite', (s) => s.put(entry, 'current'));
+export const putDraft = (sub) => run('drafts', 'readwrite', (s) => s.put(sub, 'current'));
 export const clearDraft = () => run('drafts', 'readwrite', (s) => s.delete('current'));
 
 // Settings

@@ -23,10 +23,11 @@ test('the same format works for an FRC game with 3-robot alliances', () => {
     sections: [
       { id: 'pre', label: 'Pre', fields: [
         { id: 'scout', type: 'text', label: 'Scout', role: 'scoutName' },
+        { id: 'level', type: 'choice', label: 'Level', role: 'matchLevel',
+          options: [{ value: 'qual', label: 'Qualification' }, { value: 'playoff', label: 'Playoff' }] },
         { id: 'match', type: 'number', label: 'Match', role: 'matchNumber' },
         { id: 'team', type: 'number', label: 'Team', role: 'teamNumber' },
-        { id: 'alliance', type: 'choice', label: 'Alliance', role: 'alliance',
-          options: [{ value: 'red', label: 'Red' }, { value: 'blue', label: 'Blue' }] },
+        { id: 'position', type: 'position', label: 'Alliance position', role: 'alliancePosition' },
       ] },
       { id: 'auto', label: 'Auto', durationSec: 15, fields: [
         { id: 'coral', type: 'counter', label: 'Coral L4', points: 7 },
@@ -52,5 +53,6 @@ test('mistakes in a config are reported clearly', () => {
 
 test('findRole finds the field behind each role', () => {
   assert.equal(findRole(biobuzz, 'teamNumber').key, 'pre.team');
-  assert.equal(findRole(biobuzz, 'alliance').field.options.length, 2);
+  assert.equal(findRole(biobuzz, 'alliancePosition').field.type, 'position');
+  assert.equal(findRole(biobuzz, 'matchLevel').key, 'pre.level');
 });

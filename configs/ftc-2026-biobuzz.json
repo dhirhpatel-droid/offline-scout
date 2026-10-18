@@ -1,6 +1,6 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 1,
+  "version": 2,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
@@ -12,13 +12,14 @@
       "label": "Pre",
       "title": "Pre-match",
       "fields": [
-        { "id": "scout", "type": "text", "label": "Scout name", "role": "scoutName", "required": true },
+        { "id": "scout", "type": "text", "label": "Scout name", "role": "scoutName", "required": true, "width": "half" },
+        {
+          "id": "level", "type": "choice", "label": "Match level", "role": "matchLevel", "required": true, "width": "half",
+          "options": [ { "value": "qual", "label": "Qual" }, { "value": "playoff", "label": "Playoff" } ]
+        },
         { "id": "match", "type": "number", "label": "Match number", "role": "matchNumber", "required": true },
         { "id": "team", "type": "number", "label": "Team number", "role": "teamNumber", "required": true },
-        {
-          "id": "alliance", "type": "choice", "label": "Alliance", "role": "alliance", "required": true,
-          "options": [ { "value": "red", "label": "Red" }, { "value": "blue", "label": "Blue" } ]
-        },
+        { "id": "position", "type": "position", "label": "Alliance position", "role": "alliancePosition", "required": true },
         { "id": "noShow", "type": "toggle", "label": "Robot no-show", "role": "noShow" }
       ]
     },

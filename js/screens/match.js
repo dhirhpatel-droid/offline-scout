@@ -3,30 +3,30 @@
 //   #match       – the match being scouted now (the draft). Created if needed.
 //   #match/<id>  – view or edit a saved match.
 //
-// Every tap updates the entry and saves it straight away (draft or saved
-// match), so closing the tab or a phone dying mid-match loses nothing.
+// Every tap updates the Submission and saves it straight away (Draft or saved
+// Submission), so closing the tab or a phone dying mid-match loses nothing.
 
 import { h, icon, savedStatus, confirmDialog, setThemeColor } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
-import { newEntry, refresh, missingRequired, nextMatchCarry } from '../entries.js';
+import { newSubmission, refresh, missingRequired, nextMatchCarry, positionLabel } from '../submissions.js';
 import * as db from '../db.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
-  let entry = editing ? await db.getEntry(param) : await db.getDraft();
+  let submission = editing ? await db.getSubmission(param) : await db.getDraft();
 
-  if (editing && !entry) {
+  if (editing && !submission) {
     return { el: notFound() };
   }
-  if (!entry) entry = await startNewMatch();
+  if (!submission) submission = await startNewMatch();
 
-  const config = await loadConfig(entry.configId);
+  const config = await loadConfig(submission.configId);
   const screen = h('div', { class: 'screen' });
 
   // Start on Pre-match if something needed there is still empty
   // (the team number, on a fresh match); otherwise on Auto.
-  let current = missingRequired(config, entry).length ? 0 : Math.min(1, config.sections.length - 1);
+  let current = missingRequired(config, submission).length ? 0 : Math.min(1, config.sections.length - 1);
 
   // ---------- header ----------
   const backBtn = h('a', {
@@ -52,32 +52,32 @@ export async function renderMatch({ param }) {
   screen.append(header, panel, bottombar);
 
   function updateHeader() {
-    const { match, team, alliance } = entry.summary;
+    const { level, match, team, position, alliance } = submission.summary;
     screen.dataset.alliance = alliance ?? 'none';
     teamEl.textContent = team ?? 'Team —';
     teamEl.classList.toggle('empty', !team);
-    const allianceText = alliance ? `${alliance[0].toUpperCase()}${alliance.slice(1)} alliance` : 'No alliance yet';
-    metaEl.textContent = `${match ? `Match ${match}` : 'Match —'} · ${allianceText}`;
+    const matchText = `${level === 'playoff' ? 'Playoff' : 'Match'} ${match ?? '—'}`;
+    metaEl.textContent = `${matchText} · ${position ? positionLabel(position) : 'No position yet'}`;
     // When the estimate goes up, the header number jumps too.
     // (Not on first draw, when the number is still empty.)
-    if (pointsEl.textContent !== '' && Number(pointsEl.textContent) < entry.points) {
+    if (pointsEl.textContent !== '' && Number(pointsEl.textContent) < submission.estimatedPoints) {
       pointsEl.classList.remove('jump');
       void pointsEl.offsetWidth;
       pointsEl.classList.add('jump');
     }
-    pointsEl.textContent = entry.points;
+    pointsEl.textContent = submission.estimatedPoints;
     // Tint the phone's status bar with the alliance colour.
     setThemeColor(getComputedStyle(screen).getPropertyValue('--alliance').trim());
   }
 
   async function save() {
-    refresh(config, entry);
-    if (editing) await db.putEntry(entry);
-    else await db.putDraft(entry);
+    refresh(config, submission);
+    if (editing) await db.putSubmission(submission);
+    else await db.putDraft(submission);
   }
 
   function onFieldChange(section, field, value) {
-    entry.values[`${section.id}.${field.id}`] = value;
+    submission.values[`${section.id}.${field.id}`] = value;
     // Remember the scout's name for next time.
     if (field.role === 'scoutName') db.setSetting('scoutName', value);
     // Clear the "needed" message once the field is filled in.
@@ -94,7 +94,7 @@ export async function renderMatch({ param }) {
   let frame = 0;
   function updateHeaderSoon() {
     cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(() => { refresh(config, entry); updateHeader(); });
+    frame = requestAnimationFrame(() => { refresh(config, submission); updateHeader(); });
   }
 
   // ---------- tabs + panel ----------
@@ -132,7 +132,7 @@ export async function renderMatch({ param }) {
       h('h2', { class: 'section-title' }, section.title ?? section.label, duration),
       section.note ? h('p', { class: 'section-note' }, section.note) : '',
       ...section.fields.map((field) =>
-        renderField(field, entry.values[`${section.id}.${field.id}`], (v) => onFieldChange(section, field, v))),
+        renderField(field, submission.values[`${section.id}.${field.id}`], (v) => onFieldChange(section, field, v), config)),
     );
     if (editing && i === config.sections.length - 1) panel.append(deleteButton());
     renderBottombar();
@@ -150,21 +150,21 @@ export async function renderMatch({ param }) {
 
   // ---------- submit / next match ----------
   async function submit() {
-    refresh(config, entry);
-    const missing = missingRequired(config, entry);
+    refresh(config, submission);
+    const missing = missingRequired(config, submission);
     if (missing.length) {
       showMissing(missing);
       return;
     }
-    entry.submittedAt ??= new Date().toISOString();
-    await db.putEntry(entry);
+    submission.submittedAt ??= new Date().toISOString();
+    await db.putSubmission(submission);
 
     if (editing) {
       location.hash = '#saved';
       return;
     }
     await db.clearDraft();
-    await db.setSetting('nextCarry', nextMatchCarry(entry));
+    await db.setSetting('nextCarry', nextMatchCarry(submission));
     showDone();
   }
 
@@ -181,13 +181,13 @@ export async function renderMatch({ param }) {
   }
 
   function showDone() {
-    const { match, team } = entry.summary;
-    const carry = nextMatchCarry(entry);
+    const { match, team } = submission.summary;
+    const carry = nextMatchCarry(submission);
     tabs.hidden = true;
     panel.removeAttribute('role');
     panel.replaceChildren(h('section', { class: 'done' },
       h('h2', { tabindex: '-1' }, `Match ${match} saved`),
-      h('p', {}, `Team ${team} · ${entry.points} estimated points.`),
+      h('p', {}, `Team ${team} · ${submission.estimatedPoints} estimated points.`),
       h('div', { class: 'actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: startNext },
           carry.match ? `Scout match ${carry.match}` : 'Scout next match'),
@@ -212,14 +212,14 @@ export async function renderMatch({ param }) {
   }
 
   async function onDelete() {
-    const { match, team } = entry.summary;
+    const { match, team } = submission.summary;
     const ok = await confirmDialog({
       title: 'Delete this match?',
       body: `Match ${match ?? '—'}, team ${team ?? '—'} will be removed from this device. This can't be undone.`,
       confirmLabel: 'Delete match',
     });
     if (!ok) return;
-    await db.deleteEntry(entry.id);
+    await db.deleteSubmission(submission.id);
     location.hash = '#saved';
   }
 
@@ -234,9 +234,9 @@ async function startNewMatch() {
     db.getSetting('configId'), db.getSetting('scoutName'), db.getSetting('eventName'), db.getSetting('nextCarry'),
   ]);
   const config = await loadConfig(configId);
-  const entry = newEntry(config, { ...carry, scout: scout || carry?.scout, event: event ?? carry?.event });
-  await db.putDraft(entry);
-  return entry;
+  const submission = newSubmission(config, { ...carry, scout: scout || carry?.scout, event: event ?? carry?.event });
+  await db.putDraft(submission);
+  return submission;
 }
 
 function formatDuration(sec) {

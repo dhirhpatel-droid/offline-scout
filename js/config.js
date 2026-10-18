@@ -3,12 +3,12 @@
 // and the fields scouts fill in. The app builds every screen from it, so a new
 // season (or FRC) means a new JSON file, not new code.
 
-export const FIELD_TYPES = ['text', 'number', 'choice', 'toggle', 'counter', 'rating', 'notes'];
+export const FIELD_TYPES = ['text', 'number', 'choice', 'toggle', 'counter', 'rating', 'notes', 'position'];
 
 // Roles tell the app which fields carry special meaning (the header, the
 // "next match" button), so the app never depends on one game's field names.
-export const ROLES = ['scoutName', 'matchNumber', 'teamNumber', 'alliance', 'noShow'];
-const REQUIRED_ROLES = ['scoutName', 'matchNumber', 'teamNumber', 'alliance'];
+export const ROLES = ['scoutName', 'matchLevel', 'matchNumber', 'teamNumber', 'alliancePosition', 'noShow'];
+const REQUIRED_ROLES = ['scoutName', 'matchLevel', 'matchNumber', 'teamNumber', 'alliancePosition'];
 
 // Returns a list of problems. An empty list means the config is valid.
 export function validateConfig(config) {
@@ -50,6 +50,9 @@ export function validateConfig(config) {
       fieldIds.add(field.id);
       if (!FIELD_TYPES.includes(field.type)) fail(`Field "${where}" has unknown type "${field.type}"`);
       if (!field.label) fail(`Field "${where}" is missing "label"`);
+      if (field.width !== undefined && !['half', 'full'].includes(field.width)) {
+        fail(`Field "${where}" has "width" "${field.width}" (use "half" or "full")`);
+      }
       if (field.points !== undefined && typeof field.points !== 'number') {
         fail(`Field "${where}" has non-number "points"`);
       }
@@ -71,13 +74,17 @@ export function validateConfig(config) {
     if (!rolesSeen.has(role)) fail(`No field has role "${role}"`);
   }
 
-  // The alliance field's options must match the alliance colours.
-  const allianceField = findRole(config, 'alliance')?.field;
-  if (allianceField?.options && config.alliance?.colors) {
-    const values = allianceField.options.map((o) => o.value).sort().join();
-    if (values !== [...config.alliance.colors].sort().join()) {
-      fail('Alliance field options must match "alliance.colors"');
-    }
+  // The match level field must offer exactly qualification and playoff.
+  const levelField = findRole(config, 'matchLevel')?.field;
+  if (levelField?.options) {
+    const values = levelField.options.map((o) => o.value).sort().join();
+    if (values !== 'playoff,qual') fail('Match level options must be "qual" and "playoff"');
+  }
+
+  // The Alliance position field draws its buttons from "alliance", so it needs no options.
+  const positionField = findRole(config, 'alliancePosition')?.field;
+  if (positionField && positionField.type !== 'position') {
+    fail('The alliancePosition field must have type "position"');
   }
 
   return errors;
@@ -103,9 +110,9 @@ export async function listConfigs() {
 
 export async function loadConfig(id) {
   const list = await listConfigs();
-  const entry = list.find((c) => c.id === id) ?? list[0];
-  const config = await (await fetch(entry.file)).json();
+  const listed = list.find((c) => c.id === id) ?? list[0];
+  const config = await (await fetch(listed.file)).json();
   const errors = validateConfig(config);
-  if (errors.length) throw new Error(`Config "${entry.id}" is invalid:\n${errors.join('\n')}`);
+  if (errors.length) throw new Error(`Config "${listed.id}" is invalid:\n${errors.join('\n')}`);
   return config;
 }

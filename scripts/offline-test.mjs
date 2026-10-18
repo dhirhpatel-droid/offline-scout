@@ -121,7 +121,7 @@ try {
     type('Scout name', 'Offline Test');
     type('Match number', '42');
     type('Team number', '4069');
-    [...document.querySelectorAll('.segmented button')].find((b) => b.textContent === 'Blue').click();
+    [...document.querySelectorAll('.segmented button')].find((b) => b.textContent === 'Blue 1').click();
     document.querySelector('#tab-auto').click();
     document.querySelector('.round.add').click();
     document.querySelector('.round.add').click();
@@ -134,10 +134,10 @@ try {
 
   // ---- 4. reload, still offline, and check it is there ----
   await load(`${APP}?second-reload#saved`);
-  await waitFor(`return document.querySelectorAll('.entry').length > 0`, 'saved list');
-  const first = await run(`return document.querySelector('.entry').getAttribute('aria-label')`);
-  if (!first.includes('Match 42') || !first.includes('team 4069') || !first.includes('40 estimated points')) {
-    throw new Error(`Unexpected saved entry: ${first}`);
+  await waitFor(`return document.querySelectorAll('.submission-row').length > 0`, 'saved list');
+  const first = await run(`return document.querySelector('.submission-row').getAttribute('aria-label')`);
+  if (!first.includes('Match 42') || !first.includes('team 4069') || !first.includes('Blue 1') || !first.includes('40 estimated points')) {
+    throw new Error(`Unexpected saved Submission: ${first}`);
   }
   step(`After reloading offline, Saved matches shows: "${first}"`);
   console.log('\nPASS: the app works with no network and keeps data across reloads.');

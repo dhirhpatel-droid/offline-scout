@@ -1,11 +1,11 @@
 // Home: event name, scout name (both remembered), and the two main actions.
 
 import { h, icon, savedStatus } from '../ui.js';
-import { getSetting, setSetting, getDraft, countEntries } from '../db.js';
+import { getSetting, setSetting, getDraft, countSubmissions } from '../db.js';
 
 export async function renderHome() {
   const [eventName, scoutName, draft, count] = await Promise.all([
-    getSetting('eventName'), getSetting('scoutName'), getDraft(), countEntries(),
+    getSetting('eventName'), getSetting('scoutName'), getDraft(), countSubmissions(),
   ]);
 
   const eventInput = h('input', {
@@ -50,9 +50,9 @@ export async function renderHome() {
   return { el };
 }
 
-// "match 14 · 23810" from the draft's summary.
-function describe(entry) {
-  const { match, team } = entry.summary ?? {};
+// "match 14 · 23810" from the Draft's summary.
+function describe(draft) {
+  const { match, team } = draft.summary ?? {};
   if (match && team) return `match ${match} · ${team}`;
   if (match) return `match ${match}`;
   return 'match';

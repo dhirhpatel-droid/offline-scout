@@ -3,19 +3,23 @@
 // { "type": "counter", "label": "HIVE TIPs", "points": 20 } and this file
 // turns it into a −/+ counter row.
 //
-// renderField(field, value, onChange) returns an element.
+// renderField(field, value, onChange, config) returns an element.
 // onChange(newValue) is called on every tap so the match screen can autosave.
+// config is the whole game config (the position widget needs its alliances).
 
 import { h, icon, buzz } from './ui.js';
+import { alliancePositions, allianceOf, positionLabel } from './submissions.js';
 
 let uid = 0;
 const nextId = () => `f${++uid}`;
 
-export function renderField(field, value, onChange) {
+export function renderField(field, value, onChange, config) {
   const render = RENDERERS[field.type];
   if (!render) throw new Error(`No widget for field type "${field.type}"`);
-  const el = render(field, value, onChange);
+  const el = render(field, value, onChange, config);
   el.dataset.fieldId = field.id;
+  // "width": "half" in the config puts two short fields side by side.
+  if (field.width === 'half') el.classList.add('half');
   return el;
 }
 
@@ -77,9 +81,37 @@ const RENDERERS = {
   // One of several options, e.g. Defense: None / Some / Heavy.
   choice(field, value, onChange) {
     const labelId = nextId();
-    const seg = segmented(field.options, value, labelId, onChange, field.role === 'alliance');
+    const seg = segmented(field.options, value, labelId, onChange);
     seg.classList.add('wide');
     return h('div', { class: 'field' }, labelBlock(field, labelId), seg);
+  },
+
+  // Alliance position (Red 1, Red 2, Blue 1...): one row per alliance, made
+  // from the config's "alliance" so FRC gets three per row with no extra code.
+  position(field, value, onChange, config) {
+    const labelId = nextId();
+    let current = value;
+    const buttons = [];
+    const rows = config.alliance.colors.map((color) => {
+      const row = h('div', { class: 'segmented' });
+      for (const pos of alliancePositions(config).filter((p) => allianceOf(p) === color)) {
+        const btn = h('button', {
+          type: 'button', 'data-color': color, 'data-value': pos,
+          'aria-pressed': String(pos === current),
+        }, positionLabel(pos));
+        btn.addEventListener('click', () => {
+          current = pos;
+          buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === current)));
+          buzz();
+          onChange(current);
+        });
+        buttons.push(btn);
+        row.append(btn);
+      }
+      return row;
+    });
+    return h('div', { class: 'field' }, labelBlock(field, labelId),
+      h('div', { class: 'position-grid', role: 'group', 'aria-labelledby': labelId }, rows));
   },
 
   // 1–5 as five buttons.
@@ -132,7 +164,7 @@ function textInput(field, value, onChange, attrs, parse) {
 // A row of buttons where one is selected. Each is a toggle button
 // (aria-pressed), so screen readers say "Yes, pressed".
 // Tapping the selected option again clears it, so a mis-tap can be undone.
-function segmented(options, value, labelId, onChange, colored = false) {
+function segmented(options, value, labelId, onChange) {
   const group = h('div', { class: 'segmented', role: 'group', 'aria-labelledby': labelId });
   let current = value;
 
@@ -140,7 +172,6 @@ function segmented(options, value, labelId, onChange, colored = false) {
     const btn = h('button', {
       type: 'button',
       'aria-pressed': String(opt.value === current),
-      'data-color': colored ? opt.value : null,
       'data-off': opt.value === false,
     }, opt.label);
     btn.addEventListener('click', () => {

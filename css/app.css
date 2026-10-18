@@ -168,7 +168,7 @@ input, textarea { caret-color: var(--text); }
   gap: var(--s1);
   padding: var(--s1);
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.22);
+  background: var(--tab-track);
 }
 .tabs button {
   flex: 1;
@@ -273,6 +273,7 @@ input, textarea { caret-color: var(--text); }
   background: var(--surface);
 }
 .segmented.wide { margin-top: var(--s2); }
+.field.half .segmented button { min-width: 0; }
 .segmented button {
   flex: 1;
   min-width: var(--tap);
@@ -296,7 +297,9 @@ input, textarea { caret-color: var(--text); }
   background: var(--primary-bg);
   color: var(--primary-text);
 }
-/* The alliance picker itself shows each option in its own colour. */
+/* Alliance position: one row of buttons per alliance, each in its own colour. */
+.position-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s2); margin-top: var(--s2); }
+.position-grid .segmented button { min-width: 0; padding: 0 var(--s1); }
 .segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); color: var(--on-alliance); }
 .segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); color: var(--on-alliance); }
 
@@ -353,8 +356,8 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 /* ---------- Saved matches list ---------- */
 
-.entries { list-style: none; padding: 0; }
-.entry {
+.submission-list { list-style: none; padding: 0; }
+.submission-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -377,11 +380,11 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 }
 .badge.red { background: var(--red); }
 .badge.blue { background: var(--blue); }
-.entry .team { font-size: var(--fs-xl); line-height: 1.1; }
-.entry .sub { font-size: var(--fs-sm); color: var(--text-2); }
-.entry .pts { text-align: right; }
-.entry .pts .value { font-size: var(--fs-2xl); line-height: 1; }
-.entry .pts .label { font-size: var(--fs-xs); color: var(--text-3); }
+.submission-row .team { font-size: var(--fs-xl); line-height: 1.1; }
+.submission-row .sub { font-size: var(--fs-sm); color: var(--text-2); }
+.submission-row .pts { text-align: right; }
+.submission-row .pts .value { font-size: var(--fs-2xl); line-height: 1; }
+.submission-row .pts .label { font-size: var(--fs-xs); color: var(--text-3); }
 
 .empty-state { padding: var(--s6) 0; }
 .empty-state h2 { font-size: var(--fs-xl); font-weight: 800; }
@@ -418,7 +421,7 @@ dialog {
   color: var(--text);
   box-shadow: 0 20px 50px rgb(0 0 0 / 0.45);
 }
-dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+dialog::backdrop { background: var(--scrim); }
 dialog h2 { font-size: var(--fs-xl); font-weight: 800; }
 dialog p { color: var(--text-2); margin-top: var(--s2); }
 dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }

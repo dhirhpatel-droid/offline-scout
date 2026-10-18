@@ -1,12 +1,12 @@
 // Settings: which game config is active, light/dark theme, and storage info.
 
 import { h, icon, applyTheme } from '../ui.js';
-import { getSetting, setSetting, countEntries } from '../db.js';
+import { getSetting, setSetting, countSubmissions } from '../db.js';
 import { listConfigs } from '../config.js';
 
 export async function renderSettings() {
   const [configs, configId, theme, count, persisted] = await Promise.all([
-    listConfigs(), getSetting('configId'), getSetting('theme'), countEntries(),
+    listConfigs(), getSetting('configId'), getSetting('theme'), countSubmissions(),
     navigator.storage?.persisted?.() ?? Promise.resolve(false),
   ]);
   const activeId = configId ?? configs[0].id;
