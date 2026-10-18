@@ -22,6 +22,7 @@ export async function whatsNext() {
       position: s.position,
       alliance: s.alliance,
       points: draft.estimatedPoints ?? 0,
+      started: new Date(draft.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     };
   }
   const carry = await getSetting('nextCarry');
@@ -40,10 +41,11 @@ export async function whatsNext() {
 export async function nowScoutingBar() {
   const next = await whatsNext();
   if (next.kind !== 'draft') return null;
-  const where = [next.code, next.team, next.position && positionLabel(next.position)].filter(Boolean).join(' · ') || 'New match';
-  return h('a', { class: 'now-bar', href: '#match', 'data-alliance': next.alliance ?? 'none' },
+  const where = [next.code, next.team, next.position && positionLabel(next.position)].filter(Boolean).join(' · ');
+  return h('a', { class: 'now-bar', href: '#match', 'data-alliance': next.alliance ?? 'none',
+    'aria-label': `Resume your unfinished match${where ? `, ${where}` : ''}, started ${next.started}` },
     h('span', { class: 'now-bar-text' },
-      h('span', { class: 'now-bar-label' }, 'Unfinished match'),
-      h('span', { class: 'num now-bar-where' }, where)),
+      h('span', { class: 'num now-bar-where' }, where || 'Unfinished match'),
+      h('span', { class: 'now-bar-label' }, `Unfinished · started ${next.started}`)),
     h('span', { class: 'now-bar-go' }, 'Resume', icon('next', 18)));
 }

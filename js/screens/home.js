@@ -2,8 +2,9 @@
 // next one) in your alliance colour, the way a music app shows what's playing.
 // Below it: your matches, your Scouting group, and the event.
 
-import { h, icon, formField, setThemeColor } from '../ui.js';
-import { getSetting, setSetting, listSubmissions } from '../db.js';
+import { h, icon, formField, setThemeColor, confirmDialog } from '../ui.js';
+import { getSetting, setSetting, listSubmissions, clearDraft } from '../db.js';
+import { listConfigs } from '../config.js';
 import { currentGroup } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
@@ -11,9 +12,11 @@ import { whatsNext } from '../now-scouting.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [eventName, submissions, group, next] = await Promise.all([
-    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(),
+  const [eventName, submissions, group, next, configs] = await Promise.all([
+    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), listConfigs(),
   ]);
+  const game = configs.find((c) => c.id === group.game_config_id) ?? configs[0];
+  const mismatch = !game.name.startsWith(group.program);
   const unsent = submissions.filter(needsSync).length;
   const lead = isLead(group);
 
@@ -31,17 +34,19 @@ export async function renderHome() {
         h('li', {}, h('a', { class: 'row', href: '#group' },
           h('div', {},
             h('div', { class: 'title' }, group.name),
-            h('div', { class: 'sub' }, `${groupLabel(group)} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
+            h('div', { class: 'sub' }, `${groupLabel(group)} · You’re a ${lead ? 'Lead' : 'Scout'} · ${game.name}`)),
           icon('next', 20))),
         h('li', {}, eventRow(eventName, lead)),
       ),
+      mismatch ? h('p', { class: 'notice' },
+        `Your group is ${group.program}, so ${group.program} positions and scoring arrive with the ${group.program} game after kickoff. Until then, matches use ${game.name}.`) : null,
       submissions.length ? h('section', {},
         h('h2', { class: 'section-h' }, 'Recent'),
-        h('ul', { class: 'submission-list' }, submissions.slice(0, 3).map((s) => h('li', {}, submissionRow(s))))) : null,
+        h('ul', { class: 'submission-list' }, submissions.slice(0, 3).map((s) => h('li', {}, submissionRow(s, submissions))))) : null,
     ),
     h('footer', { class: 'bottombar' },
       h('p', { class: 'status' }, icon('device', 18),
-        h('span', {}, submissions.length ? `${submissions.length} saved on this phone` : 'Works with no signal'))),
+        h('span', {}, 'Works with no signal'))),
   );
 
   // The phone's status bar matches the block's colour.
@@ -57,10 +62,15 @@ function nowBlock(next) {
   if (next.kind === 'draft') {
     return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
       top,
-      h('p', { class: 'now-meta num' }, [next.code, next.position && positionLabel(next.position)].filter(Boolean).join(' · ') || 'Not set up yet'),
-      h('h1', { class: `now-hero${next.team || next.code ? ' num' : ''}`, tabindex: '-1' }, next.team ?? next.code ?? 'New match'),
-      h('p', { class: 'now-sub' }, `Unfinished · ${next.points} est. pts so far`),
-      h('a', { class: 'pill big block now-go', href: '#match' }, next.code ? `Resume ${next.code}` : 'Resume scouting', icon('next', 22)));
+      h('h1', { class: `now-hero${next.team || next.code ? ' num' : ''}`, tabindex: '-1' }, next.team ?? next.code ?? 'Unfinished match'),
+      h('p', { class: 'now-sub' }, [
+        next.team ? next.code : null,
+        next.position && positionLabel(next.position),
+        `started ${next.started}`,
+        next.points ? `${next.points} est. pts so far` : null,
+      ].filter(Boolean).join(' · ')),
+      h('a', { class: 'pill big block now-go', href: '#match' }, next.code ? `Resume ${next.code}` : 'Resume this match', icon('next', 22)),
+      discardLink());
   }
   if (next.kind === 'next') {
     return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
@@ -72,9 +82,23 @@ function nowBlock(next) {
   }
   return h('section', { class: 'now', 'data-alliance': 'none' },
     top,
-    h('h1', { class: 'now-hero', tabindex: '-1' }, 'Ready to scout'),
-    h('p', { class: 'now-sub' }, 'Pick the match, the team and their position, then tap as things happen.'),
-    h('a', { class: 'pill big block now-go', href: '#match' }, 'Start scouting', icon('next', 22)));
+    h('h1', { class: 'now-hero', tabindex: '-1' }, 'First match'),
+    h('a', { class: 'pill big block now-go', href: '#match' }, 'Scout a match', icon('next', 22)));
+}
+
+function discardLink() {
+  const btn = h('button', { class: 'now-discard', type: 'button' }, 'Discard this match');
+  btn.addEventListener('click', async () => {
+    const ok = await confirmDialog({
+      title: 'Discard this match?',
+      body: 'Everything tapped for it is removed from this phone. Matches you already saved are not affected.',
+      confirmLabel: 'Discard',
+    });
+    if (!ok) return;
+    await clearDraft();
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
+  return btn;
 }
 
 // The event: Leads can change it; Scouts just see it.

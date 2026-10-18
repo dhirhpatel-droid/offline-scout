@@ -106,7 +106,12 @@ try {
       return 1`);
     await go('#home');
     await shot(t('05-home'));
+    await go('#saved');
+    await shot(t('08-saved'));
+    // Start a match, type one thing, leave: it's now an unfinished match.
     await go('#match', 1200);
+    await run(`const i = [...document.querySelectorAll('input')].find((x) => x.labels[0]?.textContent === 'Match number'); i.value = '18'; i.dispatchEvent(new Event('input')); return 1`);
+    await sleep(300);
     await go('#home');
     await shot(t('05b-home-unfinished'));
     await go('#saved');
@@ -115,8 +120,6 @@ try {
     await shot(t('06-group-offline'));
     await go('#settings');
     await shot(t('07-settings'));
-    await go('#saved');
-    await shot(t('08-saved'));
 
     // A match in progress
     await go('#match', 1200);

@@ -69,7 +69,7 @@ export async function renderSettings() {
       })
     : [h('p', { class: 'setting-value' }, game.name)];
 
-  const themes = [['system', 'Same as phone'], ['light', 'Light'], ['dark', 'Dark']];
+  const themes = [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']];
   const themeGroup = h('div', { class: 'segmented wide', role: 'group', 'aria-labelledby': 'theme-h' });
   const themeButtons = themes.map(([value, label]) => {
     const btn = h('button', { type: 'button', 'aria-pressed': String((theme ?? 'system') === value) }, label);
@@ -96,13 +96,13 @@ export async function renderSettings() {
           ? h('p', { class: 'plain', style: 'margin-top:8px' }, `This is an ${game.name.split(' ')[0]} game and your group is ${group.program}. The ${group.program} game is added after its kickoff.`)
           : h('p', { class: 'plain', style: 'margin-top:8px' }, 'Set by your group’s Leads, so everyone scouts the same game.')),
       h('section', { class: 'group' }, h('h2', { id: 'theme-h' }, 'Theme'), themeGroup,
-        h('p', { class: 'plain', style: 'margin-top:8px' }, 'Light is easiest to read in sunlight. “Same as phone” follows your phone’s setting.')),
+        h('p', { class: 'plain', style: 'margin-top:8px' }, 'Light is easiest to read in sunlight. Auto follows your phone’s setting.')),
       h('section', { class: 'group' },
         h('h2', {}, 'Storage'),
         h('p', { class: 'setting-value' }, `${count} ${count === 1 ? 'match' : 'matches'} saved on this phone`),
         h('p', { class: 'plain', style: 'margin-top:4px' }, persisted
           ? 'Protected: the browser will not clear it to free up space.'
-          : 'If the phone gets very low on space, the browser could clear it. Adding the app to your home screen helps protect it.')),
+          : 'Add Offline Scout to your home screen so the phone keeps your matches safe, even when it’s low on space.')),
       h('section', { class: 'group danger-zone' }, signOutBtn),
     ),
     await nowScoutingBar(),

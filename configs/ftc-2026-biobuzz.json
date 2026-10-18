@@ -161,9 +161,9 @@
         {
           "id": "park",
           "type": "toggle",
-          "label": "PARK in loading zone",
+          "label": "PARK at the end",
           "points": 5,
-          "hint": "At the end of the match"
+          "hint": "In the loading zone when the match ends"
         }
       ],
       "showWith": "teleop"

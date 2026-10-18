@@ -96,7 +96,7 @@ export async function renderGroup() {
   // Invite form (Leads only)
   let inviteForm = null;
   if (lead) {
-    const email = formField('Invite a scout', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'their email' },
+    const email = formField('Invite a scout', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'name@school.org' },
       'They get an email with a link. They join as a Scout; you can make them a Lead after.');
     const send = h('button', { class: 'pill block', type: 'submit', disabled: !isOnline() }, isOnline() ? 'Send invite' : 'Send invite (needs signal)');
     inviteForm = h('form', { class: 'form', novalidate: true }, email.el, h('div', { class: 'actions' }, send));
@@ -141,15 +141,15 @@ export async function renderGroup() {
       h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
       h('h1', { tabindex: '-1' }, group.name)),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, h('span', { class: 'num' }, groupLabel(group)), ` · You’re a ${lead ? 'Lead' : 'Scout'}`),
+      h('p', { class: 'group-lede' }, `${groupLabel(group)} · You’re a ${lead ? 'Lead' : 'Scout'}`),
       message.el,
       inviteForm,
       invitesSection,
-      h('h2', { class: 'section-h' }, 'Members'),
+      h('h2', { class: 'section-title sub' }, 'Members'),
       membersNote,
       membersList,
       h('div', { class: 'danger-zone group-footer' },
-        h('a', { class: 'pill secondary block', href: '#groups' }, 'Your groups'),
+        h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),
     await nowScoutingBar(),
   );

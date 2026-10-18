@@ -165,7 +165,7 @@ input, textarea { caret-color: var(--text); }
   line-height: 0.95;
   padding: 0 var(--s1) var(--s3);
 }
-.match-head .team.empty { opacity: 0.75; }
+.screen[data-first-tab='true'] .match-head .points { visibility: hidden; } /* nothing scored yet on Setup */
 
 /* Section tabs: Pre / Auto / Teleop / End / Post */
 .tabs {
@@ -246,7 +246,7 @@ input, textarea { caret-color: var(--text); }
   color: var(--on-alliance);
 }
 .round:active { transform: scale(0.92); }
-.round:disabled { opacity: 0.35; }
+.round:disabled { color: var(--text-3); border-style: dashed; } /* nothing to undo */
 
 /* Signature moment: adding flashes the row in the alliance colour and the
    number jumps. Skipped for people who turn off motion in their phone settings. */
@@ -303,7 +303,7 @@ input, textarea { caret-color: var(--text); }
 .position-grid .segmented button { min-width: 0; padding: 0 var(--s1); }
 .segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); border-color: var(--red); color: var(--on-alliance); }
 .segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--on-alliance); }
-.segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: var(--card-yellow); color: #0e0e10; }
+.segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: #7a6200; color: #0e0e10; } /* dark edge: visible on white too */
 
 /* Text inputs */
 .input {
@@ -407,7 +407,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 /* ---------- Settings ---------- */
 
 .group { margin-top: var(--s5); }
-.group h2 { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin-bottom: var(--s2); }
+.group h2 { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; color: var(--text); margin-bottom: var(--s2); }
 .setting-value { font-size: var(--fs-lg); font-weight: 700; }
 .radio-row {
   display: flex;
@@ -492,7 +492,14 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.pill:disabled { opacity: 0.6; }
+.pill:disabled,
+.pill[aria-disabled='true'] {
+  /* Clearly not pressable: no primary colour, quiet text. */
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 2px dashed var(--control-line);
+  cursor: not-allowed;
+}
 
 /* ---------- Groups and members ---------- */
 
@@ -582,7 +589,7 @@ a.row { color: inherit; }
   border-color: var(--alliance);
   color: var(--on-alliance);
 }
-.field.tile[aria-pressed='true'] .field-hint { color: inherit; opacity: 0.85; }
+.field.tile[aria-pressed='true'] .field-hint { color: inherit; } /* full colour: 5:1 on the alliance fill */
 .field.tile[aria-pressed='true'] .tile-check { background: var(--on-alliance); border-color: var(--on-alliance); color: var(--alliance); }
 [data-alliance='none'] .field.tile[aria-pressed='true'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
 [data-alliance='none'] .field.tile[aria-pressed='true'] .tile-check { color: var(--primary-bg); background: var(--primary-text); border-color: var(--primary-text); }
@@ -673,7 +680,7 @@ a.row { color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: var(--s1);
-  min-height: 48px;
+  min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
   background: var(--tab-track);
@@ -692,3 +699,27 @@ a.row { color: inherit; }
 
 .auth-hero .now-hero { font-size: var(--fs-num); }
 .auth-hero + .content { padding-top: var(--s3); }
+
+.finish-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; opacity: 0.9; }
+.now-bar-go { background: color-mix(in srgb, currentColor 18%, transparent); }
+
+.now-discard {
+  justify-self: center;
+  min-height: var(--tap);
+  padding: 0 var(--s3);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.notice {
+  margin-top: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* A choice nobody has answered yet says so (so "None" and "skipped" differ). */
+.answer-state { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
+.answer-state[data-answered='true'] { display: none; }

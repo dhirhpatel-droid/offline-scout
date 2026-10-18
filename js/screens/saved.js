@@ -21,7 +21,7 @@ export async function renderSaved() {
   const body = submissions.length
     ? [...byEvent].map(([event, subs]) => h('section', {},
         h('h2', { class: 'section-h' }, `${event} · ${subs.length}`),
-        h('ul', { class: 'submission-list' }, subs.map((s) => h('li', {}, submissionRow(s))))))
+        h('ul', { class: 'submission-list' }, subs.map((s) => h('li', {}, submissionRow(s, submissions))))))
     : h('div', { class: 'empty-state' },
         h('h2', {}, 'No matches yet'),
         h('p', {}, 'Every match you save shows up here, newest first. They stay on this phone even with no signal.'),
@@ -34,15 +34,17 @@ export async function renderSaved() {
     h('main', { class: 'content' }, body),
     bar,
     h('footer', { class: 'bottombar' }, savedStatus(submissions.length
-      ? `${submissions.length} on this phone${unsent ? ` · ${unsent} not sent yet` : ''}`
-      : 'Saved on this phone')),
+      ? `${submissions.length} on this phone${unsent ? ' · not sent yet' : ''}`
+      : 'Works with no signal')),
   );
   return { el };
 }
 
 // One row: the alliance position as a coloured block, the match and team,
-// the points, and where the data is (on this phone / sent).
-export function submissionRow(sub) {
+// the points, and where the data is (on this phone / sent). The status chip
+// only shows when rows differ, so it means something when it's there.
+export function submissionRow(sub, all = [sub]) {
+  const mixed = new Set(all.map((x) => syncStatus(x).state)).size > 1;
   const { team, position, alliance, scout } = sub.summary ?? {};
   const code = matchCode(sub.summary);
   const where = position ? positionLabel(position) : '';
@@ -62,6 +64,6 @@ export function submissionRow(sub) {
       h('span', { class: 'sub' }, [where, scout, time].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),
-      h('span', { class: `sync-chip ${status.state}` }, status.state === 'sent' ? 'Sent' : 'On phone')),
+      mixed ? h('span', { class: `sync-chip ${status.state}` }, status.state === 'sent' ? 'Sent' : 'Not sent') : null),
   );
 }

@@ -26,6 +26,9 @@ export async function renderMatch({ param }) {
   if (editing && !submission) return { el: notFound() };
   if (!submission) submission = await startNewMatch();
 
+  // Remember whether this Draft is brand new (nothing typed yet), before
+  // anything below updates it.
+  const freshDraft = !editing && submission.createdAt === submission.updatedAt;
   const config = await loadConfig(submission.configId);
   // Fill in the scout from the account if a hidden field still needs it.
   const profile = await cachedProfile();
@@ -40,6 +43,9 @@ export async function renderMatch({ param }) {
   const tabOf = (section) => tabSections.find((t) => t.id === (section.showWith ?? section.id));
 
   const screen = h('div', { class: 'screen' });
+
+  // A Draft nobody typed anything into is thrown away when you leave.
+  let touched = editing;
 
   // Start on Setup if something needed there is still empty (the team, on a
   // fresh match); otherwise on the first period.
@@ -73,9 +79,7 @@ export async function renderMatch({ param }) {
     screen.dataset.alliance = alliance ?? 'none';
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
-    metaEl.textContent = match || position
-      ? `${matchCode(submission.summary)} · ${position ? positionLabel(position) : 'pick a position'}`
-      : 'Pick the match and position';
+    metaEl.textContent = `${match ? matchCode(submission.summary) : 'Q?'} · ${position ? positionLabel(position) : 'pick a position'}`;
     // When the estimate goes up, the header number jumps too.
     // (Not on first draw, when the number is still empty.)
     if (pointsEl.textContent !== '' && Number(pointsEl.textContent) < submission.estimatedPoints) {
@@ -98,6 +102,8 @@ export async function renderMatch({ param }) {
     submission.values[`${section.id}.${field.id}`] = value;
     // Clear the "needed" message once the field is filled in.
     const row = panel.querySelector(`[data-field-id="${field.id}"]`);
+    touched = true;
+    if (field.role === 'noShow') queueMicrotask(renderBottombar);
     if (row?.classList.contains('invalid') && value !== '' && value !== null) {
       row.classList.remove('invalid');
       row.querySelector('.error-text')?.remove();
@@ -134,9 +140,11 @@ export async function renderMatch({ param }) {
 
   function sectionBlock(section, isGuest) {
     const duration = section.durationSec ? h('span', { class: 'duration' }, formatDuration(section.durationSec)) : null;
+    // On Setup the tab already says "Setup", so its heading is for screen readers only.
+    const sameAsTab = !isGuest && !section.durationSec && (section.title ?? section.label) === section.label;
     const title = isGuest
-      ? h('h3', { class: 'section-title sub' }, section.title ?? section.label, duration)
-      : h('h2', { class: 'section-title' }, section.title ?? section.label, duration);
+      ? h('h3', { class: 'section-title sub', id: `guest-${section.id}` }, section.title ?? section.label, duration)
+      : h('h2', { class: `section-title${sameAsTab ? ' visually-hidden' : ''}` }, section.title ?? section.label, duration);
     return [
       title,
       section.note ? h('p', { class: 'section-note' }, section.note) : null,
@@ -161,17 +169,59 @@ export async function renderMatch({ param }) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }
     if (editing && i === tabSections.length - 1) panel.append(deleteButton());
+    if (!editing && i === 0) panel.append(discardButton());
+    screen.dataset.firstTab = String(i === 0); // points are hidden on Setup
+    watchGuests(section);
     renderBottombar();
     window.scrollTo({ top: 0 });
   }
 
+  // Sections shown inside this tab (Endgame inside Teleop) sit lower down.
+  // "Next" scrolls to them first, so nobody skips Endgame by accident.
+  const seenGuests = new Set();
+  let observer;
+  function watchGuests(section) {
+    observer?.disconnect();
+    observer = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting && !seenGuests.has(e.target.id)) {
+          seenGuests.add(e.target.id);
+          renderBottombar();
+        }
+      }
+    }, {
+      // Only counts as seen once it's above the bottom bar (not hidden behind it)
+      // and the first fields under the heading are visible too.
+      rootMargin: `0px 0px -${bottombar.offsetHeight + 120}px 0px`,
+    });
+    for (const g of guestsOf(section)) {
+      const el = panel.querySelector(`#guest-${g.id}`);
+      if (el) observer.observe(el);
+    }
+  }
+  const unseenGuest = () => guestsOf(tabSections[current]).find((g) => !seenGuests.has(`guest-${g.id}`));
+
   function renderBottombar() {
     const last = current === tabSections.length - 1;
     const code = matchCode(submission.summary);
-    const action = last
-      ? h('button', { class: 'pill', type: 'button', onclick: submit }, editing ? 'Save changes' : `Save ${code}`)
-      : h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
-          `Next: ${tabSections[current + 1].label}`, icon('next', 20));
+    const noShow = config.sections.some((sec) => sec.fields.some((f) => f.role === 'noShow'
+      && submission.values[`${sec.id}.${f.id}`] === true));
+    const guest = unseenGuest();
+    let action;
+    if (last || (noShow && !editing)) {
+      // A robot that didn't show up has nothing more to record: save straight away.
+      action = h('button', { class: 'pill', type: 'button', onclick: submit },
+        editing ? 'Save changes' : noShow && !last ? `Save ${code} (no-show)` : `Save ${code}`);
+    } else if (guest) {
+      action = h('button', { class: 'pill', type: 'button', onclick: () => {
+        seenGuests.add(`guest-${guest.id}`);
+        panel.querySelector(`#guest-${guest.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        renderBottombar();
+      } }, `Next: ${guest.label}`, icon('next', 20));
+    } else {
+      action = h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
+        `Next: ${tabSections[current + 1].label}`, icon('next', 20));
+    }
     bottombar.replaceChildren(savedStatus('Saved on this phone'), action);
   }
 
@@ -221,6 +271,7 @@ export async function renderMatch({ param }) {
         h('span', { class: 'part-value num' }, parts[s.id]),
         h('span', { class: 'part-label' }, s.label)));
     tabs.hidden = true;
+    backBtn.hidden = true; // the buttons below say where to go next
     screen.classList.add('finished');
     panel.removeAttribute('role');
     panel.removeAttribute('aria-labelledby');
@@ -230,6 +281,7 @@ export async function renderMatch({ param }) {
         h('div', { class: 'finish-total' },
           h('span', { class: 'num' }, submission.estimatedPoints), h('span', {}, 'est. pts')),
         h('div', { class: 'parts' }, breakdown),
+        h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
         h('p', { class: 'finish-status' }, icon('device', 18), syncStatus(submission).text)),
       h('div', { class: 'finish-actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: startNext },
@@ -238,7 +290,7 @@ export async function renderMatch({ param }) {
           h('a', { class: 'pill secondary block', href: `#match/${submission.id}` }, `Edit ${code}`),
           h('a', { class: 'pill secondary block', href: '#saved' }, 'My matches'))),
     );
-    bottombar.replaceChildren(savedStatus('Saved on this phone'));
+    bottombar.remove(); // the status is in the result above
     panel.querySelector('h2').focus();
   }
 
@@ -246,6 +298,22 @@ export async function renderMatch({ param }) {
     await startNewMatch();
     // Same URL (#match), so re-render this screen by hand.
     window.dispatchEvent(new HashChangeEvent('hashchange'));
+  }
+
+  function discardButton() {
+    const btn = h('button', { class: 'text-btn danger', type: 'button' },
+      h('span', { class: 'icon-label' }, icon('trash', 20), 'Discard this match'));
+    btn.addEventListener('click', async () => {
+      const ok = await confirmDialog({
+        title: 'Discard this match?',
+        body: 'Everything tapped for it is removed from this phone. Matches you already saved are not affected.',
+        confirmLabel: 'Discard',
+      });
+      if (!ok) return;
+      await db.clearDraft();
+      location.hash = '#home';
+    });
+    return h('div', { class: 'danger-zone' }, btn);
   }
 
   function deleteButton() {
@@ -268,7 +336,14 @@ export async function renderMatch({ param }) {
 
   updateHeader();
   showSection(current);
-  return { el: screen };
+  return {
+    el: screen,
+    cleanup: () => {
+      observer?.disconnect();
+      // Opened by mistake and left without typing anything: don't keep it.
+      if (freshDraft && !touched && !submission.submittedAt) db.clearDraft();
+    },
+  };
 }
 
 // Creates and saves a fresh Draft, pre-filled from the last match.

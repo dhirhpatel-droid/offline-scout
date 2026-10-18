@@ -90,10 +90,7 @@ const RENDERERS = {
 
   // One of several options, e.g. Played defense: None / Some / A lot.
   choice(field, value, onChange) {
-    const labelId = nextId();
-    const seg = segmented(field.options, value, labelId, onChange);
-    seg.classList.add('wide');
-    return h('div', { class: 'field' }, labelBlock(field, labelId), seg);
+    return answerable(field, value, onChange, field.options);
   },
 
   // Alliance position (Red 1, Red 2, Blue 1...): one row per alliance, made
@@ -131,9 +128,7 @@ const RENDERERS = {
     for (let n = field.min; n <= field.max; n++) {
       options.push({ value: n, label: field.labels?.[n - field.min] ?? String(n) });
     }
-    const seg = segmented(options, value, labelId, onChange);
-    seg.classList.add('wide');
-    return h('div', { class: 'field' }, labelBlock(field, labelId), seg);
+    return answerable(field, value, onChange, options, labelId);
   },
 
   // Numbers (match, team) open the number pad, not the full keyboard.
@@ -158,6 +153,19 @@ const RENDERERS = {
     return h('div', { class: 'field' }, h('label', { class: 'field-label', for: id }, field.label), area);
   },
 };
+
+// A choice or scale, with a "Not answered yet" line until something is picked.
+function answerable(field, value, onChange, options, labelId = nextId()) {
+  const state = h('span', { class: 'answer-state', 'data-answered': String(value !== undefined && value !== null) }, 'Not answered yet');
+  const seg = segmented(options, value, labelId, (v) => {
+    state.dataset.answered = String(v !== null && v !== undefined);
+    onChange(v);
+  });
+  seg.classList.add('wide');
+  const label = labelBlock(field, labelId);
+  label.append(state);
+  return h('div', { class: 'field' }, label, seg);
+}
 
 function textInput(field, value, onChange, attrs, parse) {
   const id = nextId();
