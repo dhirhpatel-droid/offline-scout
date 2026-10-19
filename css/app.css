@@ -201,7 +201,6 @@ input, textarea { caret-color: var(--text); }
   line-height: 1;
 }
 .section-note { margin-top: calc(-1 * var(--s1)); font-size: var(--fs-sm); color: var(--text-2); }
-.section-title .duration { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
 
 /* ---------- Fields ---------- */
 
@@ -347,21 +346,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
   border-bottom: 1px solid var(--line);
   text-align: left;
 }
-.badge {
-  /* a station sign: "R1" on the alliance colour */
-  display: grid;
-  place-items: center;
-  width: var(--tap);
-  height: var(--tap);
-  border-radius: var(--plate-radius);
-  font-weight: 800;
-  font-stretch: 75%;
-  font-size: var(--fs-xl);
-  color: var(--on-alliance);
-  background: var(--neutral-alliance);
-}
-.badge.red { background: var(--red); }
-.badge.blue { background: var(--blue); }
+.submission-team .bumper { font-size: var(--fs-lg); min-width: 4.4em; height: 2.2em; }
 .submission-main { display: grid; min-width: 0; }
 .submission-title { font-size: var(--fs-xl); line-height: 1.15; }
 .submission-row .sub { font-size: var(--fs-sm); color: var(--text-2); }
@@ -589,7 +574,7 @@ a.row { color: inherit; }
   justify-content: space-between;
   min-height: 44px;
   padding: var(--s1) 0;
-  border-bottom: 1px solid var(--tab-track);
+  border-bottom: 1px solid var(--on-alliance-rule);
 }
 .part-label { font-size: var(--fs-md); font-weight: 700; }
 .part-value { margin: 0; font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
@@ -746,7 +731,7 @@ a.row { color: inherit; }
 .event-title { font-size: var(--fs-display-words); line-height: 1; }
 .event-facts { font-weight: 700; }
 .schedule { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.schedule th, .schedule td { padding: var(--s2) 2px; border-bottom: 1px solid var(--line); text-align: center; }
+.schedule th, .schedule td { padding: var(--s2) 3px; border-bottom: 1px solid var(--line); text-align: center; }
 .schedule thead th { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); padding-bottom: var(--s1); }
 .schedule thead th:first-child, .schedule tbody th { text-align: left; width: 4.75rem; }
 /* The station headings get the alliance colour as a bar, plus their words */
@@ -756,6 +741,9 @@ a.row { color: inherit; }
 .schedule tbody th { display: grid; }
 .schedule-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
 .schedule-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; white-space: nowrap; }
+.schedule .bumper.mine { outline-offset: -3px; }
+.schedule[style*='--stations: 6'] .bumper { padding-inline: 0.1em; }
+.schedule[style*='--stations: 6'] thead th:first-child, .schedule[style*='--stations: 6'] tbody th { width: 3.75rem; }
 .schedule .bumper { width: 100%; min-width: 0; font-size: min(var(--fs-lg), calc(var(--fs-lg) * 4 / var(--stations, 4))); }
 /* Played: outlined, so the matches still to come stand out (text stays ≥ 4.5:1) */
 .schedule tr.played .bumper:not(.mine) { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
@@ -844,8 +832,16 @@ a.row { color: inherit; }
   font-weight: 800;
   font-stretch: 75%;
 }
-.lineup-team.mine { background: var(--on-alliance); color: var(--alliance); border-color: var(--on-alliance); }
-[data-alliance="none"] .lineup-team.mine { color: var(--neutral-alliance); }
+.lineup-team.red { background: var(--red); color: var(--on-alliance); }
+.lineup-team.blue { background: var(--blue); color: var(--on-alliance); }
+/* each plate keeps a white edge so it shows on a block of its own colour */
+.lineup-team { border-color: var(--on-alliance); }
+.lineup-team.mine.red { background: var(--on-alliance); color: var(--red); }
+.lineup-team.mine.blue { background: var(--on-alliance); color: var(--blue); }
+/* Grey block (light theme is near-white): edges and "mine" in Text colour */
+.now[data-alliance='none'] { --focus: var(--text); }
+.now[data-alliance='none'] .lineup-team { border-color: var(--text); }
+.now[data-alliance='none'] .lineup-team.mine { background: var(--text); color: var(--bg); }
 .lineup-vs { font-size: var(--fs-sm); font-weight: 700; }
 
 
@@ -918,3 +914,10 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .head-lineup { display: none; }
 .screen[data-first-tab='true'] .head-lineup { display: block; margin: calc(-1 * var(--s2)) 0 var(--s3); }
 .head-lineup .lineup { margin-top: 0; }
+.assign-member .rows li:last-child { border-bottom: 0; }
+/* Two Teams in one match: the switch plates are printed signs too */
+.team-switch button { border-radius: var(--plate-radius); }
+.finish-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+/* a station sign on the alliance block: white plate, alliance-coloured words */
+.station.on { background: var(--on-alliance); color: var(--alliance); font-size: var(--fs-md); }
+.small-btn.plain-remove { color: var(--text); background: transparent; border-color: transparent; }

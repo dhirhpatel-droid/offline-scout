@@ -106,8 +106,9 @@ export async function renderAssign() {
   }
 
   function instructionRow(m, kind, id, title, shown, sub) {
-    const remove = online ? h('button', { class: 'small-btn danger', type: 'button',
-      'aria-label': `Remove ${title} from ${m.display_name}` }, 'Remove') : null;
+    // Text colour + bin icon (red text would read like the red alliance here).
+    const remove = online ? h('button', { class: 'small-btn plain-remove', type: 'button',
+      'aria-label': `Remove ${title} from ${m.display_name}` }, h('span', { class: 'icon-label' }, icon('trash', 18), 'Remove')) : null;
     remove?.addEventListener('click', async () => {
       const ok = await confirmDialog({
         title: `Remove ${title} from ${m.display_name}?`,

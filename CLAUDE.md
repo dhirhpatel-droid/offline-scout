@@ -104,6 +104,9 @@ form would not even open, so we lost scouting data when we needed it most.
   next assignment" + Coming up; Leads plan on #assign (with Coverage gaps); two Teams in
   one match = two Drafts ('current'/'second') with a switch. Critique 27/26 → findings fixed.
   Not yet tested by Dhir on two phones.
+- **"Like the event itself" redesign (Oct 19, 2026, Dhir's pick):** bumper team numbers,
+  station signs, printed per-station schedule, field-clock period times, results-table
+  finish (DESIGN.md "Event pieces"). Whole-app critique 28–29 → 29–30.
 - **Next:** Milestone 6 in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

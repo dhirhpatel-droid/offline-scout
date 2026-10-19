@@ -64,6 +64,7 @@
   --radius: 14px;
   --plate-radius: 6px; /* bumpers and station signs: printed, square-ish */
   --bumper-shade: rgb(0 0 0 / 0.25); /* the darker lower edge of a bumper */
+  --on-alliance-rule: rgb(255 255 255 / 0.4); /* dividers drawn on the alliance colour */
 
   color-scheme: dark;
 }

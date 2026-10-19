@@ -102,7 +102,8 @@ try {
         const teams = [23810, 16012, 19455, 21229, 16415, 14515, 22309, 24436, 30420, 25049].map((n) => ({ team_number: n, team_name: 'Team ' + n }));
         const at = (q) => new Date(Date.UTC(2026, 10, 21, 14, 0 + q * 7)).toISOString();
         const matches = [14, 15, 16, 17, 18, 19, 20].map((q, i) => ({ level: 'qual', number: q, game: 1, scheduled_at: at(q),
-          red: [teams[i % 10].team_number, teams[(i + 1) % 10].team_number], blue: [teams[(i + 2) % 10].team_number, teams[(i + 3) % 10].team_number], played: q < 18 }));
+          red: [teams[i % 10].team_number, teams[(i + 1) % 10].team_number], blue: [teams[(i + 2) % 10].team_number, teams[(i + 3) % 10].team_number], played: q < 18,
+          red_score: q < 18 ? 60 + q * 3 : null, blue_score: q < 18 ? 140 - q * 4 : null }));
         matches[4].red = [16415, 23810]; // Q18 Red 2 = 23810
         s.put({ event: ev, teams, matches, savedAt: new Date(Date.now() - 4 * 60000).toISOString() }, 'event:ev1');
         s.put([{ id: 'g1', program: 'FTC', team_number: 16415, name: 'Lo-Ellen EDIT', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {}, currentEvent: ev }], 'groups');

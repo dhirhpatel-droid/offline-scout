@@ -9,7 +9,7 @@
 // Tabs come from the game config's sections. A section with "showWith" (e.g.
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
-import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -273,12 +273,11 @@ export async function renderMatch({ param }) {
   });
 
   function sectionBlock(section, isGuest) {
-    const duration = section.durationSec ? h('span', { class: 'duration' }, clock(section.durationSec)) : null;
     // On Setup the tab already says "Setup", so its heading is for screen readers only.
     const sameAsTab = !isGuest && !section.durationSec && (section.title ?? section.label) === section.label;
     const title = isGuest
-      ? h('h3', { class: 'section-title sub', id: `guest-${section.id}` }, section.title ?? section.label, duration)
-      : h('h2', { class: `section-title${sameAsTab ? ' visually-hidden' : ''}` }, section.title ?? section.label, duration);
+      ? h('h3', { class: 'section-title sub', id: `guest-${section.id}` }, section.title ?? section.label)
+      : h('h2', { class: `section-title${sameAsTab ? ' visually-hidden' : ''}` }, section.title ?? section.label);
     return [
       title,
       section.note ? h('p', { class: 'section-note' }, section.note) : null,
@@ -440,7 +439,7 @@ export async function renderMatch({ param }) {
       statusEl.replaceChildren(icon(sent ? 'check' : 'device', 18), h('span', {},
         sent ? 'Sent to your group'
           : failed ? 'Saved on this phone · couldn’t reach your group, will retry'
-            : 'Saved on this phone · sends when you have signal'));
+            : 'Saved on this phone · sends later'));
     };
     showStatus(null);
     syncNow().then(showStatus);
@@ -464,7 +463,9 @@ export async function renderMatch({ param }) {
     panel.removeAttribute('aria-labelledby');
     panel.replaceChildren(
       h('section', { class: 'finish' },
-        h('h2', { class: 'finish-title', tabindex: '-1' }, `${code} saved`),
+        h('div', { class: 'finish-head' },
+          h('h2', { class: 'finish-title', tabindex: '-1' }, `${code} saved`),
+          submission.summary.position ? station(positionLabel(submission.summary.position), 'on') : null),
         // Laid out like the results screen after a match: each period, then the total.
         h('dl', { class: 'parts' }, breakdown,
           h('div', { class: 'part total' },

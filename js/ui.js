@@ -46,24 +46,27 @@ export function icon(name, size = 24) {
 
 // A team number set the way it is on a robot's bumper: heavy white digits on
 // the alliance colour. alliance = 'red' | 'blue' | null (unknown: neutral).
-// mine = this phone's Scout watches it (a ring, and the words "you watch",
-// so it never relies on colour).
+// mine = this phone's Scout scouts it here: a ring plus the words "you scout"
+// (hidden visually, read by screen readers), so it never relies on colour.
+const hidden = (text) => h('span', { class: 'visually-hidden' }, text);
+const cap = (word) => `${word[0].toUpperCase()}${word.slice(1)}`;
+
 export function bumper(team, alliance = null, { mine = false, size = '' } = {}) {
-  return h('span', {
-    class: ['bumper', alliance, mine && 'mine', size].filter(Boolean).join(' '),
-    'aria-label': team ? `${alliance ? `${alliance[0].toUpperCase()}${alliance.slice(1)} ` : ''}${team}${mine ? ', you watch' : ''}` : 'Team not known yet',
-  }, team ?? '—');
+  return h('span', { class: ['bumper', alliance, mine && 'mine', size].filter(Boolean).join(' ') },
+    alliance && team ? hidden(`${cap(alliance)} `) : null,
+    team ?? '—',
+    mine ? hidden(', you scout') : null);
 }
 
 // The match line-up the way the field display reads it: red teams, "vs",
-// blue teams. The team(s) you watch are filled in; the rest are outlined.
+// blue teams, each in its own alliance colour. The team(s) you scout are
+// filled white.
 export function lineup(match, watched) {
   if (!match) return null;
-  const side = (teams) => teams.map((t) => h('span', { class: `lineup-team num${watched.includes(t) ? ' mine' : ''}` }, t));
-  return h('p', { class: 'lineup', 'aria-label': `Red ${match.red.join(' and ')} versus blue ${match.blue.join(' and ')}` },
-    h('span', { class: 'lineup-side' }, side(match.red)),
-    h('span', { class: 'lineup-vs', 'aria-hidden': 'true' }, 'vs'),
-    h('span', { class: 'lineup-side' }, side(match.blue)));
+  const side = (color) => h('span', { class: 'lineup-side' }, hidden(`${cap(color)}: `),
+    match[color].map((t) => h('span', { class: `lineup-team num ${color}${watched.includes(t) ? ' mine' : ''}` },
+      t, watched.includes(t) ? hidden(' (you scout)') : null)));
+  return h('p', { class: 'lineup' }, side('red'), h('span', { class: 'lineup-vs' }, 'vs'), side('blue'));
 }
 
 // An alliance station sign: "Red 1" on the alliance colour, square-cornered

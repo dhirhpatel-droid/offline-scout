@@ -3,7 +3,7 @@
 //   #saved/everyone  – everyone's (Leads, or Scouts if the group allows it)
 // Tap one to view or edit it (delete is inside).
 
-import { h, icon, busy } from '../ui.js';
+import { h, icon, busy, bumper } from '../ui.js';
 import { listSubmissions, getSetting } from '../db.js';
 import { positionLabel, matchCode, syncStatus, needsSync } from '../submissions.js';
 import { nowScoutingBar } from '../now-scouting.js';
@@ -80,18 +80,16 @@ export function submissionRow(sub, all = [sub], showScout = false) {
   const code = matchCode(sub.summary);
   const where = position ? positionLabel(position) : '';
   const time = new Date(sub.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  // "R1" / "B2" (or "R" for Milestone 1 data that only knew the colour)
-  const badge = where ? where.replace(/[a-z ]/g, '') : '?';
   const status = syncStatus(sub);
 
   return h('a', {
     class: 'submission-row', href: `#match/${sub.id}`,
     'aria-label': `${code}, team ${team ?? 'not set'}, ${where || 'no position'}, by ${scout ?? 'unknown'}, ${sub.estimatedPoints} estimated points, ${status.text}`,
   },
-    // Colour AND letters, so it reads without colour vision too.
-    h('span', { class: `badge ${alliance ?? ''}`, 'aria-hidden': 'true' }, badge),
+    // The team as its bumper; the position is written out below it.
+    h('span', { class: 'submission-team', 'aria-hidden': 'true' }, bumper(team, alliance)),
     h('span', { class: 'submission-main' },
-      h('span', { class: 'submission-title num' }, `${code} · ${team ?? '—'}`),
+      h('span', { class: 'submission-title num' }, code),
       h('span', { class: 'sub' }, [where, showScout && scout, `saved ${time}`].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),

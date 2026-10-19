@@ -77,10 +77,12 @@ export async function renderEvent() {
     ? h('section', {},
         h('h2', { class: 'section-title sub' }, 'Schedule'),
         h('table', { class: 'schedule', style: `--stations: ${positions.length}` },
-          h('caption', { class: 'visually-hidden' }, 'Match schedule. Teams you watch are marked.'),
+          h('caption', { class: 'visually-hidden' }, 'Match schedule. Your matches are marked “you scout”.'),
           h('thead', {}, h('tr', {},
             h('th', { scope: 'col' }, 'Match'),
-            positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` }, positionLabel(p))))),
+            // FRC has 6 stations: short headings (R1) with the full name for screen readers.
+            positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` },
+              positions.length > 4 ? h('abbr', { title: positionLabel(p) }, positionLabel(p).replace(/[a-z ]/g, '')) : positionLabel(p))))),
           h('tbody', {}, all.map((m) => matchRow(m, m === nextMatch, positions, mine)))))
     : data ? h('p', { class: 'notice' }, 'The qualification schedule isn’t out yet. It usually comes the night before or the morning of the event, and downloads by itself when it does.') : null;
 
