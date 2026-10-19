@@ -53,6 +53,7 @@ export async function renderMatch({ param }) {
   // The Event's schedule (saved on this phone), so the team can fill itself in.
   const eventData = await cachedEvent(submission.eventId ?? (!editing ? group?.currentEvent?.id : null));
   const teamKey = findRole(config, 'teamNumber')?.key;
+  const positionKey = findRole(config, 'alliancePosition')?.key;
   const scheduled = () => findMatch(eventData?.matches, submission.summary.level, submission.summary.match);
   // The team the schedule filled in (replaced if the match or position changes).
   let autoTeam = null;
@@ -140,7 +141,12 @@ export async function renderMatch({ param }) {
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
     if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
-    lineupEl.replaceChildren(lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
+    // No team yet, but the schedule knows the match: the line-up becomes
+    // buttons, so one tap picks the team (typing it still works below).
+    const canPick = !team && !readOnly && !pair && teamKey && positionKey && scheduled();
+    lineupEl.replaceChildren(...(canPick
+      ? [h('p', { class: 'lineup-hint' }, 'Tap the team you’re scouting'), lineup(scheduled(), [], pickFromLineup)]
+      : [lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '']));
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       // With two Teams, each pill already says its position.
@@ -159,6 +165,19 @@ export async function renderMatch({ param }) {
     if (pair) pointsLabel.textContent = `${team ?? '?'} est. pts`;
     // Tint the phone's status bar with the alliance colour.
     setThemeColor(getComputedStyle(screen).getPropertyValue('--alliance').trim());
+  }
+
+  // A team tapped in the line-up fills in both the team and its position.
+  function pickFromLineup(team, position) {
+    submission.values[teamKey] = team;
+    submission.values[positionKey] = position;
+    autoTeam = team; // it came from the schedule
+    touched = true;
+    refresh(config, submission);
+    save();
+    updateHeader();
+    showSection(current); // redraw the Setup fields with the new values
+    teamEl.focus(); // the big team number now says who you're scouting
   }
 
   async function save() {
