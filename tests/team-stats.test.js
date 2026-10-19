@@ -97,3 +97,20 @@ test('fieldSummary leaves no-shows out, except for the no-show field', () => {
 test('unlinked counts saved Submissions with no Event', () => {
   assert.equal(unlinked([sub(1, {}, { eventId: null }), sub(2), sub(3, {}, { eventId: null, deletedAt: 'x' })], { groupId: 'g1' }), 1);
 });
+
+test('Submissions with no match number each count as their own match', () => {
+  const noMatch = (pts) => sub(1, { 'auto.hiveTips': pts / 20 }, { summary: { team: 1, level: 'qual' } });
+  const [row] = teamRows(config, [noMatch(20), noMatch(60)]);
+  assert.equal(row.scouted, 2);
+  assert.equal(row.avg, 40);
+});
+
+test('a no-show and a played Submission for the same match', () => {
+  // One Scout says the robot didn't show, another scouted it: one match,
+  // averaged from the played Submission only, with the no-show counted.
+  const [row] = teamRows(config, [sub(1, { 'pre.noShow': true }), sub(1, { 'auto.hiveTips': 1 })]);
+  assert.equal(row.scouted, 1);
+  assert.equal(row.submissions, 2);
+  assert.equal(row.noShows, 1);
+  assert.equal(row.avg, 20);
+});

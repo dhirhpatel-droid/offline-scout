@@ -137,11 +137,16 @@ export function shortNames(members) {
   return labels;
 }
 
-// Used by Home for the Lead's row: "3 of 4 positions covered in Q18".
+// Used by Home for the Lead's row, the same count as the Coverage grid:
+// "5 open positions in Q18–Q20 · first Q18 Blue 2".
 export function planSummary(plan, matches) {
   const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
   if (!scouts.size) return null;
-  const next = coverage(plan, matches).find((c) => !c.played);
-  if (!next) return `${scouts.size} ${scouts.size === 1 ? 'scout' : 'scouts'} assigned`;
-  return `${next.covered} of ${next.total} positions covered in Q${next.number}`;
+  const left = coverage(plan, matches).filter((c) => !c.played);
+  if (!left.length) return `${scouts.size} ${scouts.size === 1 ? 'scout' : 'scouts'} assigned`;
+  const range = left.length > 1 ? `Q${left[0].number}–Q${left.at(-1).number}` : `Q${left[0].number}`;
+  const open = left.reduce((sum, c) => sum + (c.total - c.covered), 0);
+  if (!open) return `Every position covered in ${range}`;
+  const first = left.find((c) => c.covered < c.total);
+  return `${open} open ${open === 1 ? 'position' : 'positions'} in ${range} · first Q${first.number}`;
 }

@@ -69,7 +69,7 @@ test('coverage counts watched positions per qualification match', () => {
     { number: 1, played: true, total: 4, covered: 1 },
     { number: 2, played: false, total: 4, covered: 2 },
   ]);
-  assert.equal(planSummary(plan, matches), '2 of 4 positions covered in Q2');
+  assert.equal(planSummary(plan, matches), '2 open positions in Q2 · first Q2');
   assert.equal(planSummary({ shifts: [], watches: [] }, matches), null);
 });
 
