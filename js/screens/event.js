@@ -13,7 +13,8 @@ import { assignmentsFor } from '../assignments.js';
 import { alliancePositions, positionLabel } from '../submissions.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { timeAgo } from '../sync.js';
-import { getSetting, setSetting } from '../db.js';
+import { getSetting, setSetting, getDraft } from '../db.js';
+import { startPlannedMatch } from './match.js';
 
 export async function renderEvent() {
   const group = await currentGroup();
@@ -76,6 +77,8 @@ export async function renderEvent() {
   const schedule = data && all.length
     ? h('section', {},
         h('h2', { class: 'section-title sub' }, 'Schedule'),
+        nextMatch ? h('p', { class: 'plain schedule-hint' }, 'Tap a team in a match still to play to scout it.') : null,
+        mine.size ? h('p', { class: 'schedule-key', 'aria-hidden': 'true' }, bumper('1234', 'red', { mine: true }), 'your assignments') : null,
         h('table', { class: 'schedule', style: `--stations: ${positions.length}` },
           h('caption', { class: 'visually-hidden' }, 'Match schedule. Your matches are marked “you scout”.'),
           h('thead', {}, h('tr', {},
@@ -184,8 +187,30 @@ function matchRow(m, isNext, positions, mine) {
     positions.map((p) => {
       const color = p.replace(/\d/, '');
       const team = m[color]?.[Number(p.slice(color.length)) - 1] ?? null;
-      return h('td', {}, bumper(team, color, { mine: mine.has(`${m.level}:${m.number}:${p}`) }));
+      const isMine = mine.has(`${m.level}:${m.number}:${p}`);
+      const plate = bumper(team, color, { mine: isMine });
+      // A shortcut: tap a team in a match still to play to scout it.
+      if (m.played || !team) return h('td', {}, plate);
+      return h('td', {}, h('button', { class: 'schedule-pick', type: 'button',
+        'aria-label': `Scout ${team} in ${code}, ${positionLabel(p)}${isMine ? ', your assignment' : ''}`,
+        onclick: () => scoutFromSchedule({ level: m.level, number: m.number, position: p, team }, code) }, plate));
     }));
+}
+
+// Start scouting a team picked from the schedule. An unfinished match would
+// be replaced, so ask first.
+async function scoutFromSchedule(item, code) {
+  // Either of the two Drafts (two Teams in one match) counts.
+  const drafts = await Promise.all([getDraft(), getDraft('second')]);
+  if (drafts.some((d) => d && d.createdAt !== d.updatedAt)) {
+    const ok = await confirmDialog({
+      title: `Start ${code} · ${item.team} instead?`,
+      body: 'Your unfinished match will be thrown away. Matches you already saved are not affected.',
+      confirmLabel: `Scout ${item.team}`,
+    });
+    if (!ok) return;
+  }
+  await startPlannedMatch([item]);
 }
 
 // "a · b · c" where each piece stays on one line.

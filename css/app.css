@@ -293,8 +293,8 @@ input, textarea { caret-color: var(--text); }
 }
 /* Outside the match screen there's no alliance colour: selections use the
    strong main colour so they're easy to tell apart. */
-.screen:not([data-alliance]) .segmented button[aria-pressed='true'],
-[data-alliance='none'] .segmented button[aria-pressed='true'] {
+.screen:not([data-alliance]) .segmented button:not([data-color])[aria-pressed='true'],
+[data-alliance='none'] .segmented button:not([data-color])[aria-pressed='true'] {
   background: var(--primary-bg);
   border-color: var(--primary-bg);
   color: var(--primary-text);
@@ -741,13 +741,12 @@ a.row { color: inherit; }
 .schedule tbody th { display: grid; }
 .schedule-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
 .schedule-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; white-space: nowrap; }
-.schedule .bumper.mine { outline-offset: -3px; }
 .schedule[style*='--stations: 6'] .bumper { padding-inline: 0.1em; }
 .schedule[style*='--stations: 6'] thead th:first-child, .schedule[style*='--stations: 6'] tbody th { width: 3.75rem; }
 .schedule .bumper { width: 100%; min-width: 0; font-size: min(var(--fs-lg), calc(var(--fs-lg) * 4 / var(--stations, 4))); }
 /* Played: outlined, so the matches still to come stand out (text stays ≥ 4.5:1) */
 .schedule tr.played .bumper:not(.mine) { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
-.schedule tr.played .bumper.mine { background: transparent; color: var(--text); box-shadow: none; }
+.schedule tr.played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
 .schedule tr.played .schedule-code { color: var(--text-2); }
 .schedule tr.next-up th, .schedule tr.next-up td { background: var(--surface); }
 .schedule tr.next-up .schedule-time.next { color: var(--text); font-weight: 800; }
@@ -856,7 +855,11 @@ a.row { color: inherit; }
 .assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 .assign-gaps { color: var(--text-2); margin-top: var(--s2); }
 .assign-member .form-message { margin: 0 0 var(--s3); }
-.assign-gaps + .plain { margin-top: var(--s3); }
+.coverage { margin: var(--s5) 0 var(--s2); }
+.coverage .assign-gaps { margin: 0 0 var(--s2); }
+.coverage > .pill { margin-top: var(--s3); }
+.coverage-key { margin-top: var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
+.coverage + .plain { margin-top: var(--s3); }
 
 /* ---------- Event pieces (DESIGN.md: "Like the event itself") ---------- */
 
@@ -880,7 +883,16 @@ a.row { color: inherit; }
 }
 .bumper.red { background: var(--red); }
 .bumper.blue { background: var(--blue); }
-.bumper.mine { outline: 3px solid var(--text); outline-offset: 2px; }
+.bumper.mine {
+  /* white plate, alliance-coloured digits and edge: the same as "mine" in the
+     line-up, and readable in both themes (≥ 5:1) */
+  background: var(--on-alliance);
+  color: var(--neutral-alliance);
+  box-shadow: inset 0 0 0 3px var(--neutral-alliance);
+  padding-inline: calc(0.1em + 3px);
+}
+.bumper.mine.red { color: var(--red); box-shadow: inset 0 0 0 3px var(--red); }
+.bumper.mine.blue { color: var(--blue); box-shadow: inset 0 0 0 3px var(--blue); }
 .bumper.big { font-size: var(--fs-xl); }
 
 /* Station plate: "Red 1" over a driver station. */
@@ -921,3 +933,68 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* a station sign on the alliance block: white plate, alliance-coloured words */
 .station.on { background: var(--on-alliance); color: var(--alliance); font-size: var(--fs-md); }
 .small-btn.plain-remove { color: var(--text); background: transparent; border-color: transparent; }
+
+/* Settings: "How it works", answers that open in place */
+.help-item { border-bottom: 1px solid var(--line); }
+.help-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: var(--tap);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.help-item summary::-webkit-details-marker { display: none; }
+.help-item summary svg { flex: none; transform: rotate(90deg); transition: transform 150ms ease-out; }
+.help-item[open] summary svg { transform: rotate(-90deg); }
+.help-item p { padding: 0 0 var(--s4); color: var(--text-2); max-width: 60ch; }
+@media (prefers-reduced-motion: reduce) { .help-item summary svg { transition: none; } }
+
+/* Setup with no team yet: the line-up plates become buttons (one tap picks
+   the team and its station). The one place a printed plate is tappable, so
+   it grows to the 56px in-match target. */
+.lineup-hint { font-size: var(--fs-sm); font-weight: 600; margin-bottom: var(--s2); }
+.lineup.pick { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s2); }
+.lineup.pick .lineup-side { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s2); }
+.lineup-team.pick { height: auto; min-height: var(--tap); justify-content: center; padding: 0 var(--s1); font-size: var(--fs-xl); }
+.lineup-team.pick.red:active { background: var(--on-alliance); color: var(--red); } /* pressed: like "mine" */
+.lineup-team.pick.blue:active { background: var(--on-alliance); color: var(--blue); }
+/* FRC: three a side doesn't fit one line on a phone, so red above blue */
+.lineup.pick:has(.lineup-side > :nth-child(3)) { grid-template-columns: 1fr; }
+.lineup.pick:has(.lineup-side > :nth-child(3)) .lineup-vs { display: none; }
+
+/* Group: the team number is the cover */
+.group-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+.group-name { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin-top: var(--s2); }
+/* Group settings without signal: read-only, the state written out */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: var(--tap-lg);
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.setting-state { font-weight: 800; }
+
+/* No group yet: the steps on the cover */
+.join-cover .now-hero { font-size: var(--fs-display-words); line-height: 1; }
+.join-steps { margin: var(--s4) 0 var(--s2); padding-left: 1.4em; display: grid; gap: var(--s3); font-size: var(--fs-md); font-weight: 600; }
+.join-steps li::marker { font-weight: 800; }
+.join-steps .join-email { display: block; margin: var(--s1) 0 0; }
+.team-preview:not(:empty) { margin: calc(-1 * var(--s2)) 0 var(--s4); }
+/* Schedule: a team in a match still to play is a button (tap to scout it) */
+.schedule-pick { padding: 0; display: flex; width: 100%; min-height: 48px; align-items: center; border-radius: var(--plate-radius); }
+.schedule-pick:active .bumper { transform: scale(0.95); }
+@media (prefers-reduced-motion: reduce) { .schedule-pick:active .bumper { transform: none; } }
+.schedule-hint { margin: calc(-1 * var(--s1)) 0 var(--s2); font-size: var(--fs-sm); }
+
+/* Coverage grid: an open station is an empty dashed plate that says "Open"
+   (the word, not only the missing colour). */
+.bumper.open { background: transparent; color: var(--text-2); box-shadow: none; border: 2px dashed var(--control-line); font-weight: 700; }
+.schedule-key { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
+.schedule-key .bumper { font-size: var(--fs-sm); min-width: 3.4em; }
+.group-offline { margin-top: var(--s4); }

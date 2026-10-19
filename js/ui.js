@@ -61,12 +61,25 @@ export function bumper(team, alliance = null, { mine = false, size = '' } = {}) 
 // The match line-up the way the field display reads it: red teams, "vs",
 // blue teams, each in its own alliance colour. The team(s) you scout are
 // filled white.
-export function lineup(match, watched) {
+//
+// onPick (optional) makes every team a 56px button: tapping one calls
+// onPick(team, 'red2'). The match screen uses it on Setup, so a scout can
+// pick their team from the line-up instead of typing it.
+export function lineup(match, watched, onPick = null) {
   if (!match) return null;
-  const side = (color) => h('span', { class: 'lineup-side' }, hidden(`${cap(color)}: `),
-    match[color].map((t) => h('span', { class: `lineup-team num ${color}${watched.includes(t) ? ' mine' : ''}` },
-      t, watched.includes(t) ? hidden(' (you scout)') : null)));
-  return h('p', { class: 'lineup' }, side('red'), h('span', { class: 'lineup-vs' }, 'vs'), side('blue'));
+  const plate = (color, t, i) => {
+    const cls = `lineup-team num ${color}${watched.includes(t) ? ' mine' : ''}`;
+    if (!onPick) return h('span', { class: cls }, t, watched.includes(t) ? hidden(' (you scout)') : null);
+    const position = `${color}${i + 1}`;
+    return h('button', { type: 'button', class: `${cls} pick`, onclick: () => onPick(t, position),
+      'aria-label': `Scout ${t}, ${cap(color)} ${i + 1}` }, t);
+  };
+  const side = (color) => h('span', { class: 'lineup-side' }, onPick ? null : hidden(`${cap(color)}: `),
+    match[color].map((t, i) => plate(color, t, i)));
+  // Buttons can't sit inside a <p>, so the tappable version is a group.
+  return onPick
+    ? h('div', { class: 'lineup pick', role: 'group', 'aria-label': 'Match line-up' }, side('red'), h('span', { class: 'lineup-vs', 'aria-hidden': 'true' }, 'vs'), side('blue'))
+    : h('p', { class: 'lineup' }, side('red'), h('span', { class: 'lineup-vs' }, 'vs'), side('blue'));
 }
 
 // An alliance station sign: "Red 1" on the alliance colour, square-cornered
@@ -89,9 +102,9 @@ export function buzz() {
 // Asks a yes/no question in a native <dialog>. Resolves true if confirmed.
 export function confirmDialog({ title, body, confirmLabel }) {
   return new Promise((resolve) => {
-    const dialog = h('dialog', { 'aria-labelledby': 'dlg-title' },
+    const dialog = h('dialog', { 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-body' },
       h('h2', { id: 'dlg-title' }, title),
-      h('p', {}, body),
+      h('p', { id: 'dlg-body' }, body),
       h('div', { class: 'actions' },
         h('button', { class: 'pill danger block', onclick: () => close(true) }, confirmLabel),
         h('button', { class: 'pill secondary block', autofocus: true, onclick: () => close(false) }, 'Cancel'),

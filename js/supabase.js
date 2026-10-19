@@ -30,7 +30,7 @@ export const isOnline = () => navigator.onLine;
 export function friendlyError(error) {
   const msg = String(error?.message ?? error ?? '');
   if (!isOnline() || /Failed to fetch|NetworkError|Load failed/i.test(msg)) {
-    return 'No connection right now. This needs signal; try again once you have it.';
+    return 'This phone has no signal right now. Nothing is lost: try again once it has some (a hallway or the parking lot usually works).';
   }
   if (/Invalid login credentials/i.test(msg)) return 'That email and password don’t match. Check them, or reset your password.';
   if (/Email not confirmed/i.test(msg)) return 'Confirm your email first: open the link we sent you, then sign in.';
@@ -38,5 +38,10 @@ export function friendlyError(error) {
   if (/Password should be at least/i.test(msg)) return 'Use a password with at least 8 characters.';
   if (/JWT|token|not authenticated|401/i.test(msg)) return 'Your sign-in has expired. Sign out (Settings) and sign in again.';
   if (/rate limit|too many/i.test(msg)) return 'Too many emails sent in the last hour. Wait a bit, then try again.';
-  return msg || 'Something went wrong. Try again.';
+  if (/permission denied|row-level security|violates row-level/i.test(msg)) {
+    return 'Your group doesn’t allow this for your role. If a Lead just changed your role, go back to Home and try again.';
+  }
+  if (/duplicate key|already exists/i.test(msg)) return 'That’s already there, so nothing changed.';
+  // Anything else: say what happened and what to do, and keep the details for whoever helps.
+  return `That didn’t work. Try again; if it keeps happening, show your Lead this: ${msg || 'unknown error'}`;
 }

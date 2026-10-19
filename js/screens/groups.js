@@ -2,7 +2,7 @@
 //   #groups      – the list
 //   #groups/new  – create a group
 
-import { h, icon, formField, formMessage, busy } from '../ui.js';
+import { h, icon, formField, formMessage, busy, bumper } from '../ui.js';
 import {
   cachedGroups, currentGroup, setCurrentGroup, myPendingInvites, acceptInvite, createGroup, cachedProfile,
   refreshAccount, signOut,
@@ -52,27 +52,33 @@ export async function renderGroups({ param }) {
   // "Check for invites": asks the server again, with feedback either way.
   const check = h('button', { class: `pill ${empty ? 'big' : 'secondary'} block`, type: 'button' }, 'Check for invites');
   check.addEventListener('click', () => busy(check, 'Checking…', async () => {
-    if (!isOnline()) return message.show('No connection right now. Checking for invites needs signal.', 'error');
+    if (!isOnline()) return message.show('This phone has no signal right now. Try again once it does: in the hallway or parking lot usually works.', 'error');
     const invites = await myPendingInvites().catch((err) => { message.show(friendlyError(err), 'error'); return null; });
     if (invites === null) return;
     showInvites(invites);
     message.show(invites.length ? `${invites.length} invite${invites.length > 1 ? 's' : ''} found.` : 'No invites yet. Ask your Lead to invite your email.', 'info');
   }));
 
+  // No group yet: the cover says what to do, in the order you do it.
+  const joinCover = h('section', { class: 'now join-cover', 'data-alliance': 'none' },
+    h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout'),
+      h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings and account' }, icon('account'))),
+    h('h1', { class: 'now-hero', tabindex: '-1' }, 'Join your team'),
+    h('ol', { class: 'join-steps' },
+      h('li', {}, 'Ask your Lead to invite this email:',
+        profile?.email ? h('span', { class: 'join-email' }, profile.email) : null),
+      h('li', {}, 'Tap Check for invites, then Join.')),
+    h('button', { class: 'link-btn', type: 'button', onclick: async () => {
+      await signOut();
+      location.hash = '#auth';
+    } }, 'Not you? Sign out'));
+
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      groups.length ? h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')) : null,
-      h('h1', { tabindex: '-1' }, empty ? 'Join your Scouting group' : 'Scouting groups'),
+    empty ? joinCover : h('header', { class: 'topbar' },
+      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+      h('h1', { tabindex: '-1' }, 'Scouting groups'),
       h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings and account' }, icon('account'))),
     h('main', { class: 'content' },
-      empty ? h('div', { class: 'join-hero' },
-        h('p', { class: 'lede' }, 'Your Lead adds you by email. Ask them to send the invite to:'),
-        profile?.email ? h('p', { class: 'join-email' }, profile.email) : null,
-        h('button', { class: 'link-btn', type: 'button', onclick: async () => {
-          await signOut();
-          location.hash = '#auth';
-        } }, 'Not you? Sign out'),
-        h('p', { class: 'plain' }, 'Then tap Check for invites below (needs signal).')) : null,
       message.el,
       invitesSection,
       groups.length ? [h('h2', { class: 'section-h' }, 'Your groups'), h('ul', { class: 'rows' }, groupRows)] : null,
@@ -116,7 +122,10 @@ function renderNewGroup() {
   const team = formField('Team number', { type: 'text', inputmode: 'numeric', pattern: '[0-9]*', maxlength: 5, autocomplete: 'off' },
     'Your team’s FIRST number, e.g. 4069.');
   team.input.classList.add('num-input');
-  team.input.addEventListener('input', () => { team.input.value = team.input.value.replace(/\D/g, ''); });
+  // A live preview: the number the way it'll look on your matches (like a bumper).
+  const preview = h('div', { class: 'team-preview', 'aria-hidden': 'true' });
+  const drawPreview = () => preview.replaceChildren(team.input.value ? bumper(team.input.value, null, { size: 'big' }) : '');
+  team.input.addEventListener('input', () => { team.input.value = team.input.value.replace(/\D/g, ''); drawPreview(); });
   const name = formField('Group name', { type: 'text', autocapitalize: 'words', maxlength: 60, autocomplete: 'off' },
     'Usually your team’s name, e.g. Lo-Ellen Robotics.');
   const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Create group and become Lead');
@@ -126,7 +135,7 @@ function renderNewGroup() {
     h('p', { class: 'lede' }, 'You’ll be its Lead: you invite your scouts and plan who watches what.'),
     message.el,
     h('div', { class: 'field' }, h('span', { class: 'field-label', id: 'program-label' }, 'Program'), programGroup, programError),
-    team.el, name.el,
+    team.el, preview, name.el,
     h('div', { class: 'actions' }, submit));
 
   form.addEventListener('submit', async (e) => {
@@ -138,7 +147,7 @@ function renderNewGroup() {
     team.setError(errors.teamNumber);
     name.setError(errors.name);
     if (Object.keys(errors).length) return;
-    if (!isOnline()) return message.show('No connection right now. Creating a group needs signal.', 'error');
+    if (!isOnline()) return message.show('This phone has no signal right now. Creating a group needs signal.', 'error');
     await busy(submit, 'Creating…', async () => {
       try {
         await createGroup(values);

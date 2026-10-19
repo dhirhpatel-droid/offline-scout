@@ -57,7 +57,7 @@ export async function renderAuth({ param }) {
 
 function offlineCheck(message) {
   if (isOnline()) return true;
-  message.show('No connection right now. Signing in needs signal once; try again when you have it.', 'error');
+  message.show('This phone has no signal right now. Signing in needs signal once; try again when you have it.', 'error');
   return false;
 }
 

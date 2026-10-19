@@ -173,5 +173,5 @@ function eventRow(group, lead, data) {
 function footerStatus(unsent, lastSyncAt) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   return h('p', { class: `status ${st.state}` }, icon(st.state === 'sent' ? 'check' : 'device', 18),
-    h('span', {}, st.state === 'waiting' ? 'Sends when you have signal' : st.text));
+    h('span', {}, st.state === 'waiting' ? `Saved on this phone · ${unsent} to send` : st.text));
 }

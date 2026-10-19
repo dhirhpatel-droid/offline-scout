@@ -5,7 +5,7 @@
 
 import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
 import {
-  currentGroup, currentUser, listMembers, setRole, removeMember, listGroupInvites, cancelInvite, sendInvite,
+  currentGroup, currentUser, listMembers, cachedMembers, setRole, removeMember, listGroupInvites, cancelInvite, sendInvite,
   setGroupSetting,
 } from '../account.js';
 import { groupLabel, isLead, isLastLead, sortMembers, isEmail } from '../group-rules.js';
@@ -26,10 +26,15 @@ export async function renderGroup() {
   const invitesSection = h('section', { hidden: true }, h('h2', { class: 'section-h' }, 'Waiting to join'), invitesList);
 
   const membersNote = h('p', { class: 'plain', hidden: true });
+  // The member list this phone saw last shows straight away (offline too).
+  const saved = sortMembers(await cachedMembers(group.id));
+  if (saved.length) membersList.replaceChildren(...saved.map((m) => memberRow(m, saved)));
   async function load() {
     if (!isOnline()) {
-      membersNote.textContent = 'Members show here once you have signal.';
-      membersNote.hidden = false;
+      if (!saved.length) {
+        membersNote.textContent = 'The member list downloads the next time this phone has signal.';
+        membersNote.hidden = false;
+      }
       return;
     }
     try {
@@ -48,7 +53,7 @@ export async function renderGroup() {
   function memberRow(m, members) {
     const isMe = m.user_id === me?.id;
     const actions = h('div', { class: 'row-actions' });
-    if (lead && !isMe) {
+    if (lead && !isMe && isOnline()) {
       const roleBtn = h('button', { class: 'small-btn', type: 'button' }, m.role === 'lead' ? 'Make Scout' : 'Make Lead');
       roleBtn.addEventListener('click', () => busy(roleBtn, '…', async () => {
         try {
@@ -96,15 +101,15 @@ export async function renderGroup() {
 
   // Invite form (Leads only)
   let inviteForm = null;
-  if (lead) {
+  if (lead && isOnline()) {
     const email = formField('Invite a scout', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'name@school.org' },
       'They get an email with a link. They join as a Scout; you can make them a Lead after.');
-    const send = h('button', { class: 'pill block', type: 'submit', disabled: !isOnline() }, isOnline() ? 'Send invite' : 'Send invite (needs signal)');
+    const send = h('button', { class: 'pill block', type: 'submit' }, 'Send invite');
     inviteForm = h('form', { class: 'form', novalidate: true }, email.el, h('div', { class: 'actions' }, send));
     inviteForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!isEmail(email.input.value)) return email.setError('Enter a valid email address.');
-      if (!isOnline()) return message.show('No connection right now. Sending an invite needs signal.', 'error');
+      if (!isOnline()) return message.show('This phone has no signal right now. Sending an invite needs signal.', 'error');
       await busy(send, 'Sending…', async () => {
         try {
           const address = email.input.value.trim().toLowerCase();
@@ -131,10 +136,15 @@ export async function renderGroup() {
   ];
   const settingsSection = lead ? h('section', {},
     h('h2', { class: 'section-title sub' }, 'Group settings'),
-    isOnline() ? null : h('p', { class: 'plain' }, 'Needs signal to change.'),
     ...SETTINGS.map(([key, fallback, label, hint]) => {
       let on = group.settings?.[key] ?? fallback;
-      const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on), disabled: !isOnline() },
+      // Offline: show each setting as it is, with nothing to tap.
+      if (!isOnline()) {
+        return h('div', { class: 'setting-row' },
+          h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
+          h('span', { class: 'setting-state' }, on ? 'On' : 'Off'));
+      }
+      const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on) },
         h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
         h('span', { class: 'tile-check', 'aria-hidden': 'true' }, icon('check', 26)));
       tile.addEventListener('click', async () => {
@@ -164,11 +174,15 @@ export async function renderGroup() {
   });
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
-      h('h1', { tabindex: '-1' }, group.name)),
+    // The cover: the team number, big, like the number on its robot.
+    h('section', { class: 'now group-cover', 'data-alliance': 'none' },
+      h('div', { class: 'now-top' },
+        h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')), null),
+      h('p', { class: 'now-hero num', 'aria-hidden': 'true' }, group.team_number),
+      h('h1', { class: 'group-name', tabindex: '-1' }, group.name),
+      h('p', { class: 'now-sub' }, `${group.program} team ${group.team_number} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, `${groupLabel(group)} · You’re a ${lead ? 'Lead' : 'Scout'}`),
+      lead && !isOnline() ? h('p', { class: 'plain group-offline' }, 'Inviting, roles and settings can be changed the next time this phone has signal. Everything here is the copy saved on it.') : null,
       message.el,
       inviteForm,
       invitesSection,
