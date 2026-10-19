@@ -1000,3 +1000,73 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .schedule-key { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
 .schedule-key .bumper { font-size: var(--fs-sm); min-width: 3.4em; }
 .group-offline { margin-top: var(--s4); }
+
+/* Assignments: the note after a change, with Undo */
+.assign-note { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+/* Filling an open station: pick a member */
+.pick-people { display: grid; gap: var(--s2); margin: var(--s3) 0; }
+.pick-person {
+  min-height: var(--tap);
+  padding: 0 var(--s4);
+  border-radius: var(--radius);
+  border: 2px solid var(--control-line);
+  font-weight: 700;
+  text-align: left;
+}
+.pick-person[aria-pressed='true'] { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
+
+/* ---------- Teams (Lead views) ---------- */
+.teams-note { font-size: var(--fs-sm); margin-bottom: var(--s3); }
+.teams-empty { margin-top: var(--s4); }
+.teams-wrap { overflow-x: auto; margin: 0 calc(-1 * var(--s4)); padding: 0 var(--s4); }
+.teams-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums lining-nums; }
+.teams-table th, .teams-table td { padding: var(--s1) 2px; border-bottom: 1px solid var(--line); text-align: right; }
+.teams-table thead th { padding: 0; border-bottom: 2px solid var(--text); }
+.teams-table th:first-child, .teams-table td:first-child { text-align: left; }
+.teams-table .sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 0 var(--s1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-2);
+}
+.teams-table th:not(:first-child) .sort { justify-content: flex-end; width: 100%; }
+.teams-table .sort.on { color: var(--text); font-weight: 800; }
+.teams-table td.num { font-size: var(--fs-lg); font-weight: 700; font-stretch: 75%; padding-inline: var(--s2) 2px; }
+.teams-table td.strong { font-size: var(--fs-xl); font-weight: 800; }
+.teams-table .team-link { display: flex; align-items: center; min-height: 52px; }
+.teams-table .team-link .bumper { font-size: var(--fs-lg); }
+.teams-table tr.unscouted .bumper { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
+.not-yet { font-size: var(--fs-sm); font-stretch: 100%; font-weight: 600; color: var(--text-2); }
+
+/* One Team: number as the cover, averages like the results screen */
+.team-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+.team-cover-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; margin-top: var(--s2); }
+.team-parts .part { border-bottom-color: var(--line); }
+.team-parts .part.total { border-top-color: var(--text); }
+.team-fields { margin-top: var(--s3); }
+.team-fields-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin-bottom: var(--s1); }
+.team-field { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); min-height: 44px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+.team-field dt { font-weight: 650; }
+.team-field dd { margin: 0; text-align: right; font-weight: 700; }
+.team-field dd.num { font-size: var(--fs-lg); font-stretch: 75%; }
+.team-field.texts { display: block; }
+.team-notes { list-style: none; padding: 0; margin: var(--s2) 0 0; display: grid; gap: var(--s2); }
+.team-notes .num { font-weight: 800; font-stretch: 75%; }
+.team-note-by { color: var(--text-2); font-size: var(--fs-sm); }
+.team-matches { list-style: none; padding: 0; }
+.team-matches li {
+  display: grid;
+  grid-template-columns: 3.5rem auto 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 56px;
+  border-bottom: 1px solid var(--line);
+}
+.team-match-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+.team-match-when { font-size: var(--fs-sm); color: var(--text-2); }
+.team-match-scouted { font-size: var(--fs-sm); font-weight: 700; }
+.team-match-scouted.none { color: var(--text-2); font-weight: 600; }

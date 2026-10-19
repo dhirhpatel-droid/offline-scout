@@ -159,6 +159,28 @@ export async function renderGroup() {
       return tile;
     })) : null;
 
+  // The Teams table's starting sort (each phone can still re-sort).
+  const SORTS = [['avg', 'Average points'], ['team', 'Team number'], ['scouted', 'Times scouted']];
+  let sortKey = group.settings?.teamsSort ?? 'avg';
+  const sortSetting = lead ? h('div', { class: 'field' },
+    h('span', { class: 'field-label', id: 'sort-label' }, 'Teams table starts sorted by'),
+    isOnline()
+      ? h('div', { class: 'segmented wide', role: 'group', 'aria-labelledby': 'sort-label' }, SORTS.map(([key, label]) => {
+        const b = h('button', { type: 'button', 'aria-pressed': String(key === sortKey) }, label);
+        b.addEventListener('click', async () => {
+          const before = sortKey;
+          sortKey = key;
+          b.parentElement.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          try { await setGroupSetting(group.id, 'teamsSort', key); } catch (err) {
+            sortKey = before;
+            b.parentElement.querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(SORTS[i][0] === before)));
+            message.show(friendlyError(err), 'error');
+          }
+        });
+        return b;
+      }))
+      : h('p', { class: 'setting-value' }, SORTS.find(([k]) => k === sortKey)?.[1])) : null;
+
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');
   leave.addEventListener('click', async () => {
     const ok = await confirmDialog({
@@ -190,6 +212,7 @@ export async function renderGroup() {
       membersNote,
       membersList,
       settingsSection,
+      sortSetting,
       h('div', { class: 'danger-zone group-footer' },
         h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),

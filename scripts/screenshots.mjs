@@ -92,9 +92,13 @@ try {
     // Now in a group, with saved matches
     await run(`
       const db = await new Promise((ok) => { const r = indexedDB.open('offline-scout'); r.onsuccess = () => ok(r.result); });
-      const mk = (match, team, position, pts, mins) => ({ id: crypto.randomUUID(), configId: 'ftc-2026-biobuzz', configVersion: 2, event: 'Sudbury Qualifier',
-        values: { 'pre.scout': 'Dhir', 'pre.level': 'qual', 'pre.match': match, 'pre.team': team, 'pre.position': position },
-        summary: { scout: 'Dhir', level: 'qual', match, team, position, alliance: position.replace(/\\d/, '') }, estimatedPoints: pts,
+      // Scouted values give believable points (Auto LEAVE + HIVE TIPs, Teleop rows, PARK).
+      const scored = (pts) => ({ 'auto.leave': pts > 0, 'auto.hiveTips': Math.floor(pts / 40), 'teleop.flower': Math.floor((pts % 40) / 4), 'end.park': pts > 30,
+        'post.driverSkill': pts > 50 ? 4 : pts > 20 ? 3 : 2, 'post.notes': pts > 60 ? 'Fast cycles, scores high CELLs' : pts === 0 ? 'Stopped moving after Auto' : '' });
+      const mk = (match, team, position, pts, mins, scout = 'Dhir') => ({ id: crypto.randomUUID(), configId: 'ftc-2026-biobuzz', configVersion: 4, event: 'Sudbury Qualifier',
+        eventId: 'ev1', groupId: 'g1',
+        values: { 'pre.scout': scout, 'pre.level': 'qual', 'pre.match': match, 'pre.team': team, 'pre.position': position, ...scored(pts) },
+        summary: { scout, level: 'qual', match, team, position, alliance: position.replace(/\\d/, '') }, estimatedPoints: pts,
         createdAt: new Date(Date.now() - mins * 60000).toISOString(), updatedAt: new Date().toISOString(), submittedAt: new Date().toISOString(), syncedAt: null });
       await new Promise((ok) => { const tx = db.transaction(['settings', 'submissions'], 'readwrite'); const s = tx.objectStore('settings');
         // A pretend Current event with a small schedule (Q14–Q20).
@@ -115,6 +119,9 @@ try {
         s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }], 'members:g1');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));
+        // Maya's matches (synced from her phone), so the Teams table has a spread.
+        [[14, 21229, 'blue2', 44, 41], [15, 16415, 'blue2', 66, 31], [16, 14515, 'blue1', 28, 21], [17, 22309, 'blue2', 81, 11], [16, 23810, 'blue1', 58, 22]]
+          .forEach((a) => sub.put({ ...mk(...a, 'Maya'), scoutId: '00000000-0000-4000-8000-0000000000bb' }));
         tx.oncomplete = ok; });
       db.close();
       return 1`);
@@ -122,6 +129,10 @@ try {
     await shot(t('05-home'));
     await go('#saved');
     await shot(t('08-saved'));
+    await go('#teams');
+    await shot(t('19-teams'));
+    await go('#team/23810');
+    await shot(t('20-team'));
     await go('#assign');
     await shot(t('16-assign'));
     // With "signal" (pretend: the real server can't be reached from here, so

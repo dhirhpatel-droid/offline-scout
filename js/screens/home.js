@@ -11,6 +11,8 @@ import { whatsNext, sharedAlliance } from '../now-scouting.js';
 import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
 import { planSummary } from '../assignments.js';
+import { forEvent, teamRows } from '../team-stats.js';
+import { loadConfig } from '../config.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
@@ -25,6 +27,17 @@ export async function renderHome() {
   const unsent = submissions.filter(needsSync).length;
   const lead = isLead(group);
   const plan = lead && group.currentEvent ? await cachedPlan(group.id, group.currentEvent.id) : null;
+  // Teams (Lead view): how many Teams at the event have been scouted (Coverage).
+  let teamsRow = null;
+  if ((lead || group.settings?.scoutsSeeAll === true) && group.currentEvent) {
+    const config = await loadConfig(group.game_config_id);
+    const rows = teamRows(config, forEvent(all, { groupId: group.id, eventId: group.currentEvent.id }), eventData?.teams ?? []);
+    const done = rows.filter((r) => r.scouted).length;
+    teamsRow = h('a', { class: 'row', href: '#teams' },
+      h('div', {}, h('div', { class: 'title' }, 'Teams'),
+        h('div', { class: 'sub' }, rows.length ? `${done} of ${rows.length} scouted · averages and notes` : 'Averages and notes, once matches come in')),
+      icon('next', 20));
+  }
 
   const el = h('div', { class: 'screen home-screen' },
     nowBlock(next),
@@ -43,6 +56,7 @@ export async function renderHome() {
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
         h('li', {}, eventRow(group, lead, eventData)),
+        teamsRow ? h('li', {}, teamsRow) : null,
         plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },
           h('div', {},
             h('div', { class: 'title' }, 'Assignments'),
