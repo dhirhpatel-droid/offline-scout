@@ -21,8 +21,8 @@ before(async () => {
 
 const add = (who, fields = {}) => {
   const q = { section: 'teleop', type: 'toggle', label: 'Cycled from the far side', options: null, ...fields };
-  return as(who, `insert into public.custom_questions (group_id, section, type, label, options, created_by)
-    values ($1, $2, $3, $4, $5, $6) returning id`, [groupId, q.section, q.type, q.label, q.options && JSON.stringify(q.options), who.id]);
+  return as(who, `insert into public.custom_questions (group_id, config_id, section, type, label, options, created_by)
+    values ($1, 'ftc-2026-biobuzz', $2, $3, $4, $5, $6) returning id`, [groupId, q.section, q.type, q.label, q.options && JSON.stringify(q.options), who.id]);
 };
 
 test('a Lead adds a question; the group sees it, outsiders don\'t', async () => {
@@ -34,9 +34,10 @@ test('a Lead adds a question; the group sees it, outsiders don\'t', async () => 
 test('Scouts can\'t add or change questions', async () => {
   await assert.rejects(add(scout), /row-level security/);
   const [{ id }] = await as(lead, 'select id from public.custom_questions limit 1');
-  await as(scout, `update public.custom_questions set label = 'Changed' where id = $1`, [id]);
-  const [{ label }] = await as(lead, 'select label from public.custom_questions where id = $1', [id]);
-  assert.equal(label, 'Cycled from the far side');
+  // A Scout's attempt to hide one matches no rows (Row Level Security).
+  await as(scout, 'update public.custom_questions set hidden_at = now() where id = $1', [id]);
+  const [{ hidden_at: hiddenAt }] = await as(lead, 'select hidden_at from public.custom_questions where id = $1', [id]);
+  assert.equal(hiddenAt, null);
 });
 
 test('Leads hide a question instead of deleting it', async () => {
@@ -51,4 +52,15 @@ test('questions must make sense', async () => {
   await assert.rejects(add(lead, { label: '   ' }), /check/);
   await assert.rejects(add(lead, { type: 'choice', options: ['Only one'] }), /check/);
   await add(lead, { type: 'choice', options: ['Left', 'Right'] });
+});
+
+test('a question\'s wording can\'t change once asked (hide and add a new one)', async () => {
+  const [{ id }] = await as(lead, `select id from public.custom_questions where type = 'choice' limit 1`);
+  await assert.rejects(as(lead, `update public.custom_questions set label = 'Reworded' where id = $1`, [id]), /permission denied/);
+  await as(lead, 'update public.custom_questions set position = 3 where id = $1', [id]);
+});
+
+test('every question belongs to a Game config', async () => {
+  await assert.rejects(as(lead, `insert into public.custom_questions (group_id, section, type, label, created_by)
+    values ($1, 'auto', 'toggle', 'No game', $2)`, [groupId, lead.id]), /null value|not-null/);
 });
