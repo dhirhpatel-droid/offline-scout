@@ -102,10 +102,28 @@ export async function deleteSubmission(id) {
   await putSubmission({ ...sub, deletedAt: now, updatedAt: now });
 }
 
-// The Draft (at most one at a time)
-export const getDraft = () => run('drafts', 'readonly', (s) => s.get('current'));
-export const putDraft = (sub) => run('drafts', 'readwrite', (s) => s.put(sub, 'current'));
-export const clearDraft = () => run('drafts', 'readwrite', (s) => s.delete('current'));
+// Drafts. Normally one ('current'). When a Scout watches two Teams in the
+// same match, the other Team's Draft waits under 'second'.
+export const getDraft = (slot = 'current') => run('drafts', 'readonly', (s) => s.get(slot));
+export const putDraft = (sub, slot = 'current') => run('drafts', 'readwrite', (s) => s.put(sub, slot));
+export const clearDraft = (slot = 'current') => run('drafts', 'readwrite', (s) => s.delete(slot));
+
+// Swap the two Drafts (the two-Team switch on the match screen).
+export async function swapDrafts() {
+  const [a, b] = await Promise.all([getDraft('current'), getDraft('second')]);
+  if (!b) return;
+  await putDraft(b, 'current');
+  await putDraft(a, 'second');
+}
+
+// The current Draft is done (saved or discarded): the waiting one moves up.
+export async function finishDraft() {
+  const second = await getDraft('second');
+  await clearDraft('second');
+  if (second) await putDraft(second, 'current');
+  else await clearDraft('current');
+  return second ?? null;
+}
 
 // Settings
 export const getSetting = (key) => run('settings', 'readonly', (s) => s.get(key));

@@ -134,8 +134,13 @@ export async function listMembers(groupId) {
   const ids = rows.map((r) => r.user_id);
   const profiles = ids.length ? must(await sb.from('profiles').select('id, display_name').in('id', ids)) : [];
   const names = Object.fromEntries(profiles.map((p) => [p.id, p.display_name]));
-  return rows.map((r) => ({ ...r, display_name: names[r.user_id] ?? 'Member' }));
+  const members = rows.map((r) => ({ ...r, display_name: names[r.user_id] ?? 'Member' }));
+  await setSetting(`members:${groupId}`, members); // so names show offline too
+  return members;
 }
+
+// The last member list this phone saw (works offline).
+export const cachedMembers = async (groupId) => (await getSetting(`members:${groupId}`)) ?? [];
 
 export const setRole = (groupId, userId, role) =>
   sb.from('memberships').update({ role }).eq('group_id', groupId).eq('user_id', userId).then(must);
