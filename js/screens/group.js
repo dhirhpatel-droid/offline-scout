@@ -127,6 +127,7 @@ export async function renderGroup() {
   const SETTINGS = [
     ['scoutsSeeAll', false, 'Scouts see everyone’s matches', 'When off, Scouts see only their own matches.'],
     ['leadsCanEdit', true, 'Leads can edit scouts’ matches', 'Every change is kept, so nothing is lost.'],
+    ['twoTeams', true, 'Scouts can watch two teams at once', 'Lets a Lead assign one Scout two teams in the same match.'],
   ];
   const settingsSection = lead ? h('section', {},
     h('h2', { class: 'section-title sub' }, 'Group settings'),

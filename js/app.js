@@ -18,6 +18,7 @@ import { renderAuth } from './screens/auth.js';
 import { renderGroups } from './screens/groups.js';
 import { renderGroup } from './screens/group.js';
 import { renderEvent } from './screens/event.js';
+import { renderAssign } from './screens/assign.js';
 
 const root = document.getElementById('app');
 
@@ -30,6 +31,7 @@ const routes = {
   groups: renderGroups,
   group: renderGroup,
   event: renderEvent,
+  assign: renderAssign,
 };
 
 // Screens you can use without a Scouting group.

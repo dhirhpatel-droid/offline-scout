@@ -145,7 +145,9 @@ export async function renderEvent() {
 
   const el = h('div', { class: 'screen' },
     cover,
-    h('main', { class: 'content' }, message.el, schedule, teams, refreshBtn, picker),
+    h('main', { class: 'content' }, message.el,
+      lead && ev ? h('a', { class: 'pill block', href: '#assign' }, 'Plan assignments', icon('next', 20)) : null,
+      schedule, teams, refreshBtn, picker),
   );
   return { el };
 }

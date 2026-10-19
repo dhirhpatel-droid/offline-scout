@@ -828,3 +828,54 @@ a.row { color: inherit; }
 }
 .team-note.warn strong { color: var(--danger); }
 .team-note.warn .small-btn { justify-self: start; }
+
+/* Two Teams in one match: the two team numbers are a switch */
+.team-switch { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin: var(--s2) 0 var(--s3); }
+.team-switch button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: var(--tap-lg);
+  padding: var(--s2) var(--s4);
+  border-radius: var(--radius);
+  border: 2px solid var(--on-alliance);
+  color: var(--on-alliance);
+  text-align: left;
+}
+.switch-team { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.switch-pos { font-size: var(--fs-sm); font-weight: 600; }
+.team-switch button[aria-pressed='true'] { background: var(--on-alliance); color: var(--alliance); }
+
+/* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
+.now-hero.two { font-size: var(--fs-hero); }
+
+/* Home: "Coming up", the rest of your Assignments. A coloured edge per row
+   says the alliance; the words say the position too (never colour alone). */
+.coming-up { list-style: none; margin: 0; padding: 0; }
+.coming-up li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  align-items: center;
+  gap: var(--s3);
+  min-height: var(--tap);
+  padding: var(--s2) 0 var(--s2) var(--s3);
+  border-left: 4px solid var(--neutral-alliance);
+  border-bottom: 1px solid var(--line);
+}
+.coming-up li[data-alliance='red'] { border-left-color: var(--red); }
+.coming-up li[data-alliance='blue'] { border-left-color: var(--blue); }
+.coming-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+.coming-what { display: flex; flex-direction: column; }
+.coming-team { font-size: var(--fs-lg); font-weight: 700; }
+.coming-sub { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Assignments (Leads): one section per member */
+.assign-member { padding: var(--s5) 0; border-bottom: 1px solid var(--line); }
+.assign-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+.assign-summary { color: var(--text-2); margin: var(--s1) 0 var(--s3); }
+.assign-row { border-left: 4px solid transparent; padding-left: var(--s3); }
+.assign-row[data-alliance='red'] { border-left-color: var(--red); }
+.assign-row[data-alliance='blue'] { border-left-color: var(--blue); }
+.assign-member > .pill { margin-top: var(--s3); }
+.assign-form { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
+.assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }

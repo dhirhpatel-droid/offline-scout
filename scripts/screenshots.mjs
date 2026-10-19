@@ -107,6 +107,11 @@ try {
         s.put({ event: ev, teams, matches, savedAt: new Date(Date.now() - 4 * 60000).toISOString() }, 'event:ev1');
         s.put([{ id: 'g1', program: 'FTC', team_number: 16415, name: 'Lo-Ellen EDIT', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {}, currentEvent: ev }], 'groups');
         s.put('g1', 'currentGroupId'); s.put('Northern Ontario Qualifier', 'eventName');
+        // A pretend plan: Dhir watches Red 1 for Q18–Q20 and follows 23810; Maya has Blue 1.
+        const dhir = '00000000-0000-4000-8000-0000000000aa', maya = '00000000-0000-4000-8000-0000000000bb';
+        s.put({ shifts: [{ id: 's1', scout_id: dhir, position: 'red1', from_match: 18, to_match: 20 }, { id: 's2', scout_id: maya, position: 'blue1', from_match: 14, to_match: 20 }],
+          watches: [{ id: 'w1', scout_id: dhir, team_number: 23810 }], savedAt: new Date().toISOString() }, 'plan:g1:ev1');
+        s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }], 'members:g1');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));
         tx.oncomplete = ok; });
@@ -116,6 +121,21 @@ try {
     await shot(t('05-home'));
     await go('#saved');
     await shot(t('08-saved'));
+    await go('#assign');
+    await shot(t('16-assign'));
+    // With "signal" (pretend: the real server can't be reached from here, so
+    // the member refresh fails quietly and its message is cleared).
+    await run(`Object.defineProperty(navigator, 'onLine', { get: () => true }); window.dispatchEvent(new HashChangeEvent('hashchange')); return 1`);
+    await sleep(900);
+    await run(`document.querySelectorAll('.form-message').forEach((m) => { m.hidden = true; }); document.querySelectorAll('.assign-member .pill')[1].click(); [...document.querySelectorAll('.position-grid button')].find((b) => b.textContent === 'Blue 2').click(); return 1`);
+    await shot(t('17-assign-add'));
+    // Start the assigned match (two Teams in Q18), then come back home.
+    await go('#home');
+    await run(`document.querySelector('.now-go').click(); return 1`);
+    await sleep(1200);
+    await shot(t('18-match-two-teams'));
+    await run(`indexedDB.open('offline-scout').onsuccess = (e) => { const tx = e.target.result.transaction('drafts', 'readwrite'); tx.objectStore('drafts').clear(); }; return 1`);
+    await sleep(300);
     // Start a match, type one thing, leave: it's now an unfinished match.
     await go('#match', 1200);
     await run(`const i = [...document.querySelectorAll('input')].find((x) => x.labels[0]?.textContent === 'Match number'); i.value = '18'; i.dispatchEvent(new Event('input')); return 1`);

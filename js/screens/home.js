@@ -3,12 +3,14 @@
 // Below it: your matches, your Scouting group, and the event.
 
 import { h, icon, setThemeColor, confirmDialog } from '../ui.js';
-import { getSetting, listSubmissions, clearDraft } from '../db.js';
+import { getSetting, listSubmissions, finishDraft } from '../db.js';
 import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
 import { whatsNext } from '../now-scouting.js';
-import { currentEventData } from '../events.js';
+import { startPlannedMatch } from './match.js';
+import { currentEventData, cachedPlan } from '../events.js';
+import { planSummary } from './assign.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
@@ -22,6 +24,7 @@ export async function renderHome() {
 
   const unsent = submissions.filter(needsSync).length;
   const lead = isLead(group);
+  const plan = lead && group.currentEvent ? await cachedPlan(group.id, group.currentEvent.id) : null;
 
   const el = h('div', { class: 'screen home-screen' },
     nowBlock(next),
@@ -40,7 +43,14 @@ export async function renderHome() {
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
         h('li', {}, eventRow(group, lead, eventData)),
+        plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },
+          h('div', {},
+            h('div', { class: 'title' }, 'Assignments'),
+            h('div', { class: 'sub' }, planSummary(plan, eventData?.matches ?? []) ?? 'No one assigned yet. Plan who watches what.')),
+          icon('next', 20))) : null,
       ),
+
+      comingUp(next),
 
       submissions.length ? h('section', {},
         h('h2', { class: 'section-h' }, 'Recent'),
@@ -73,6 +83,29 @@ function nowBlock(next) {
       h('a', { class: 'pill big block now-go', href: '#match' }, next.code ? `Resume ${next.code}` : 'Resume this match', icon('next', 22)),
       discardLink());
   }
+  if (next.kind === 'assigned') {
+    const two = next.items.length > 1;
+    const go = h('button', { class: 'pill big block now-go', type: 'button' },
+      `Scout ${next.code}${two ? ' · both teams' : ''}`, icon('next', 22));
+    go.addEventListener('click', () => startPlannedMatch(next.items));
+    return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
+      top,
+      h('h1', { class: `now-hero num${two ? ' two' : ''}`, tabindex: '-1' }, next.team ?? next.code),
+      h('p', { class: 'now-sub' }, [
+        next.team ? next.code : null,
+        next.items.map((a) => positionLabel(a.position)).join(' and '),
+        next.time,
+        two ? 'your next two teams' : 'your next assignment',
+      ].filter(Boolean).join(' · ')),
+      go);
+  }
+  if (next.kind === 'all-done') {
+    return h('section', { class: 'now', 'data-alliance': 'none' },
+      top,
+      h('h1', { class: 'now-hero', tabindex: '-1' }, 'All done'),
+      h('p', { class: 'now-sub' }, `You’ve scouted all ${next.total} of your assignments. Extra matches still count.`),
+      h('a', { class: 'pill big block now-go', href: '#match' }, 'Scout another match', icon('next', 22)));
+  }
   if (next.kind === 'next') {
     return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
       top,
@@ -89,6 +122,20 @@ function nowBlock(next) {
     h('a', { class: 'pill big block now-go', href: '#match' }, 'Scout a match', icon('next', 22)));
 }
 
+// The rest of your Assignments, in match order (the next few).
+function comingUp(next) {
+  if (next.kind !== 'assigned' || !next.later.length) return null;
+  const shown = next.later.slice(0, 5);
+  return h('section', {},
+    h('h2', { class: 'section-h' }, 'Coming up'),
+    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', { 'data-alliance': g.items[0].position.replace(/\d/, '') },
+      h('span', { class: 'num coming-code' }, g.code),
+      h('span', { class: 'coming-what' },
+        h('span', { class: 'num coming-team' }, g.items.map((a) => a.team ?? positionLabel(a.position)).join(' + ')),
+        h('span', { class: 'coming-sub' }, [g.items.map((a) => positionLabel(a.position)).join(', '), g.time].filter(Boolean).join(' · ')))))),
+    next.later.length > shown.length ? h('p', { class: 'plain' }, `And ${next.later.length - shown.length} more after that.`) : null);
+}
+
 function discardLink() {
   const btn = h('button', { class: 'now-discard', type: 'button' }, h('span', { class: 'icon-label' }, icon('trash', 20), 'Discard this match'));
   btn.addEventListener('click', async () => {
@@ -98,7 +145,7 @@ function discardLink() {
       confirmLabel: 'Discard',
     });
     if (!ok) return;
-    await clearDraft();
+    await finishDraft();
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   });
   return btn;

@@ -1,16 +1,38 @@
 // "What am I scouting?" – used by Home's big block and by the now-scouting
 // bar that follows you around while a match is unfinished.
 //
-// Three cases:
-//   draft – a match in progress: resume it
-//   next  – the last match was saved: the next one (match + 1) is ready
-//   none  – nothing yet: start scouting
+// Four cases:
+//   draft    – a match in progress: resume it
+//   assigned – your Lead gave you Assignments: the next one (1 or 2 Teams)
+//   next     – the last match was saved: the next one (match + 1) is ready
+//   none     – nothing yet: start scouting
 
 import { h, icon } from './ui.js';
 import { getDraft, getSetting, listSubmissions } from './db.js';
 import { matchCode, positionLabel, allianceOf } from './submissions.js';
-import { currentEventData } from './events.js';
+import { currentEventData, cachedPlan } from './events.js';
+import { currentGroup, cachedProfile } from './account.js';
 import { findMatch, teamAt, timeOf } from './schedule.js';
+import { assignmentsFor, upcoming, byMatch } from './assignments.js';
+
+// My Assignments still to do at the Current event, grouped by match.
+// Works offline: the plan and schedule are copies saved on this phone.
+export async function myPlan() {
+  const [group, profile, eventData, all] = await Promise.all([
+    currentGroup(), cachedProfile(), currentEventData(), listSubmissions(),
+  ]);
+  const ev = group?.currentEvent;
+  if (!ev || !profile?.id) return { assigned: false, todo: [] };
+  const plan = await cachedPlan(group.id, ev.id);
+  const mine = assignmentsFor({ scoutId: profile.id, shifts: plan.shifts, watches: plan.watches, matches: eventData?.matches ?? [] });
+  const mySubs = all.filter((s) => s.scoutId === profile.id || !s.scoutId);
+  const todo = byMatch(upcoming(mine, mySubs)).map((g) => ({
+    ...g,
+    code: matchCode({ level: g.level, match: g.number }),
+    time: timeOf(findMatch(eventData?.matches, g.level, g.number)),
+  }));
+  return { assigned: mine.length > 0, total: mine.length, todo };
+}
 
 export async function whatsNext() {
   const draft = await getDraft();
@@ -27,6 +49,23 @@ export async function whatsNext() {
       started: new Date(draft.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     };
   }
+  // Assignments come first: the Lead planned these.
+  const plan = await myPlan();
+  if (plan.todo.length) {
+    const [first, ...later] = plan.todo;
+    return {
+      kind: 'assigned',
+      items: first.items,
+      code: first.code,
+      time: first.time,
+      team: first.items.map((a) => a.team).filter(Boolean).join(' + ') || null,
+      position: first.items[0].position,
+      alliance: allianceOf(first.items[0].position),
+      later,
+    };
+  }
+  if (plan.assigned) return { kind: 'all-done', total: plan.total };
+
   const [carry, eventData] = await Promise.all([getSetting('nextCarry'), currentEventData()]);
   // The schedule (if any) says which team is in that match and position, and when.
   const withSchedule = (next, level, match) => {

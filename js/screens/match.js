@@ -24,6 +24,7 @@ import { isLead } from '../group-rules.js';
 import { findRole } from '../config.js';
 import { cachedEvent } from '../events.js';
 import { findMatch, teamAt, timeOf, isAtEvent } from '../schedule.js';
+import { myPlan } from '../now-scouting.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -70,6 +71,7 @@ export async function renderMatch({ param }) {
   // A Draft nobody typed anything into is thrown away when you leave.
   let touched = editing;
   let stopListening = null;
+  let nextUp = null; // my remaining Assignments, worked out after saving
 
   // Start on Setup if something needed there is still empty (the team, on a
   // fresh match); otherwise on the first period.
@@ -84,6 +86,27 @@ export async function renderMatch({ param }) {
   const pointsEl = h('span', { class: 'value num' });
   const teamEl = h('h1', { class: 'team num', tabindex: '-1' });
   const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Match periods' });
+
+  // Watching two Teams in this match? A switch between their two Drafts.
+  const other = !editing ? await db.getDraft('second') : null;
+  const sameMatch = (a, b) => a && b && a.summary?.match === b.summary?.match
+    && (a.summary?.level ?? 'qual') === (b.summary?.level ?? 'qual');
+  const pair = sameMatch(submission, other) ? other : null;
+  // The two Teams become the big numbers (the plain team number is then only
+  // for screen readers), with the position under each.
+  const pill = (sub, pressed) => h('button', { type: 'button', 'aria-pressed': String(pressed) },
+    h('span', { class: 'num switch-team' }, sub.summary.team ?? '?'),
+    h('span', { class: 'switch-pos' }, positionLabel(sub.summary.position)));
+  const thisPill = pair ? pill(submission, true) : null;
+  const otherPill = pair ? pill(pair, false) : null;
+  otherPill?.addEventListener('click', async () => {
+    await save();
+    await db.swapDrafts();
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
+  const teamSwitch = pair ? h('div', { class: 'team-switch', role: 'group', 'aria-label': 'Switch between your two teams in this match' },
+    thisPill, otherPill) : null;
+  if (pair) teamEl.classList.add('visually-hidden');
   const header = h('header', { class: 'match-head' },
     h('div', { class: 'row1' },
       backBtn, metaEl,
@@ -91,6 +114,7 @@ export async function renderMatch({ param }) {
         pointsEl, h('div', { class: 'label' }, 'est. pts')),
     ),
     teamEl,
+    teamSwitch,
     tabs,
   );
 
@@ -103,6 +127,7 @@ export async function renderMatch({ param }) {
     screen.dataset.alliance = alliance ?? 'none';
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
+    if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       position ? positionLabel(position) : 'pick a position',
@@ -352,8 +377,16 @@ export async function renderMatch({ param }) {
       location.hash = '#saved';
       return;
     }
-    await db.clearDraft();
+    const waiting = await db.finishDraft();
+    if (waiting) {
+      // The other Team in this match is still to finish: go straight to it.
+      await db.setSetting('authNote', null);
+      syncNow();
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+      return;
+    }
     await db.setSetting('nextCarry', nextMatchCarry(submission));
+    nextUp = await myPlan();
     showFinish();
   }
 
@@ -393,8 +426,11 @@ export async function renderMatch({ param }) {
     showStatus(null);
     syncNow().then(showStatus);
     stopListening = listenFor('scout-sync', (e) => showStatus(e.detail));
-    const nextCode = carry.match ? matchCode({ level: carry.level, match: carry.match }) : null;
-    const nextTeam = carry.match ? teamAt(findMatch(eventData?.matches, carry.level, carry.match), carry.position) : null;
+    // The next Assignment (if the Lead planned any) beats "this match + 1".
+    const planned = nextUp?.todo[0] ?? null;
+    const nextCode = planned ? planned.code : carry.match ? matchCode({ level: carry.level, match: carry.match }) : null;
+    const nextTeam = planned ? planned.items.map((a) => a.team).filter(Boolean).join(' + ')
+      : carry.match ? teamAt(findMatch(eventData?.matches, carry.level, carry.match), carry.position) : null;
     const parts = pointsBySection(config, submission.values);
     const breakdown = config.sections
       .filter((s) => s.fields.some((f) => f.points))
@@ -416,7 +452,7 @@ export async function renderMatch({ param }) {
         h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
         statusEl),
       h('div', { class: 'finish-actions' },
-        h('button', { class: 'pill big block', type: 'button', onclick: startNext },
+        h('button', { class: 'pill big block', type: 'button', onclick: () => (planned ? startPlannedMatch(planned.items) : startNext()) },
           nextCode ? `Scout ${nextCode}${nextTeam ? ` · ${nextTeam}` : ''}` : 'Scout the next match', icon('next', 22)),
         h('div', { class: 'two' },
           h('a', { class: 'pill secondary block', href: `#match/${submission.id}` }, `Edit ${code}`),
@@ -442,7 +478,7 @@ export async function renderMatch({ param }) {
         confirmLabel: 'Discard',
       });
       if (!ok) return;
-      await db.clearDraft();
+      await db.finishDraft();
       location.hash = '#home';
     });
     return h('div', { class: 'danger-zone' }, btn);
@@ -474,17 +510,19 @@ export async function renderMatch({ param }) {
       observer?.disconnect();
       stopListening?.();
       // Opened by mistake and left without typing anything: don't keep it.
-      if (freshDraft && !touched && !submission.submittedAt) db.clearDraft();
+      if (freshDraft && !touched && !submission.submittedAt && !pair) db.finishDraft();
     },
   };
 }
 
 // Creates and saves a fresh Draft, pre-filled from the last match.
 // The scout's name comes from their account; the game config from their group.
-export async function startNewMatch() {
-  const [group, profile, configId, event, carry] = await Promise.all([
+export async function startNewMatch(planned = null, slot = 'current') {
+  const [group, profile, configId, event, savedCarry] = await Promise.all([
     currentGroup(), cachedProfile(), db.getSetting('configId'), db.getSetting('eventName'), db.getSetting('nextCarry'),
   ]);
+  // A planned match (from an Assignment) beats the "last match + 1" guess.
+  const carry = planned ? { ...savedCarry, ...planned } : savedCarry;
   const config = await loadConfig(group?.game_config_id ?? configId);
   const scout = profile?.display_name || carry?.scout;
   const submission = newSubmission(config, { ...carry, scout, event: event ?? carry?.event });
@@ -503,8 +541,26 @@ export async function startNewMatch() {
       refresh(config, submission);
     }
   }
-  await db.putDraft(submission);
+  if (planned?.team) {
+    const key = findRole(config, 'teamNumber')?.key;
+    if (key) submission.values[key] = planned.team;
+    refresh(config, submission);
+  }
+  await db.putDraft(submission, slot);
   return submission;
+}
+
+// Start an assigned match. Two Assignments in the same match (two Teams at
+// once) become two Drafts, with a switch on the match screen.
+export async function startPlannedMatch(items) {
+  await db.clearDraft('second');
+  const [first, second] = items;
+  await startNewMatch({ level: first.level, match: first.number, position: first.position, team: first.team });
+  if (second) {
+    await startNewMatch({ level: second.level, match: second.number, position: second.position, team: second.team }, 'second');
+  }
+  if (location.hash === '#match') window.dispatchEvent(new HashChangeEvent('hashchange'));
+  else location.hash = '#match';
 }
 
 function formatDuration(sec) {
