@@ -1,6 +1,6 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 3,
+  "version": 4,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
@@ -167,7 +167,8 @@
           "hint": "In the loading zone when the match ends"
         }
       ],
-      "showWith": "teleop"
+      "durationSec": 30,
+      "note": "The last 30 seconds of Teleop."
     },
     {
       "id": "post",
