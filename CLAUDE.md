@@ -113,7 +113,12 @@ form would not even open, so we lost scouting data when we needed it most.
   field summed up by `fieldSummary`, its matches, its Submissions). `js/team-stats.js`.
   Endgame got its own tab (config v4). Assignments: Undo after Add/Remove, tap an Open
   station to fill it.
-- **Next:** Milestone 7 in docs/roadmap.md. Re-run the impeccable
+- **Milestone 7 (built Oct 19, 2026):** Custom questions (`custom_questions` table, migration
+  applied; answers stored in values as `<section>.custom-<id>`, so they never score;
+  `js/custom-rules.js` + `js/custom.js`, editor at #questions). Data checks
+  (`js/data-checks.js`: scouts disagree, alliance total far from official score, values that
+  don't fit the schedule; Group setting `checkSensitivity`; #checks, Home row, Team pages).
+- **Next:** test Milestones 4–7 on real phones at an event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands

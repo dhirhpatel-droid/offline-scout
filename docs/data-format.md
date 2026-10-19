@@ -106,3 +106,11 @@ Replaced versions are kept in `submission_edits`. Mapping: `toServer()` / `fromS
 in `js/sync-rules.js`.
 
 Still undecided: the QR payload (QR backup is a later, optional Group setting).
+
+## Custom questions
+
+A group's extra questions (table `custom_questions`) are merged into the Game config on
+the phone (`withCustom` in `js/custom-rules.js`). An answer is stored in the Submission's
+`values` like any other, under `<section>.custom-<question id>`. Custom fields never have
+`points`, so they never change Estimated points. A config field may also give `min`/`max`;
+Data checks flag numbers outside them.

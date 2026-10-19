@@ -48,13 +48,16 @@ js/sync-rules.js         the sync rules: newer edit wins, deletes, claiming (tes
 js/now-scouting.js       "what am I scouting?" for Home and the unfinished-match bar
 js/assignments.js        Assignments + Coverage from the Lead's plan and the schedule (tested)
 js/team-stats.js         Lead views: per-Team counts, averages, field summaries (tested)
+js/custom-rules.js       Custom questions merged into the Game config, never scored (tested)
+js/custom.js             Custom questions: download, add, hide (with signal)
+js/data-checks.js        Data checks: disagreements, score gaps, impossible values (tested)
 js/db.js                 IndexedDB: Submissions, Drafts (two for two Teams), settings (+ upgrades)
 js/config.js             loads + validates game configs, finds fields by role
 js/scoring.js            estimated points from a config + values (pure function)
 js/submissions.js        Submissions: creating, summaries, next match, Alliance positions
 js/fields.js             turns a config field into a widget (counter, Yes/No…)
 js/ui.js                 small helpers: h() element builder, icons, dialog
-js/screens/*.js          home, match, saved, settings, auth, groups, group, event, assign, teams
+js/screens/*.js          home, match, saved, settings, auth, groups, group, event, assign, teams, questions, checks
 vendor/                  supabase-js, kept in the repo so it works offline
 supabase/migrations/     database tables and security rules (SQL)
 supabase/functions/      server code that needs secret keys (sending invites)

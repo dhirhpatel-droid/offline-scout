@@ -17,7 +17,7 @@ Each one is useful on its own, and each builds on the one before.
 | 4 | **Events from FIRST** | A Lead searches for an Event and makes it the Current event. Its Teams and qualification schedule download to every member's phone. The match screen fills in the Team from the schedule. |
 | 5 | **Assignments** (built Oct 19) | Leads make Position shifts and Team watches. Each Scout's home screen shows "your next matches" with scheduled times. Two Teams in one Match (Group setting) with a switch at the top. Playoff Teams fill in when there's signal. |
 | 6 | **Lead views** (built Oct 19) | All Teams table (sortable, default sort is a Group setting), one page per Team, and Coverage. |
-| 7 | **Data checks and Custom questions** | Flags for disagreeing Submissions, totals far from official scores, and impossible values (sensitivity is a Group setting). Leads add Custom questions to any period. |
+| 7 | **Data checks and Custom questions** (built Oct 19) | Flags for disagreeing Submissions, totals far from official scores, and impossible values (sensitivity is a Group setting). Leads add Custom questions to any period. |
 | later | Not scheduled yet | QR backup, running-late estimate, clash flags, pit scouting, announcements, FRC 2027 config (after kickoff in January). |
 
 **Why this order?** Nothing can be shared until there are accounts and groups (2). Leads
