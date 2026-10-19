@@ -141,16 +141,24 @@ export async function renderMatch({ param }) {
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
     if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
-    // No team yet, but the schedule knows the match: the line-up becomes
-    // buttons, so one tap picks the team (typing it still works below).
-    const canPick = !team && !readOnly && !pair && teamKey && positionKey && scheduled();
-    lineupEl.replaceChildren(...(canPick
-      ? [h('p', { class: 'lineup-hint' }, 'Tap the team you’re scouting'), lineup(scheduled(), [], pickFromLineup)]
-      : [lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '']));
+    // The schedule knows the match and no team was typed by hand: the
+    // line-up is buttons, so one tap picks the team, and another tap
+    // changes it (typing still works below).
+    const canPick = Boolean(!readOnly && !pair && teamKey && positionKey && scheduled() && (!team || team === autoTeam));
+    if (canPick) {
+      const picker = lineup(scheduled(), team ? [team] : [], pickFromLineup);
+      picker.setAttribute('aria-describedby', 'lineup-hint');
+      lineupEl.replaceChildren(
+        h('p', { class: 'lineup-hint', id: 'lineup-hint' }, team ? 'Tap another team to change' : 'Tap the team you’re scouting'),
+        picker);
+    } else {
+      lineupEl.replaceChildren(lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
+    }
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       // With two Teams, each pill already says its position.
-      pair ? null : position ? positionLabel(position) : 'pick a position',
+      // (No "pick a position" while the line-up hint already asks.)
+      pair ? null : position ? positionLabel(position) : canPick ? null : 'pick a position',
       timeOf(scheduled()),
     ].filter(Boolean).join(' · ');
     // When the estimate goes up, the header number jumps too.

@@ -71,8 +71,9 @@ export function lineup(match, watched, onPick = null) {
     const cls = `lineup-team num ${color}${watched.includes(t) ? ' mine' : ''}`;
     if (!onPick) return h('span', { class: cls }, t, watched.includes(t) ? hidden(' (you scout)') : null);
     const position = `${color}${i + 1}`;
+    // aria-pressed: the team picked now (tapping another one changes it).
     return h('button', { type: 'button', class: `${cls} pick`, onclick: () => onPick(t, position),
-      'aria-label': `Scout ${t}, ${cap(color)} ${i + 1}` }, t);
+      'aria-pressed': String(watched.includes(t)), 'aria-label': `Scout ${t}, ${cap(color)} ${i + 1}` }, t);
   };
   const side = (color) => h('span', { class: 'lineup-side' }, onPick ? null : hidden(`${cap(color)}: `),
     match[color].map((t, i) => plate(color, t, i)));
