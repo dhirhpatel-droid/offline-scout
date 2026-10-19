@@ -56,7 +56,8 @@ form would not even open, so we lost scouting data when we needed it most.
 ## Not decided yet
 - QR payload format (QR backup is a later, optional Group setting)
 - Pit scouting layout (later)
-- Which FRC data source to use for FRC 2027 (official FRC Events API or The Blue Alliance)
+- Which FRC data source to use for FRC 2027 (official FRC Events API or The Blue Alliance).
+  FTC uses FTCScout (no key) through `supabase/functions/event-data`.
 
 ## Timeline
 - Oct–Dec 2026: v1 — offline core, one FTC config, accounts + groups + sync, events and assignments
@@ -93,7 +94,11 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Milestone 3 (built Oct 19, 2026):** sync. `submissions` table + rules
   (migration applied), `js/sync.js` + `js/sync-rules.js`, Mine/Everyone, Group settings.
   Tested by Dhir on two phones with real accounts (Oct 19): send, Everyone view, offline edit.
-- **Next:** Milestone 4 (Events from FIRST) in docs/roadmap.md. Re-run the impeccable
+- **Milestone 4 (built Oct 20, 2026):** Events from FIRST via FTCScout (`event-data`
+  server function, deployed; `events`/`event_teams`/`event_matches`/`group_events`,
+  migration applied). Teams fill in from the schedule; Home shows the next team.
+  Not yet tested by Dhir with a real event pick.
+- **Next:** Milestone 5 (Assignments) in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands
