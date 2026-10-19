@@ -125,6 +125,9 @@ form would not even open, so we lost scouting data when we needed it most.
   the repo. Only the Supabase URL and publishable key go in the app.
 - Database changes are SQL migration files in `supabase/migrations/`, applied with
   `npx supabase db push`. Every table has Row Level Security.
+- New tables are NOT exposed automatically: grant table permissions explicitly, to
+  `authenticated` for what phones do and to `service_role` for what server functions
+  write (service_role skips RLS but still needs grants).
 - Claude can't create real accounts on the live Supabase project; real sign-up/invite
   testing is done by Dhir. The offline test uses a pretend saved login.
 - The in-app browser pane can't run service workers; test offline with `npm run test:offline`
