@@ -107,7 +107,13 @@ form would not even open, so we lost scouting data when we needed it most.
 - **"Like the event itself" redesign (Oct 19, 2026, Dhir's pick):** bumper team numbers,
   station signs, printed per-station schedule, field-clock period times, results-table
   finish (DESIGN.md "Event pieces"). Whole-app critique 28–29 → 29–30.
-- **Next:** Milestone 6 in docs/roadmap.md. Re-run the impeccable
+- **Milestone 6 (built Oct 19, 2026):** Lead views, all on the phone (no database change):
+  #teams (All Teams table: Scouted = Coverage, averages per scoring period, tap a heading to
+  sort; starting sort is Group setting `teamsSort`) and #team/<n> (averages, every config
+  field summed up by `fieldSummary`, its matches, its Submissions). `js/team-stats.js`.
+  Endgame got its own tab (config v4). Assignments: Undo after Add/Remove, tap an Open
+  station to fill it.
+- **Next:** Milestone 7 in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands

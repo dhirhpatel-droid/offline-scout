@@ -322,6 +322,8 @@ Surface fill, 20px corners, 24px padding, sits at the bottom of the screen so th
 - **Field clock:** period tabs show their time under the name (Auto 0:30, Teleop 2:00).
 - **Results:** the finish block lists each period with its points right-aligned, a 3px rule, then the estimated total at hero size.
 
+- **Teams table:** a plain sortable table (the printed results-sheet look): team bumpers down the left, numbers right-aligned in condensed tabular digits, the active sort heading in Text colour with an arrow icon, a 2px rule under the headings. Unscouted teams show outlined bumpers and "None".
+
 ### Named Rules
 **The Printed Sign Rule.** Things that exist as printed signs at an event (bumpers, station signs) get 6px corners; things you tap stay pills and circles.
 
