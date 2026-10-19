@@ -4,7 +4,7 @@
 // assigns anyone by itself (PRODUCT.md: show data, let humans decide).
 // Changes need signal; the plan saved on the phone still shows without it.
 
-import { h, icon, formField, formMessage, busy, confirmDialog, bumper, station } from '../ui.js';
+import { h, icon, formField, formMessage, busy, bumper, station } from '../ui.js';
 import { currentGroup, cachedMembers, listMembers, currentUser } from '../account.js';
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -44,13 +44,21 @@ export async function renderAssign() {
   };
 
   // Add a shift or watch, and remember how to undo it (the new row's id).
-  async function addAndNote(memberId, kind, row, text) {
+  async function addAndNote(memberId, kind, row, text, where = null) {
     const before = new Set([...plan.shifts, ...plan.watches].map((x) => x.id));
     const after = kind === 'shift'
       ? await addShift(group, { scoutId: memberId, position: row.position, from: row.from_match, to: row.to_match })
       : await addWatch(group, { scoutId: memberId, team: row.team_number });
     const added = (kind === 'shift' ? after.shifts : after.watches).find((x) => !before.has(x.id));
-    await reload(memberId, text, added ? { op: 'remove', kind, id: added.id } : null);
+    await setSetting('assignNote', { memberId, text, where, undo: added ? { op: 'remove', kind, id: added.id } : null });
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  }
+
+  // The note itself. It gets focus after the screen redraws, so a screen
+  // reader reads what changed (a live region made fresh with its text isn't
+  // reliably announced).
+  function noteEl(n) {
+    return h('div', { class: 'form-message info assign-note', role: 'status', tabindex: '-1' }, h('span', {}, n.text), undoButton(n));
   }
 
   // The Undo button in a note.
@@ -123,7 +131,7 @@ export async function renderAssign() {
     const section = h('section', { class: 'assign-member', 'data-member': m.user_id },
       h('h2', { class: 'assign-name', tabindex: '-1' }, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
       h('p', { class: 'assign-summary' }, summary),
-      changed ? h('div', { class: 'form-message info assign-note', role: 'status' }, h('span', {}, note.text), undoButton(note)) : null,
+      changed && note.where !== 'grid' ? noteEl(note) : null,
       rows.length ? h('ul', { class: 'rows' }, rows) : null,
       addBtn);
     addBtn?.addEventListener('click', () => {
@@ -140,13 +148,8 @@ export async function renderAssign() {
     // Text colour + bin icon (red text would read like the red alliance here).
     const remove = online ? h('button', { class: 'small-btn plain-remove', type: 'button',
       'aria-label': `Remove ${title} from ${m.display_name}` }, h('span', { class: 'icon-label' }, icon('trash', 18), 'Remove')) : null;
-    remove?.addEventListener('click', async () => {
-      const ok = await confirmDialog({
-        title: `Remove ${title} from ${m.display_name}?`,
-        body: `It disappears from ${m.display_name}’s phone the next time it has signal. Matches already scouted stay.`,
-        confirmLabel: 'Remove',
-      });
-      if (!ok) return;
+    // No "are you sure?": the note that follows has Undo (every tap undoable).
+    remove?.addEventListener('click', () => {
       busy(remove, '…', async () => {
         try {
           await removeAssignment(group, kind, row.id);
@@ -275,12 +278,13 @@ export async function renderAssign() {
       const ids = row.scouts[p];
       const color = p.replace(/\d/, '');
       if (!ids.length) {
-        const plate = h('span', { class: 'bumper open' }, 'Open');
-        if (!online) return h('td', {}, plate);
+        if (!online) return h('td', {}, h('span', { class: 'bumper open' }, 'Open'));
+        // With signal it's a button, so it says so: "+ Open".
+        const plate = h('span', { class: 'bumper open can-fill' }, icon('plus', 14), 'Open');
         // Tap an open station to choose who watches it (the Lead decides).
         return h('td', {}, h('button', { class: 'schedule-pick', type: 'button',
           'aria-label': `Q${row.number} ${positionLabel(p)} is open. Choose who watches it.`,
-          onclick: () => fillOpen(row, p, members) }, plate));
+          onclick: (e) => fillOpen(row, p, members, e.currentTarget) }, plate));
       }
       return h('td', {}, h('span', { class: `bumper ${color}` },
         h('span', { 'aria-hidden': 'true' }, ids.map((id) => labels.get(id) ?? '?').join(' ')),
@@ -298,6 +302,7 @@ export async function renderAssign() {
       h('p', { class: 'assign-gaps' }, first
         ? `${openCells.length} open ${openCells.length === 1 ? 'station' : 'stations'} in ${range}. First: Q${first.r.number} ${positionLabel(first.p)}.`
         : `Every station is covered in ${range}.`),
+      note?.where === 'grid' ? noteEl(note) : null,
       doubled.length ? h('p', { class: 'assign-gaps' }, doubled.map((d) =>
         `${d.m.display_name} watches two teams in ${listMatches(d.in)}.`).join(' ')) : null,
       // The key first, so the letters can be read as you go.
@@ -328,7 +333,7 @@ export async function renderAssign() {
   // ---------- filling an open station ----------
   // A sheet: "Who watches Blue 2 from Q18?" The Lead picks the Scout; "To"
   // starts at the last match in a row where that station is still open.
-  function fillOpen(row, p, members) {
+  function fillOpen(row, p, members, opener) {
     let until = row.number;
     for (const r of grid.slice(grid.indexOf(row) + 1)) {
       if (r.number !== until + 1 || r.scouts[p].length) break;
@@ -338,24 +343,38 @@ export async function renderAssign() {
     const msg = formMessage();
     const to = formField('To match', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', value: String(until) },
       until > row.number ? `Open in a row until Q${until}.` : null);
+    const shiftFor = (m) => ({ scout_id: m.user_id, position: p, from_match: row.number, to_match: Number(to.input.value) || row.number });
+    // Would this shift give them too many Teams in some match? (Checked as
+    // the sheet opens, so full people are greyed out with the reason.)
+    const clashFor = (m) => {
+      const mine = { shifts: plan.shifts.filter((s) => s.scout_id === m.user_id).concat(shiftFor(m)),
+        watches: plan.watches.filter((w) => w.scout_id === m.user_id) };
+      return byMatch(assignmentsFor({ scoutId: m.user_id, ...mine, matches })).find((g) => g.items.length > (twoTeams ? 2 : 1));
+    };
+    // One choice from a list: a radio group (screen readers say "1 of 3").
     const people = sortMembers(members).map((m) => {
-      const b = h('button', { type: 'button', class: 'pick-person', 'aria-pressed': 'false' }, m.display_name, m.user_id === me?.id ? ' (you)' : '');
+      const clash = clashFor(m);
+      const b = h('button', { type: 'button', class: 'pick-person', role: 'radio', 'aria-checked': 'false', disabled: Boolean(clash) },
+        h('span', {}, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
+        clash ? h('span', { class: 'pick-why' }, `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}`) : null);
       b.addEventListener('click', () => {
         chosen = m;
-        people.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        people.forEach((x) => x.setAttribute('aria-checked', String(x === b)));
         msg.show(null);
       });
       return b;
     });
+    const stationTeam = teamAtStation(row, p);
     const add = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
     const dialog = h('dialog', { 'aria-labelledby': 'fill-title' },
       h('form', { class: 'form', novalidate: true, method: 'dialog' },
-        h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)} from Q${row.number}?`),
-        h('div', { class: 'pick-people', role: 'group', 'aria-label': 'Members' }, people),
+        h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)}${stationTeam ? ` (${stationTeam})` : ''} from Q${row.number}?`),
+        h('div', { class: 'pick-people', role: 'radiogroup', 'aria-labelledby': 'fill-title' }, people),
         to.el, msg.el,
         h('div', { class: 'actions' }, add,
           h('button', { class: 'pill secondary block', type: 'button', onclick: () => close() }, 'Cancel'))));
-    const close = () => { dialog.close(); dialog.remove(); };
+    // Closing puts focus back on the Open station that was tapped.
+    const close = () => { dialog.close(); dialog.remove(); opener?.focus(); };
     dialog.addEventListener('cancel', close);
     dialog.querySelector('form').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -369,14 +388,22 @@ export async function renderAssign() {
       if (clash) return msg.show(`That gives ${chosen.display_name} too many teams in Q${clash.number}.`, 'error');
       busy(add, 'Adding…', async () => {
         try {
-          await addAndNote(chosen.user_id, 'shift', shift, `Added ${positionLabel(p)} for Q${row.number}–Q${b}.`);
-          close();
+          dialog.close();
+          dialog.remove();
+          await addAndNote(chosen.user_id, 'shift', shift, `${chosen.display_name} now watches ${positionLabel(p)} for Q${row.number}–Q${b}.`, 'grid');
         } catch (err) { msg.show(friendlyError(err), 'error'); }
       });
     });
     document.body.append(dialog);
     dialog.showModal();
-    people[0]?.focus();
+    people.find((b) => !b.disabled)?.focus();
+  }
+
+  // The Team at a station in a match, from the schedule ("24436"), if known.
+  function teamAtStation(row, p) {
+    const m = matches.find((x) => x.level === 'qual' && x.number === row.number);
+    const color = p.replace(/\d/, '');
+    return m?.[color]?.[Number(p.slice(color.length)) - 1] ?? null;
   }
 
   // Names show from the phone's copy straight away, then refresh with signal.
@@ -387,12 +414,13 @@ export async function renderAssign() {
     ? 'The schedule isn’t out yet. You can still plan Position shifts; teams fill in when it arrives.'
     : `${ev.name} · Q${quals[0].number}–Q${quals.at(-1).number}${twoTeams ? '' : ' · one team per match'}`;
 
-  // After an Add or Remove, go back to the member it changed.
+  // After a change, go back to where it was made (the member, or the grid)
+  // and focus the note so it's read out.
   if (note?.memberId) {
     setTimeout(() => {
-      const target = membersEl.querySelector(`[data-member="${note.memberId}"] h2`);
-      target?.scrollIntoView({ block: 'start' });
-      target?.focus({ preventScroll: true });
+      const where = note.where === 'grid' ? coverageEl : membersEl.querySelector(`[data-member="${note.memberId}"]`);
+      where?.scrollIntoView({ block: 'start' });
+      where?.querySelector('.assign-note')?.focus({ preventScroll: true });
     }, 60);
   }
 

@@ -14,7 +14,7 @@ import { listSubmissions, getSetting, setSetting } from '../db.js';
 import { cachedEvent } from '../events.js';
 import { positionOf, timeOf } from '../schedule.js';
 import { positionLabel, matchCode } from '../submissions.js';
-import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections } from '../team-stats.js';
+import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections, unlinked } from '../team-stats.js';
 import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
@@ -28,7 +28,7 @@ async function load() {
   ]);
   const canSeeAll = isLead(group) || group.settings?.scoutsSeeAll === true;
   const subs = ev ? forEvent(all, { groupId: group.id, eventId: ev.id }) : [];
-  return { group, ev, config, data, subs, canSeeAll, lastSyncAt };
+  return { group, ev, config, data, subs, canSeeAll, lastSyncAt, noEvent: unlinked(all, { groupId: group.id }) };
 }
 
 function topbar(title, back = '#home') {
@@ -49,11 +49,12 @@ const COLUMNS = (config) => [
   { key: 'team', label: 'Team' },
   { key: 'scouted', label: 'Scouted' },
   { key: 'avg', label: 'Avg' },
-  ...scoringSections(config).map((s) => ({ key: s.id, label: s.label === 'Endgame' ? 'End' : s.label })),
+  // A config can give a period a short heading ("End" for Endgame).
+  ...scoringSections(config).map((s) => ({ key: s.id, label: s.shortLabel ?? s.label })),
 ];
 
 export async function renderTeams() {
-  const { group, ev, config, data, subs, canSeeAll, lastSyncAt } = await load();
+  const { group, ev, config, data, subs, canSeeAll, lastSyncAt, noEvent } = await load();
   if (!canSeeAll) {
     return notice('Teams', 'The Teams table is for Leads. A Lead can let Scouts see it by turning on “Scouts see everyone’s matches” in Group settings.');
   }
@@ -61,9 +62,12 @@ export async function renderTeams() {
 
   const rows = teamRows(config, subs, data?.teams ?? []);
   const columns = COLUMNS(config);
-  // Sort: what this phone last chose, else the group's default (a Group setting).
+  // Sort: what this phone last chose, else the group's default (a Group
+  // setting). If a Lead changes the default, phones start from the new one.
+  const groupDefault = group.settings?.teamsSort ?? 'avg';
   const saved = (await getSetting('teamsSort')) ?? {};
-  let sort = { key: saved.key ?? group.settings?.teamsSort ?? 'avg', dir: saved.dir ?? null };
+  const fresh = saved.groupDefault === groupDefault;
+  let sort = { key: fresh ? saved.key : groupDefault, dir: fresh ? saved.dir : null };
   const scouted = rows.filter((r) => r.scouted).length;
 
   const table = h('table', { class: 'teams-table', style: `--cols: ${columns.length}` });
@@ -78,17 +82,19 @@ export async function renderTeams() {
           h('button', { type: 'button', class: `sort${active ? ' on' : ''}`, onclick: () => {
             // Same column: flip the direction. New column: its natural direction.
             sort = active ? { key: c.key, dir: dir === 'asc' ? 'desc' : 'asc' } : { key: c.key, dir: null };
-            setSetting('teamsSort', sort);
+            setSetting('teamsSort', { ...sort, groupDefault });
             draw();
             table.querySelector('th button.on')?.focus();
           } }, c.label, active ? icon(dir === 'asc' ? 'sortUp' : 'sortDown', 14) : null));
       }))),
-      h('tbody', {}, sorted.map((r) => h('tr', { class: r.scouted ? '' : 'unscouted' },
-        h('th', { scope: 'row' }, h('a', { href: `#team/${r.team}`, class: 'team-link', 'aria-label': `${r.team}${r.name ? `, ${r.name}` : ''}` },
-          bumper(r.team))),
+      // The whole row opens the Team page (the link stretches over it).
+      // An average from a single match is grey: it's thin evidence.
+      h('tbody', {}, sorted.map((r) => h('tr', { class: [r.scouted ? '' : 'unscouted', r.matches === 1 ? 'thin' : ''].join(' ').trim() },
+        h('th', { scope: 'row' }, h('a', { href: `#team/${r.team}`, class: 'team-link' },
+          bumper(r.team), r.name && r.name !== `Team ${r.team}` ? h('span', { class: 'team-link-name' }, r.name) : null)),
         h('td', { class: 'num' }, r.scouted ? String(r.scouted) : h('span', { class: 'not-yet' }, 'None')),
-        h('td', { class: 'num strong' }, formatAvg(r.avg)),
-        scoringSections(config).map((s) => h('td', { class: 'num' }, formatAvg(r.bySection[s.id])))))));
+        h('td', { class: 'num strong' }, avgCell(r.avg)),
+        scoringSections(config).map((s) => h('td', { class: 'num' }, avgCell(r.bySection[s.id])))))));
   }
   draw();
 
@@ -97,9 +103,10 @@ export async function renderTeams() {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, `${ev.name} · ${scouted} of ${rows.length} teams scouted`),
       h('p', { class: 'plain teams-note' }, [
-        'Averages are estimated points from your scouts’ taps, without no-shows.',
-        lastSyncAt ? ` Up to date as of ${timeAgo(lastSyncAt)}.` : '',
+        'Average estimated points per match, from your scouts’ taps, without no-shows. Grey: from one match only. Tap a team for its page.',
+        lastSyncAt ? ` Your group’s matches as of ${timeAgo(lastSyncAt)}.` : ' Only matches saved on this phone so far: the rest arrive when it has signal.',
       ].join('')),
+      noEvent ? h('p', { class: 'plain teams-note' }, `${noEvent} saved ${noEvent === 1 ? 'match isn’t' : 'matches aren’t'} counted here: ${noEvent === 1 ? 'it was' : 'they were'} scouted before your event was picked.`) : null,
       h('div', { class: 'teams-wrap' }, table)),
     await nowScoutingBar(),
   );
@@ -125,19 +132,21 @@ export async function renderTeam({ param }) {
     h('div', { class: 'now-top' },
       h('a', { class: 'icon-btn', href: '#teams', 'aria-label': 'Back to all teams' }, icon('back')), null),
     h('h1', { class: 'now-hero num', tabindex: '-1' }, team),
-    h('p', { class: 'team-cover-name' }, name ?? (data ? 'Not on this event’s team list' : '')),
+    // (Some events only list a placeholder name like "Team 23810": skip it.)
+    name && name !== `Team ${team}` ? h('p', { class: 'team-cover-name' }, name)
+      : !name && data ? h('p', { class: 'team-cover-name' }, 'Not on this event’s team list') : null,
     h('p', { class: 'now-sub' }, !row?.scouted ? 'Not scouted yet'
       : [`Scouted ${row.scouted} ${row.scouted === 1 ? 'time' : 'times'}`,
         row.noShows ? `${row.noShows} no-show${row.noShows > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')));
 
   // Averages, laid out like the results screen.
-  const averages = row?.played ? h('section', {},
+  const averages = row?.matches ? h('section', {},
     h('h2', { class: 'section-h' }, 'Average per match'),
     h('dl', { class: 'parts team-parts' },
       sections.map((s) => h('div', { class: 'part' },
         h('dt', { class: 'part-label' }, s.label), h('dd', { class: 'part-value num' }, formatAvg(row.bySection[s.id])))),
       h('div', { class: 'part total' },
-        h('dt', { class: 'part-label' }, `Estimated, over ${row.played} ${row.played === 1 ? 'match' : 'matches'}`),
+        h('dt', { class: 'part-label' }, `Estimated, over ${row.matches} ${row.matches === 1 ? 'match' : 'matches'}`),
         h('dd', { class: 'part-value num' }, formatAvg(row.avg))))) : null;
 
   // Every field in the Game config, summed up.
@@ -162,7 +171,7 @@ export async function renderTeam({ param }) {
       return h('li', {},
         h('span', { class: 'num team-match-code' }, code),
         station(positionLabel(pos), pos.replace(/\d/, '')),
-        h('span', { class: 'team-match-when' }, m.played ? (m.red_score != null ? `Played ${m.red_score}–${m.blue_score}` : 'Played') : timeOf(m) ?? ''),
+        h('span', { class: 'team-match-when' }, m.played ? result(m, pos) : timeOf(m) ?? ''),
         h('span', { class: `team-match-scouted${n ? '' : ' none'}` }, n ? `Scouted${n > 1 ? ` ×${n}` : ''}` : m.played ? 'Not scouted' : ''));
     }))) : null;
 
@@ -179,6 +188,20 @@ export async function renderTeam({ param }) {
     await nowScoutingBar(),
   );
   return { el };
+}
+
+// An average, or "—" with words for screen readers.
+function avgCell(n) {
+  return n == null ? [h('span', { 'aria-hidden': 'true' }, '—'), h('span', { class: 'visually-hidden' }, 'no data')] : formatAvg(n);
+}
+
+// A played match from this Team's side: "Won 45–30", "Lost 30–45", "Tied 20–20".
+function result(m, pos) {
+  if (m.red_score == null) return 'Played';
+  const red = pos.startsWith('red');
+  const ours = red ? m.red_score : m.blue_score;
+  const theirs = red ? m.blue_score : m.red_score;
+  return `${ours > theirs ? 'Won' : ours < theirs ? 'Lost' : 'Tied'} ${ours}–${theirs}`;
 }
 
 // One field's summary as a definition row: "LEAVE · 4 of 5".

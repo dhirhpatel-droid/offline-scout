@@ -141,6 +141,9 @@ try {
     await sleep(900);
     await run(`document.querySelectorAll('.form-message').forEach((m) => { m.hidden = true; }); document.querySelectorAll('.assign-member .pill')[1].click(); [...document.querySelectorAll('.position-grid button')].find((b) => b.textContent === 'Blue 2').click(); return 1`);
     await shot(t('17-assign-add'));
+    await run(`document.querySelector('.can-fill')?.closest('button').click(); return 1`);
+    await shot(t('17b-assign-fill'));
+    await run(`document.querySelector('dialog')?.remove(); return 1`);
     // Start the assigned match (two Teams in Q18), then come back home.
     await go('#home');
     await run(`document.querySelector('.now-go').click(); return 1`);
