@@ -5,7 +5,8 @@
 import { h, icon } from '../ui.js';
 import { matchCode } from '../submissions.js';
 import { load } from './teams.js';
-import { dataChecks } from '../data-checks.js';
+import { dataChecks, openChecks, checkKey } from '../data-checks.js';
+import { getSetting, setSetting } from '../db.js';
 import { nowScoutingBar } from '../now-scouting.js';
 
 const KINDS = [
@@ -16,12 +17,20 @@ const KINDS = [
 
 export const SENSITIVITY_WORDS = [['relaxed', 'Relaxed'], ['normal', 'Normal'], ['strict', 'Strict']];
 
-// Buttons to open each Submission a check is about: "Open Maya's Q18 · 23810".
-export function checkButtons(check, byId) {
+// Buttons to open each Submission a check is about. Short on screen
+// ("Maya’s", or the team when it's one scout's), full for screen readers.
+export function checkButtons(check, byId, extra = null) {
   const subs = check.subs.map((id) => byId.get(id)).filter(Boolean);
-  return h('div', { class: 'check-actions' }, subs.map((s) => h('a', { class: 'small-btn', href: `#match/${s.id}` },
-    `Open ${s.summary?.scout ? `${s.summary.scout}’s` : ''} ${matchCode(s.summary)} · ${s.summary?.team ?? '?'}`.replace(/\s+/g, ' ').trim())));
+  const scouts = new Set(subs.map((s) => s.summary?.scout));
+  return h('div', { class: 'check-actions' }, subs.map((s) => {
+    const full = `Open ${s.summary?.scout ? `${s.summary.scout}’s` : 'the'} ${matchCode(s.summary)}, team ${s.summary?.team ?? 'not set'}`;
+    const shown = scouts.size === subs.length && s.summary?.scout ? `${s.summary.scout}’s` : `${matchCode(s.summary)} · ${s.summary?.team ?? '?'}`;
+    return h('a', { class: 'small-btn', href: `#match/${s.id}`, 'aria-label': full }, `Open ${shown}`);
+  }), extra);
 }
+
+// Keys of the checks this phone marked "Looks right", per group.
+export const okKeys = async (groupId) => (await getSetting(`checksOk:${groupId}`)) ?? [];
 
 export async function renderChecks() {
   const { group, ev, config, data, subs, canSeeAll } = await load();
@@ -33,8 +42,23 @@ export async function renderChecks() {
       h('p', { class: 'plain teams-empty' }, !ev ? 'Data checks follow your event. Pick it first.' : 'Data checks are for Leads.'))) };
   }
   const sensitivity = group.settings?.checkSensitivity ?? 'normal';
-  const checks = dataChecks(config, subs, data ?? {}, sensitivity);
+  const all = dataChecks(config, subs, data ?? {}, sensitivity);
   const byId = new Map(subs.map((s) => [s.id, s]));
+  const ok = await okKeys(group.id);
+  const checks = openChecks(all, ok, byId);
+  const marked = all.filter((c) => !checks.includes(c));
+  // Mark as right, or look again: remembered on this phone only.
+  const toggleOk = async (c, on) => {
+    const key = checkKey(c, byId);
+    await setSetting(`checksOk:${group.id}`, on ? [...ok, key] : ok.filter((k) => k !== key));
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+  const okButton = (c, on) => h('button', { class: 'small-btn quiet', type: 'button', onclick: () => toggleOk(c, on),
+    'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${c.title}` }, on ? 'Looks right' : 'Look again');
+  const item = (c, on, short) => h('li', { class: `check ${c.kind}` },
+    h('h3', { class: 'check-title' }, short ? c.short ?? c.title : c.title),
+    h('p', { class: 'check-text' }, c.text),
+    checkButtons(c, byId, okButton(c, on)));
 
   const sections = KINDS.map(([kind, title, about]) => {
     const mine = checks.filter((c) => c.kind === kind);
@@ -42,10 +66,7 @@ export async function renderChecks() {
     return h('section', {},
       h('h2', { class: 'section-h' }, `${title} (${mine.length})`),
       h('p', { class: 'plain checks-about' }, about),
-      h('ul', { class: 'checks' }, mine.map((c) => h('li', { class: `check ${c.kind}` },
-        h('p', { class: 'check-title' }, c.title),
-        h('p', { class: 'check-text' }, c.text),
-        checkButtons(c, byId)))));
+      h('ul', { class: 'checks' }, mine.map((c) => item(c, true, true))));
   });
 
   const word = SENSITIVITY_WORDS.find(([k]) => k === sensitivity)?.[1] ?? 'Normal';
@@ -55,8 +76,12 @@ export async function renderChecks() {
       h('p', { class: 'group-lede' }, checks.length
         ? `${ev.name} · ${checks.length} to look at`
         : `${ev.name} · nothing looks off`),
-      h('p', { class: 'plain teams-note' }, `Checks are ${word.toLowerCase()} (a Group setting). They never change anything: open a match to fix it, or leave it if it’s right.`),
-      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'When two scouts disagree, a total is far from the official score, or a team doesn’t fit the schedule, it shows up here.')),
+      h('p', { class: 'plain teams-note' }, 'Checks never change anything. Open a match to fix it, or tap Looks right.'),
+      h('p', { class: 'plain teams-note' }, 'Sensitivity: ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change in Group settings')),
+      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'When two scouts disagree, a total is far from the official score, or a team doesn’t fit the schedule, it shows up here.'),
+      marked.length ? h('details', { class: 'team-list' },
+        h('summary', {}, `Marked right (${marked.length})`, icon('next', 18)),
+        h('ul', { class: 'checks' }, marked.map((c) => item(c, false, false)))) : null),
     await nowScoutingBar(),
   );
   return { el };

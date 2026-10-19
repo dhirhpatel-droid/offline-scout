@@ -117,8 +117,8 @@ try {
         s.put({ shifts: [{ id: 's1', scout_id: dhir, position: 'red1', from_match: 18, to_match: 20 }, { id: 's2', scout_id: maya, position: 'blue1', from_match: 14, to_match: 20 }],
           watches: [{ id: 'w1', scout_id: dhir, team_number: 23810 }], savedAt: new Date().toISOString() }, 'plan:g1:ev1');
         // Two Custom questions (Milestone 7).
-        s.put([{ id: 'q1', section: 'teleop', type: 'choice', label: 'Scored from', options: ['Near side', 'Far side'], position: 0, created_at: '2026-10-19', hidden_at: null },
-          { id: 'q2', section: 'post', type: 'toggle', label: 'Helped their partner', options: null, position: 0, created_at: '2026-10-19', hidden_at: null }], 'questions:g1');
+        s.put([{ id: 'q1', config_id: 'ftc-2026-biobuzz', section: 'teleop', type: 'choice', label: 'Scored from', options: ['Near side', 'Far side'], position: 0, created_at: '2026-10-19', hidden_at: null },
+          { id: 'q2', config_id: 'ftc-2026-biobuzz', section: 'post', type: 'toggle', label: 'Helped their partner', options: null, position: 0, created_at: '2026-10-19', hidden_at: null }], 'questions:g1');
         s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }], 'members:g1');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));

@@ -20,8 +20,8 @@ import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections,
 import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
-import { dataChecks, checksFor } from '../data-checks.js';
-import { checkButtons } from './checks.js';
+import { dataChecks, checksFor, openChecks } from '../data-checks.js';
+import { checkButtons, okKeys } from './checks.js';
 
 // Everything the Lead views need (also used by the Checks screen).
 export async function load() {
@@ -172,12 +172,17 @@ export async function renderTeam({ param }) {
         row.noShows ? `${row.noShows} no-show${row.noShows > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')));
 
   // Data checks about this Team, first: the Lead should see them before trusting the numbers.
-  const mineChecks = ev ? checksFor(dataChecks(config, subs, data ?? {}, group.settings?.checkSensitivity ?? 'normal'), team) : [];
   const byId = new Map(subs.map((s) => [s.id, s]));
+  const mineChecks = ev ? openChecks(checksFor(dataChecks(config, subs, data ?? {}, group.settings?.checkSensitivity ?? 'normal'), team),
+    await okKeys(group.id), byId) : [];
+  // How many of this Team's Submissions those checks are about: the averages
+  // below include them, and the Lead should know.
+  const flagged = new Set(mineChecks.flatMap((c) => c.subs).filter((id) => byId.get(id)?.summary?.team === team)).size;
   const checksEl = mineChecks.length ? h('section', { class: 'team-checks' },
     h('h2', { class: 'section-h' }, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'}`),
     h('ul', { class: 'checks' }, mineChecks.map((c) => h('li', { class: `check ${c.kind}` },
-      h('p', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text), checkButtons(c, byId))))) : null;
+      h('h3', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text), checkButtons(c, byId)))),
+    h('p', { class: 'plain teams-note' }, h('a', { href: '#checks' }, 'All data checks'))) : null;
 
   // Averages, laid out like the results screen.
   const averages = row?.matches ? h('section', {},
@@ -187,7 +192,9 @@ export async function renderTeam({ param }) {
         h('dt', { class: 'part-label' }, s.label), h('dd', { class: 'part-value num' }, formatAvg(row.bySection[s.id])))),
       h('div', { class: 'part total' },
         h('dt', { class: 'part-label' }, `Estimated, over ${row.matches} ${row.matches === 1 ? 'match' : 'matches'}`),
-        h('dd', { class: 'part-value num' }, formatAvg(row.avg))))) : null;
+        h('dd', { class: 'part-value num' }, formatAvg(row.avg)))),
+    flagged ? h('p', { class: 'plain teams-note flagged-note' },
+      `Includes ${flagged} ${flagged === 1 ? 'Submission' : 'Submissions'} with a data check above.`) : null) : null;
 
   // Every field in the Game config, summed up.
   const summary = mine.length ? fieldSummary(config, mine) : [];

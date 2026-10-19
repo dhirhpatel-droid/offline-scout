@@ -41,22 +41,26 @@ export function parseOptions(text) {
 // One Custom question as a Game config field, so the match screen and the
 // Team page can treat it like any other field. No "points": ever.
 export function toField(q) {
-  const field = { id: `custom-${q.id}`, type: q.type, label: q.label, custom: true, hint: 'Your group’s question · no points' };
+  const field = { id: `custom-${q.id}`, type: q.type, label: q.label, custom: true, hint: 'Your group’s question' };
   if (q.type === 'choice') field.options = (q.options ?? []).map((o) => ({ value: o, label: o }));
   if (q.type === 'rating') Object.assign(field, { min: 1, max: 5 });
   return field;
 }
 
 // The Game config with the group's Custom questions added to their sections.
-// Hidden questions are left out, unless this Submission already answered one
-// (so old answers can still be seen and edited). A question for a section the
-// game doesn't have goes in the last section.
+// Only questions made for this Game config count (a group's FTC questions
+// don't follow it into the FRC game). Hidden questions are left out, unless
+// this Submission already answered one (so old answers can still be seen and
+// edited).
 export function withCustom(config, questions = [], values = {}) {
   const sections = config.sections.map((s) => ({ ...s, fields: [...s.fields] }));
   const sorted = [...questions].sort((a, b) => a.position - b.position || a.created_at?.localeCompare?.(b.created_at ?? '') || 0);
   for (const q of sorted) {
-    const section = sections.find((s) => s.id === q.section) ?? sections.at(-1);
-    const answered = values[`${section.id}.custom-${q.id}`] !== undefined;
+    if (q.config_id && q.config_id !== config.id) continue;
+    const section = sections.find((s) => s.id === q.section);
+    if (!section) continue;
+    const answer = values[customKey(q)];
+    const answered = answer !== undefined && answer !== null && answer !== '';
     if (q.hidden_at && !answered) continue;
     section.fields.push(toField(q));
   }

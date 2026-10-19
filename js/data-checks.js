@@ -9,7 +9,7 @@
 //   impossible – a value that can't be right (team not at the event, not in
 //                that match, a match that isn't in the schedule…)
 
-import { estimatePoints, fieldKey } from './scoring.js';
+import { estimatePoints, pointsBySection, fieldKey } from './scoring.js';
 import { positionOf } from './schedule.js';
 import { positionLabel, matchCode } from './submissions.js';
 
@@ -65,6 +65,14 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
       const pts = group.map((s) => estimatePoints(config, s.values ?? {}));
       if (Math.max(...pts) - Math.min(...pts) > limits.points) {
         reasons.push(group.map((s, i) => `${scoutOf(s)} ${pts[i]}`).join(', ') + ' est. pts');
+        // Where the difference is: each scoring period that doesn't match.
+        const parts = group.map((s) => pointsBySection(config, s.values ?? {}));
+        for (const sec of config.sections.filter((x) => x.fields.some((f) => f.points))) {
+          const p = parts.map((x) => x[sec.id]);
+          if (Math.max(...p) !== Math.min(...p)) {
+            reasons.push(`${sec.label}: ${group.map((s, i) => `${scoutOf(s)} ${p[i]}`).join(', ')}`);
+          }
+        }
       }
       for (const t of scoringToggles) {
         const answers = group.map((s) => s.values?.[t.key] === true);
@@ -77,6 +85,7 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
     out.push({
       kind: 'disagree', level: levelOf(first), number: first.summary.match, team: first.summary.team,
       title: `${matchCode(first.summary)} · ${first.summary.team}: scouts disagree`,
+      short: `${matchCode(first.summary)} · ${first.summary.team}`, // under a "Scouts disagree" heading
       text: reasons.join('. ') + '.',
       subs: group.map((s) => s.id),
     });
@@ -91,7 +100,7 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
 export function scoreGaps(config, subs, matches, limits = SENSITIVITY.normal) {
   const out = [];
   for (const m of matches) {
-    if (!m.played || m.red_score == null) continue;
+    if (!m.played || m.red_score == null || m.blue_score == null) continue;
     for (const side of ['red', 'blue']) {
       const official = m[`${side}_score`];
       const teams = m[side] ?? [];
@@ -169,3 +178,17 @@ export function impossible(config, subs, { teams = [], matches = [] } = {}) {
 // Checks about one Team (for its page).
 export const checksFor = (checks, team) => checks.filter((c) => c.team === team
   || (c.kind === 'score' && c.teams.includes(team)));
+
+// "Looks right": a Lead can mark a check as fine. It's remembered by what the
+// check is about AND when those Submissions last changed, so editing one of
+// them brings the check back. byId: Map(id → Submission).
+export function checkKey(check, byId) {
+  const stamps = [...check.subs].sort().map((id) => `${id}@${byId.get(id)?.updatedAt ?? ''}`);
+  return `${check.kind}|${check.alliance ?? ''}|${check.number ?? ''}|${stamps.join(',')}`;
+}
+
+// The checks not marked "Looks right" (okKeys: the saved keys).
+export const openChecks = (checks, okKeys = [], byId = new Map()) => {
+  const ok = new Set(okKeys);
+  return checks.filter((c) => !ok.has(checkKey(c, byId)));
+};

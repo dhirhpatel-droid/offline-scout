@@ -53,7 +53,7 @@ export async function renderQuestions() {
   const sectionOf = (q) => config.sections.find((s) => s.id === q.section) ?? config.sections.at(-1);
   const lists = config.sections.map((s) => {
     const mine = visible.filter((q) => sectionOf(q) === s);
-    return mine.length ? h('section', {}, h('h2', { class: 'section-h' }, s.title ?? s.label), h('ul', { class: 'rows' }, mine.map(row))) : null;
+    return mine.length ? h('section', {}, h('h2', { class: 'section-h' }, s.label), h('ul', { class: 'rows' }, mine.map(row))) : null;
   });
 
   // ---------- add a question ----------
@@ -102,13 +102,13 @@ export async function renderQuestions() {
       h('a', { class: 'icon-btn', href: '#group', 'aria-label': 'Back to your group' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Custom questions')),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, 'Extra questions for your group’s scouts, on top of the game’s. They show in the match and never add to points.'),
+      h('p', { class: 'group-lede' }, 'Extra questions for your group’s scouts, on top of the game’s. They show in the match and never add to points. To reword one, hide it and add a new one (answers keep their wording).'),
       message.el,
       visible.length ? lists : h('p', { class: 'plain' }, 'No questions yet.'),
       hidden.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Hidden (${hidden.length})`, icon('next', 18)),
         h('ul', { class: 'rows' }, hidden.map(row))) : null,
-      online ? form : h('p', { class: 'plain' }, 'Adding and hiding questions open up when this phone has signal. These are the questions saved on it.')),
+      online ? form : h('p', { class: 'plain questions-offline' }, 'These are saved on this phone. Add or hide questions next time it has signal.')),
   );
   return { el };
 }

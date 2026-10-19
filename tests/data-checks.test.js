@@ -21,6 +21,7 @@ test('two Scouts far apart on points disagree; close ones don\'t', () => {
   const [c] = disagreements(config, far);
   assert.equal(c.kind, 'disagree');
   assert.match(c.text, /Dhir 20, Maya 60 est\. pts/);
+  assert.match(c.text, /Auto: Dhir 20, Maya 60/);
   assert.equal(c.subs.length, 2);
   const close = [sub(1, 1, { 'teleop.garden': 1 }), sub(1, 1, { 'teleop.garden': 3 })]; // 1 vs 3
   assert.equal(disagreements(config, close).length, 0);
@@ -68,4 +69,16 @@ test('dataChecks sorts by match; checksFor picks one team', () => {
   assert.ok(all.length >= 2);
   assert.ok(checksFor(all, 1).some((c) => c.kind === 'score'));
   assert.ok(checksFor(all, 9).some((c) => c.kind === 'impossible'));
+});
+
+test('"Looks right" hides a check until one of its Submissions changes', async () => {
+  const { checkKey, openChecks } = await import('../js/data-checks.js');
+  const a = { ...sub(1, 1, { 'auto.hiveTips': 1 }), updatedAt: 't1' };
+  const b = { ...sub(1, 1, { 'auto.hiveTips': 3 }, { scout: 'Maya' }), updatedAt: 't1' };
+  const byId = new Map([[a.id, a], [b.id, b]]);
+  const checks = disagreements(config, [a, b]);
+  const ok = [checkKey(checks[0], byId)];
+  assert.equal(openChecks(checks, ok, byId).length, 0);
+  byId.set(b.id, { ...b, updatedAt: 't2' }); // Maya edits her Submission
+  assert.equal(openChecks(checks, ok, byId).length, 1);
 });

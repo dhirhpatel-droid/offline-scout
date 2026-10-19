@@ -21,7 +21,7 @@ test('parseOptions trims, drops blanks and repeats', () => {
 
 test('toField turns a question into a config field with no points', () => {
   assert.deepEqual(toField(q({ type: 'choice', options: ['L', 'R'] })),
-    { id: 'custom-q1', type: 'choice', label: 'Cycled from the far side', custom: true, hint: 'Your group’s question · no points', options: [{ value: 'L', label: 'L' }, { value: 'R', label: 'R' }] });
+    { id: 'custom-q1', type: 'choice', label: 'Cycled from the far side', custom: true, hint: 'Your group’s question', options: [{ value: 'L', label: 'L' }, { value: 'R', label: 'R' }] });
   assert.equal(toField(q({ type: 'rating' })).max, 5);
 });
 
@@ -36,9 +36,16 @@ test('withCustom adds questions to their sections; hidden ones only if answered'
   assert.ok(!config.sections.find((s) => s.id === 'teleop').fields.some((f) => f.custom));
 });
 
-test('a question for a section the game doesn\'t have goes in the last one', () => {
-  const merged = withCustom(config, [q({ section: 'nowhere' })]);
-  assert.ok(merged.sections.at(-1).fields.some((f) => f.id === 'custom-q1'));
+test('questions for another game, or a section this game lacks, are left out', () => {
+  const count = (c) => c.sections.flatMap((s) => s.fields).filter((f) => f.custom).length;
+  assert.equal(count(withCustom(config, [q({ section: 'nowhere' })])), 0);
+  assert.equal(count(withCustom(config, [q({ config_id: 'frc-2027' })])), 0);
+  assert.equal(count(withCustom(config, [q({ config_id: config.id })])), 1);
+});
+
+test('a cleared answer doesn\'t keep a hidden question showing', () => {
+  const merged = withCustom(config, [q({ hidden_at: 'x' })], { 'teleop.custom-q1': null });
+  assert.ok(!merged.sections.some((s) => s.fields.some((f) => f.custom)));
 });
 
 test('Custom answers never add to Estimated points', () => {

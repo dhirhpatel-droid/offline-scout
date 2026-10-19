@@ -12,7 +12,7 @@ import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
 import { planSummary } from '../assignments.js';
 import { forEvent, teamRows } from '../team-stats.js';
-import { dataChecks } from '../data-checks.js';
+import { dataChecks, openChecks } from '../data-checks.js';
 import { loadConfig } from '../config.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
@@ -36,10 +36,12 @@ export async function renderHome() {
     const eventSubs = forEvent(all, { groupId: group.id, eventId: group.currentEvent.id });
     const rows = teamRows(config, eventSubs, eventData?.teams ?? []);
     // Data checks (Leads): only shown when there's something to look at.
-    const checks = lead ? dataChecks(config, eventSubs, eventData ?? {}, group.settings?.checkSensitivity ?? 'normal') : [];
+    // Only the ones not marked "Looks right" on this phone.
+    const checks = lead ? openChecks(dataChecks(config, eventSubs, eventData ?? {}, group.settings?.checkSensitivity ?? 'normal'),
+      (await getSetting(`checksOk:${group.id}`)) ?? [], new Map(eventSubs.map((s) => [s.id, s]))) : [];
     checksRow = checks.length ? h('a', { class: 'row', href: '#checks' },
-      h('div', {}, h('div', { class: 'title' }, 'Data checks'),
-        h('div', { class: 'sub' }, `${checks.length} to look at · ${checks[0].title}`)),
+      h('div', {}, h('div', { class: 'title' }, 'Data checks to look at'),
+        h('div', { class: 'sub' }, `First: ${checks[0].title}`)),
       h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, checks.length), icon('next', 20))) : null;
     const done = rows.filter((r) => r.scouted).length;
     teamsRow = h('a', { class: 'row', href: '#teams' },

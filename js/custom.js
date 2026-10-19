@@ -12,7 +12,7 @@ const must = ({ data, error }) => {
 
 export async function downloadQuestions(groupId) {
   const rows = must(await sb.from('custom_questions')
-    .select('id, section, type, label, options, position, created_at, hidden_at')
+    .select('id, config_id, section, type, label, options, position, created_at, hidden_at')
     .eq('group_id', groupId).order('position').order('created_at'));
   await setSetting(`questions:${groupId}`, rows);
   return rows;
@@ -25,7 +25,7 @@ export async function addQuestion(group, { section, type, label, options }) {
   const { data: { user } } = await sb.auth.getUser();
   const existing = await cachedQuestions(group.id);
   must(await sb.from('custom_questions').insert({
-    group_id: group.id, section, type, label: label.trim(),
+    group_id: group.id, config_id: group.game_config_id, section, type, label: label.trim(),
     options: type === 'choice' ? parseOptions(options) : null,
     position: existing.filter((q) => q.section === section).length,
     created_by: user.id,
