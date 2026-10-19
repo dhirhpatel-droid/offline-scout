@@ -8,6 +8,7 @@ import { PGlite } from '@electric-sql/pglite';
 const AUTH_STANDIN = `
   create role anon nologin;
   create role authenticated nologin;
+  create role service_role nologin bypassrls;
   create schema auth;
   grant usage on schema auth to anon, authenticated;
   create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}');
@@ -15,7 +16,7 @@ const AUTH_STANDIN = `
     $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(auth.jwt() ->> 'sub', '')::uuid $$;
-  grant usage on schema public to anon, authenticated;
+  grant usage on schema public to anon, authenticated, service_role;
 `;
 
 export async function freshDatabase() {
@@ -31,10 +32,13 @@ export async function freshDatabase() {
       [p.id, p.email, JSON.stringify({ display_name: p.name })]);
   }
 
-  // Run SQL as a signed-in person (or as the database owner when person is null).
+  // Run SQL as a signed-in person, as 'service' (what server functions use),
+  // or as the database owner when person is null.
   async function as(person, sql, params = []) {
     await db.exec('reset role');
-    if (person) {
+    if (person === 'service') {
+      await db.exec('set role service_role');
+    } else if (person) {
       const claims = JSON.stringify({ sub: person.id, email: person.email, role: 'authenticated' });
       await db.query(`select set_config('request.jwt.claims', $1, false)`, [claims]);
       await db.exec('set role authenticated');

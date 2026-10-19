@@ -69,3 +69,12 @@ test('Submissions keep the Event they were scouted at', async () => {
   const [row] = await as(lead, 'select event_id from public.submissions where id = $1', [s.id]);
   assert.equal(row.event_id, eventA);
 });
+
+test('the server function (service_role) can save events, teams and schedules', async () => {
+  const [{ id }] = await as('service', `insert into public.events (program, season, code, name) values ('FTC', 2026, 'TESTSR', 'Service test') returning id`);
+  await as('service', `insert into public.event_teams (event_id, team_number) values ($1, 16415)`, [id]);
+  await as('service', `insert into public.event_matches (event_id, level, number, red, blue) values ($1, 'qual', 1, '{1,2}', '{3,4}')`, [id]);
+  await as('service', `update public.events set fetched_at = now() where id = $1`, [id]);
+  const rows = await as('service', 'select count(*)::int as n from public.event_matches where event_id = $1', [id]);
+  assert.equal(rows[0].n, 1);
+});
