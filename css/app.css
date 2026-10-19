@@ -127,7 +127,7 @@ input, textarea { caret-color: var(--text); }
   transition: transform 120ms ease-out;
 }
 .pill:active { transform: scale(0.97); }
-.pill.secondary { background: var(--surface-2); color: var(--text); border: 2px solid var(--control-line); } /* edge 3:1 */
+.pill.secondary { background: var(--bg); color: var(--text); border: 2px solid var(--control-line); } /* edge 3:1 */
 .pill.block { display: flex; width: 100%; }
 .pill.big { min-height: var(--tap-lg); font-size: var(--fs-lg); }
 
@@ -327,37 +327,11 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 .field.invalid .input { border-color: var(--danger); }
 .error-text { margin-top: var(--s2); color: var(--danger); font-size: var(--fs-sm); font-weight: 600; }
 
-/* ---------- Done view (after saving a match) ---------- */
-
-.done {
-  padding: var(--s6) 0 var(--s5);
-}
-.done h2 { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
-.done p { color: var(--text-2); margin-top: var(--s2); }
-.done .actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
-
 /* ---------- Home ---------- */
 
-.home-group { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s2); }
-.home-event { padding-top: var(--s4); }
 .home .field { border-bottom: 0; }
 .home-actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
 .home-actions .resume-note { font-size: var(--fs-sm); color: var(--text-2); }
-
-.list-link {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  width: 100%;
-  min-height: var(--tap-lg);
-  padding: 0 var(--s4);
-  border-radius: var(--radius);
-  background: var(--surface);
-  font-weight: 700;
-  text-align: left;
-  text-decoration: none;
-}
-.list-link .count { margin-left: auto; color: var(--text-2); font-weight: 600; }
 
 /* ---------- My matches ---------- */
 
@@ -374,11 +348,12 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
   text-align: left;
 }
 .badge {
+  /* a station sign: "R1" on the alliance colour */
   display: grid;
   place-items: center;
   width: var(--tap);
   height: var(--tap);
-  border-radius: var(--radius);
+  border-radius: var(--plate-radius);
   font-weight: 800;
   font-stretch: 75%;
   font-size: var(--fs-xl);
@@ -450,6 +425,8 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   .field.flash .value, .match-head .points .value.jump { animation: none; }
   .pill:active, .round:active { transform: none; }
   .pill, .round { transition: none; }
+  .field.tile, .field.tile:active { transition: none; transform: none; }
+  .team-list summary svg { transition: none; }
 }
 
 /* ---------- Forms: sign in, groups, invites ---------- */
@@ -505,18 +482,6 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 
 /* ---------- Groups and members ---------- */
 
-.group-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  min-height: var(--tap);
-  padding: 0 var(--s3);
-  border-radius: 999px;
-  background: var(--surface);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-}
-.group-chip .num { font-size: var(--fs-md); }
 
 .rows { list-style: none; padding: 0; }
 .row {
@@ -557,7 +522,7 @@ a.row { color: inherit; }
 .group-footer { display: grid; gap: var(--s3); }
 .group-footer .text-btn { justify-self: start; padding-left: 0; }
 .group-lede { color: var(--text-2); font-weight: 600; margin: var(--s1) 0 var(--s3); }
-.section-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin: var(--s5) 0 var(--s1); }
+.section-h { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin: var(--s6) 0 var(--s2); }
 
 /* ---------- Tap tiles (Yes/No questions) ---------- */
 
@@ -617,12 +582,19 @@ a.row { color: inherit; }
   padding: var(--s2) var(--s4) var(--s5);
 }
 .finish-title { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
-.finish-total { display: flex; align-items: baseline; gap: var(--s2); margin-top: var(--s4); font-weight: 700; }
-.finish-total .num { font-size: var(--fs-hero); line-height: 0.9; }
-.parts { display: flex; gap: var(--s5); margin-top: var(--s3); }
-.part { display: grid; }
-.part-value { font-size: var(--fs-2xl); line-height: 1; }
-.part-label { font-size: var(--fs-sm); font-weight: 600; }
+.parts { margin: var(--s4) 0 0; }
+.part {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: var(--s1) 0;
+  border-bottom: 1px solid var(--tab-track);
+}
+.part-label { font-size: var(--fs-md); font-weight: 700; }
+.part-value { margin: 0; font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.part.total { border-bottom: 0; border-top: 3px solid var(--on-alliance); margin-top: var(--s1); padding-top: var(--s2); }
+.part.total .part-value { font-size: var(--fs-hero); line-height: 0.9; }
 .finish-status {
   display: inline-flex;
   align-items: center;
@@ -661,7 +633,6 @@ a.row { color: inherit; }
 .home-rows .row { min-height: 76px; }
 .row-end { display: inline-flex; align-items: center; gap: var(--s2); }
 .row-count { font-size: var(--fs-2xl); line-height: 1; }
-.event-form { padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
 
 /* ---------- Now-scouting bar (other screens, while a match is unfinished) ---------- */
 
@@ -688,7 +659,6 @@ a.row { color: inherit; }
   min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
-  background: var(--tab-track);
   font-weight: 700;
 }
 
@@ -775,35 +745,24 @@ a.row { color: inherit; }
 .event-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
 .event-title { font-size: var(--fs-display-words); line-height: 1; }
 .event-facts { font-weight: 700; }
-.schedule { list-style: none; padding: 0; }
-.schedule-row {
-  display: grid;
-  grid-template-columns: 3.5rem 6.5rem 1fr;
-  align-items: center;
-  gap: var(--s2);
-  min-height: 64px;
-  padding: var(--s2) 0;
-  border-bottom: 1px solid var(--line);
-}
-.schedule-row.played .schedule-code { color: var(--text-2); }
-.schedule-row.next-up .schedule-time { color: var(--text); font-weight: 800; }
-.schedule-code { font-size: var(--fs-xl); }
-.schedule-time { font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
-.schedule-teams { display: grid; gap: 2px; font-variant-numeric: tabular-nums; font-weight: 700; }
-/* Colour AND a letter (R / B), so red/blue reads without colour vision. */
-.alliance-teams .side {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-right: var(--s2);
-  border-radius: 10px; /* the badge corner, from DESIGN.md */
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  color: var(--on-alliance);
-}
-.alliance-teams.red .side { background: var(--red); }
-.alliance-teams.blue .side { background: var(--blue); }
+.schedule { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.schedule th, .schedule td { padding: var(--s2) 2px; border-bottom: 1px solid var(--line); text-align: center; }
+.schedule thead th { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); padding-bottom: var(--s1); }
+.schedule thead th:first-child, .schedule tbody th { text-align: left; width: 4.75rem; }
+/* The station headings get the alliance colour as a bar, plus their words */
+.schedule thead th.st { box-shadow: inset 0 -3px 0 var(--neutral-alliance); }
+.schedule thead th.st.red { box-shadow: inset 0 -3px 0 var(--red); }
+.schedule thead th.st.blue { box-shadow: inset 0 -3px 0 var(--blue); }
+.schedule tbody th { display: grid; }
+.schedule-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.schedule-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; white-space: nowrap; }
+.schedule .bumper { width: 100%; min-width: 0; font-size: min(var(--fs-lg), calc(var(--fs-lg) * 4 / var(--stations, 4))); }
+/* Played: outlined, so the matches still to come stand out (text stays ≥ 4.5:1) */
+.schedule tr.played .bumper:not(.mine) { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
+.schedule tr.played .bumper.mine { background: transparent; color: var(--text); box-shadow: none; }
+.schedule tr.played .schedule-code { color: var(--text-2); }
+.schedule tr.next-up th, .schedule tr.next-up td { background: var(--surface); }
+.schedule tr.next-up .schedule-time.next { color: var(--text); font-weight: 800; }
 .nowrap { white-space: nowrap; }
 .team-list { margin: var(--s4) 0; }
 .team-list summary { min-height: var(--tap); display: flex; align-items: center; gap: var(--s2); font-weight: 700; cursor: pointer; list-style: none; }
@@ -850,36 +809,112 @@ a.row { color: inherit; }
 /* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
 .now-hero.two { font-size: var(--fs-hero); }
 
-/* Home: "Coming up", the rest of your Assignments. A coloured edge per row
-   says the alliance; the words say the position too (never colour alone). */
+/* Home: "Coming up", the rest of your Assignments, read like the queuing
+   screen at an event: match and time, then station and team. */
 .coming-up { list-style: none; margin: 0; padding: 0; }
 .coming-up li {
   display: grid;
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 5.5rem 1fr;
   align-items: center;
   gap: var(--s3);
-  min-height: var(--tap);
-  padding: var(--s2) 0 var(--s2) var(--s3);
-  border-left: 4px solid transparent; /* mixed or unknown alliance: no stripe */
+  min-height: var(--tap-lg);
+  padding: var(--s2) 0;
   border-bottom: 1px solid var(--line);
 }
-.coming-up li[data-alliance='red'] { border-left-color: var(--red); }
-.coming-up li[data-alliance='blue'] { border-left-color: var(--blue); }
-.coming-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
-.coming-what { display: flex; flex-direction: column; }
-.coming-team { font-size: var(--fs-lg); font-weight: 700; }
-.coming-sub { font-size: var(--fs-sm); color: var(--text-2); }
+.coming-when { display: grid; }
+.coming-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.coming-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
+.coming-what { display: grid; gap: var(--s1); }
+.coming-item { display: flex; align-items: center; gap: var(--s2); }
+.coming-item .station { min-width: 4.25rem; justify-content: center; }
+.coming-item .bumper { font-size: var(--fs-lg); }
+.coming-tbd { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Home: the match line-up inside the alliance block */
+.lineup { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+.lineup-side { display: flex; gap: var(--s1); }
+.lineup-team {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 var(--s2);
+  border-radius: var(--plate-radius);
+  border: 2px solid currentColor;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  font-stretch: 75%;
+}
+.lineup-team.mine { background: var(--on-alliance); color: var(--alliance); border-color: var(--on-alliance); }
+[data-alliance="none"] .lineup-team.mine { color: var(--neutral-alliance); }
+.lineup-vs { font-size: var(--fs-sm); font-weight: 700; }
+
 
 /* Assignments (Leads): one section per member */
 .assign-member { padding: var(--s5) 0; border-bottom: 1px solid var(--line); }
 .assign-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
 .assign-summary { color: var(--text-2); margin: var(--s1) 0 var(--s3); }
-.assign-row { border-left: 4px solid transparent; padding-left: var(--s3); }
-.assign-row[data-alliance='red'] { border-left-color: var(--red); }
-.assign-row[data-alliance='blue'] { border-left-color: var(--blue); }
+.assign-what { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); }
+.assign-what .num { font-weight: 800; font-stretch: 75%; font-size: var(--fs-xl); }
 .assign-member > .pill { margin-top: var(--s3); }
 .assign-form { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
 .assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 .assign-gaps { color: var(--text-2); margin-top: var(--s2); }
 .assign-member .form-message { margin: 0 0 var(--s3); }
 .assign-gaps + .plain { margin-top: var(--s3); }
+
+/* ---------- Event pieces (DESIGN.md: "Like the event itself") ---------- */
+
+/* Bumper: a team number the way it's printed on a robot's bumper. */
+.bumper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.6em;
+  height: 1.9em;
+  padding: 0 0.4em;
+  border-radius: var(--plate-radius);
+  background: var(--neutral-alliance);
+  color: var(--on-alliance);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1;
+  /* the fabric rolls over the noodle: a darker lower edge */
+  box-shadow: inset 0 -0.16em 0 var(--bumper-shade);
+}
+.bumper.red { background: var(--red); }
+.bumper.blue { background: var(--blue); }
+.bumper.mine { outline: 3px solid var(--text); outline-offset: 2px; }
+.bumper.big { font-size: var(--fs-xl); }
+
+/* Station plate: "Red 1" over a driver station. */
+.station {
+  display: inline-flex;
+  align-items: center;
+  height: 1.75em;
+  padding: 0 0.55em;
+  border-radius: var(--plate-radius);
+  background: var(--neutral-alliance);
+  color: var(--on-alliance);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.station.red { background: var(--red); }
+.station.blue { background: var(--blue); }
+
+/* Browser surfaces carry the design too */
+html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; caret-color: var(--text); }
+
+/* Focus on alliance-coloured blocks: white ring (≥ 5:1 on every alliance fill) */
+.match-head, .now, .now-bar, .finish { --focus: var(--on-alliance); }
+.status { text-wrap: balance; }
+
+/* Match periods carry the field clock's time under the name */
+.tabs button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.tab-clock { font-size: var(--fs-xs); font-weight: 700; font-stretch: 75%; }
+
+/* Match header: the line-up shows on Setup only (scouting periods keep the room) */
+.head-lineup { display: none; }
+.screen[data-first-tab='true'] .head-lineup { display: block; margin: calc(-1 * var(--s2)) 0 var(--s3); }
+.head-lineup .lineup { margin-top: 0; }

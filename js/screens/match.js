@@ -9,7 +9,7 @@
 // Tabs come from the game config's sections. A section with "showWith" (e.g.
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
-import { h, icon, savedStatus, confirmDialog, setThemeColor } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -88,6 +88,8 @@ export async function renderMatch({ param }) {
   const pointsLabel = h('div', { class: 'label' }, 'est. pts');
   const teamEl = h('h1', { class: 'team num', tabindex: '-1' });
   const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Match periods' });
+  // On Setup: the whole match line-up from the schedule, to check the team.
+  const lineupEl = h('div', { class: 'head-lineup' });
 
   // Watching two Teams in this match? A switch between their two Drafts.
   const other = !editing ? await db.getDraft('second') : null;
@@ -124,6 +126,7 @@ export async function renderMatch({ param }) {
     ),
     teamEl,
     teamSwitch,
+    lineupEl,
     tabs,
   );
 
@@ -137,6 +140,7 @@ export async function renderMatch({ param }) {
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
     if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
+    lineupEl.replaceChildren(lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       // With two Teams, each pill already says its position.
@@ -251,7 +255,9 @@ export async function renderMatch({ param }) {
   const tabButtons = tabSections.map((section, i) => {
     const btn = h('button', {
       type: 'button', role: 'tab', id: `tab-${section.id}`, 'aria-controls': 'period-panel',
-    }, section.label);
+    }, h('span', {}, section.label),
+      // The field clock's time for the period ("0:30", "2:00").
+      section.durationSec ? h('span', { class: 'tab-clock num', 'aria-hidden': 'true' }, clock(section.durationSec)) : null);
     btn.addEventListener('click', () => showSection(i));
     return btn;
   });
@@ -267,7 +273,7 @@ export async function renderMatch({ param }) {
   });
 
   function sectionBlock(section, isGuest) {
-    const duration = section.durationSec ? h('span', { class: 'duration' }, formatDuration(section.durationSec)) : null;
+    const duration = section.durationSec ? h('span', { class: 'duration' }, clock(section.durationSec)) : null;
     // On Setup the tab already says "Setup", so its heading is for screen readers only.
     const sameAsTab = !isGuest && !section.durationSec && (section.title ?? section.label) === section.label;
     const title = isGuest
@@ -448,8 +454,8 @@ export async function renderMatch({ param }) {
     const breakdown = config.sections
       .filter((s) => s.fields.some((f) => f.points))
       .map((s) => h('div', { class: 'part' },
-        h('span', { class: 'part-value num' }, parts[s.id]),
-        h('span', { class: 'part-label' }, s.label)));
+        h('dt', { class: 'part-label' }, s.label),
+        h('dd', { class: 'part-value num' }, parts[s.id])));
     tabs.hidden = true;
     backBtn.hidden = true; // the buttons below say where to go next
     metaEl.textContent = ''; // match and position are in the result below
@@ -459,9 +465,11 @@ export async function renderMatch({ param }) {
     panel.replaceChildren(
       h('section', { class: 'finish' },
         h('h2', { class: 'finish-title', tabindex: '-1' }, `${code} saved`),
-        h('div', { class: 'finish-total' },
-          h('span', { class: 'num' }, submission.estimatedPoints), h('span', {}, 'est. pts')),
-        h('div', { class: 'parts' }, breakdown),
+        // Laid out like the results screen after a match: each period, then the total.
+        h('dl', { class: 'parts' }, breakdown,
+          h('div', { class: 'part total' },
+            h('dt', { class: 'part-label' }, 'Estimated total'),
+            h('dd', { class: 'part-value num' }, submission.estimatedPoints))),
         h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
         statusEl),
       h('div', { class: 'finish-actions' },
@@ -580,8 +588,9 @@ export async function startPlannedMatch(items) {
   else location.hash = '#match';
 }
 
-function formatDuration(sec) {
-  return sec >= 60 ? `${sec / 60} min` : `${sec} s`;
+// 30 → "0:30", 120 → "2:00", like the match clock on the field display.
+function clock(sec) {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
 
 function notFound() {

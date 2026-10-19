@@ -3,12 +3,14 @@
 // anyone can check who's in a match. Leads search FIRST's events and pick
 // the one the group is at.
 
-import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
-import { currentGroup } from '../account.js';
+import { h, icon, formField, formMessage, busy, confirmDialog, bumper } from '../ui.js';
+import { currentGroup, cachedProfile } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
 import { seasonOf, timeOf } from '../schedule.js';
-import { searchEvents, chooseEvent, cachedEvent, refreshCurrentEvent } from '../events.js';
+import { searchEvents, chooseEvent, cachedEvent, cachedPlan, refreshCurrentEvent } from '../events.js';
+import { assignmentsFor } from '../assignments.js';
+import { alliancePositions, positionLabel } from '../submissions.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { timeAgo } from '../sync.js';
 import { getSetting, setSetting } from '../db.js';
@@ -62,11 +64,24 @@ export async function renderEvent() {
         ]);
 
   // ---------- the schedule ----------
-  const schedule = data && (quals.length || playoffs.length)
+  // Laid out like the printed schedule posted at events: one column per
+  // alliance station. Teams you're assigned to watch get a ring.
+  const profile = await cachedProfile();
+  const plan = ev ? await cachedPlan(group.id, ev.id) : { shifts: [], watches: [] };
+  const mine = new Set(assignmentsFor({ scoutId: profile?.id, ...plan, matches: data?.matches ?? [] })
+    .map((a) => `${a.level}:${a.number}:${a.position}`));
+  const positions = alliancePositions(config);
+  const all = [...quals, ...playoffs];
+  const nextMatch = all.find((x) => !x.played);
+  const schedule = data && all.length
     ? h('section', {},
         h('h2', { class: 'section-title sub' }, 'Schedule'),
-        h('ol', { class: 'schedule', 'aria-label': 'Qualification and playoff matches' },
-          [...quals, ...playoffs].map((m, i, all) => matchRow(m, m === all.find((x) => !x.played)))))
+        h('table', { class: 'schedule', style: `--stations: ${positions.length}` },
+          h('caption', { class: 'visually-hidden' }, 'Match schedule. Teams you watch are marked.'),
+          h('thead', {}, h('tr', {},
+            h('th', { scope: 'col' }, 'Match'),
+            positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` }, positionLabel(p))))),
+          h('tbody', {}, all.map((m) => matchRow(m, m === nextMatch, positions, mine)))))
     : data ? h('p', { class: 'notice' }, 'The qualification schedule isn’t out yet. It usually comes the night before or the morning of the event, and downloads by itself when it does.') : null;
 
   const teams = data?.teams.length ? h('details', { class: 'team-list' },
@@ -146,24 +161,29 @@ export async function renderEvent() {
   const el = h('div', { class: 'screen' },
     cover,
     h('main', { class: 'content' }, message.el,
+      schedule,
       lead && ev ? h('a', { class: 'pill block', href: '#assign' }, 'Plan assignments', icon('next', 20)) : null,
-      schedule, teams, refreshBtn, picker),
+      teams, refreshBtn, picker),
   );
   return { el };
 }
 
-// One schedule row: Q18 · 11:06 AM · red teams · blue teams (· score once played).
-function matchRow(m, isNext) {
+// One schedule row: the match (with its time, or the score once played),
+// then a bumper per station.
+function matchRow(m, isNext, positions, mine) {
   const code = m.level === 'qual' ? `Q${m.number}` : `P${m.number}${m.game > 1 ? `-${m.game}` : ''}`;
   const score = m.played && m.red_score != null ? `${m.red_score}–${m.blue_score}` : null;
-  // Words, not just shade: "Played 82–141", "Next · 11:06 AM", or the time.
-  const when = m.played ? (score ? `Played ${score}` : 'Played') : isNext ? `Next · ${timeOf(m) ?? ''}` : timeOf(m) ?? '';
-  return h('li', { class: `schedule-row${m.played ? ' played' : ''}${isNext ? ' next-up' : ''}` },
-    h('span', { class: 'schedule-code num' }, code),
-    h('span', { class: 'schedule-time' }, when),
-    h('span', { class: 'schedule-teams' },
-      h('span', { class: 'alliance-teams red' }, h('span', { class: 'side' }, 'R'), m.red.join(' ')),
-      h('span', { class: 'alliance-teams blue' }, h('span', { class: 'side' }, 'B'), m.blue.join(' '))));
+  // Words, not just shade: "Played 82–141", "Next 11:06 AM", or the time.
+  const when = m.played ? (score ?? 'Played') : isNext ? `Next ${timeOf(m) ?? ''}` : timeOf(m) ?? '';
+  return h('tr', { class: `${m.played ? 'played' : ''}${isNext ? ' next-up' : ''}` },
+    h('th', { scope: 'row' }, h('span', { class: 'schedule-code num' }, code),
+      isNext ? h('span', { class: 'schedule-time next' }, 'Next') : null,
+      h('span', { class: 'schedule-time' }, isNext ? timeOf(m) ?? '' : when)),
+    positions.map((p) => {
+      const color = p.replace(/\d/, '');
+      const team = m[color]?.[Number(p.slice(color.length)) - 1] ?? null;
+      return h('td', {}, bumper(team, color, { mine: mine.has(`${m.level}:${m.number}:${p}`) }));
+    }));
 }
 
 // "a · b · c" where each piece stays on one line.

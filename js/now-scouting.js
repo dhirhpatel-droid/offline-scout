@@ -29,6 +29,7 @@ export async function myPlan() {
   const todo = byMatch(upcoming(mine, mySubs)).map((g) => ({
     ...g,
     code: matchCode({ level: g.level, match: g.number }),
+    match: findMatch(eventData?.matches, g.level, g.number),
     time: timeOf(findMatch(eventData?.matches, g.level, g.number)),
   }));
   return { assigned: mine.length > 0, total: mine.length, todo };
@@ -58,6 +59,7 @@ export async function whatsNext() {
       items: first.items,
       code: first.code,
       time: first.time,
+      match: first.match,
       team: first.items.map((a) => a.team).filter(Boolean).join(' + ') || null,
       position: first.items[0].position,
       // Red 1 + Blue 2? Then no single alliance colour (the words say both).
@@ -71,7 +73,7 @@ export async function whatsNext() {
   // The schedule (if any) says which team is in that match and position, and when.
   const withSchedule = (next, level, match) => {
     const m = findMatch(eventData?.matches, level, match);
-    return { ...next, team: teamAt(m, next.position), time: timeOf(m) };
+    return { ...next, team: teamAt(m, next.position), time: timeOf(m), match: m };
   };
   if (carry?.match) {
     return withSchedule({

@@ -2,7 +2,7 @@
 // next one) in your alliance colour, the way a music app shows what's playing.
 // Below it: your matches, your Scouting group, and the event.
 
-import { h, icon, setThemeColor, confirmDialog } from '../ui.js';
+import { h, icon, setThemeColor, confirmDialog, bumper, station, lineup } from '../ui.js';
 import { getSetting, listSubmissions, finishDraft } from '../db.js';
 import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
@@ -34,9 +34,9 @@ export async function renderHome() {
           h('div', {},
             h('div', { class: 'title' }, 'My matches'),
             h('div', { class: 'sub' }, submissions.length
-              ? (unsent ? `${unsent} waiting to send` : lastSyncAt ? 'All sent to your group' : 'On this phone')
+              ? `${submissions.length} saved · ${unsent ? `${unsent} waiting to send` : lastSyncAt ? 'all sent to your group' : 'on this phone'}`
               : 'None yet. Matches you save show up here.')),
-          h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, submissions.length), icon('next', 20)))),
+          icon('next', 20))),
         h('li', {}, h('a', { class: 'row', href: '#group' },
           h('div', {},
             h('div', { class: 'title' }, group.name),
@@ -97,6 +97,7 @@ function nowBlock(next) {
         next.time,
         two ? null : 'your next assignment',
       ].filter(Boolean).join(' · ')),
+      lineup(next.match, next.items.map((a) => a.team)),
       go);
   }
   if (next.kind === 'all-done') {
@@ -114,6 +115,7 @@ function nowBlock(next) {
         ? [next.code, next.position && `${positionLabel(next.position)}, same as last match`, next.time].filter(Boolean).join(' · ')
         : [next.position && positionLabel(next.position), 'you’ll enter the team on the next screen']
           .filter(Boolean).join(' · ').replace(/^y/, 'Y')),
+      lineup(next.match, [next.team]),
       h('a', { class: 'pill big block now-go', href: '#match' }, `Scout ${next.code}`, icon('next', 22)));
   }
   return h('section', { class: 'now', 'data-alliance': 'none' },
@@ -128,11 +130,13 @@ function comingUp(next) {
   const shown = next.later.slice(0, 5);
   return h('section', {},
     h('h2', { class: 'section-h' }, 'Coming up'),
-    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', { 'data-alliance': sharedAlliance(g.items) ?? 'none' },
-      h('span', { class: 'num coming-code' }, g.code),
-      h('span', { class: 'coming-what' },
-        h('span', { class: 'num coming-team' }, g.items.map((a) => a.team ?? positionLabel(a.position)).join(' + ')),
-        h('span', { class: 'coming-sub' }, [g.items.map((a) => positionLabel(a.position)).join(', '), g.time].filter(Boolean).join(' · ')))))),
+    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', {},
+      h('span', { class: 'coming-when' },
+        h('span', { class: 'num coming-code' }, g.code),
+        h('span', { class: 'coming-time' }, g.time ?? '')),
+      h('span', { class: 'coming-what' }, g.items.map((a) => h('span', { class: 'coming-item' },
+        station(positionLabel(a.position), a.position.replace(/\d/, '')),
+        a.team ? bumper(a.team, a.position.replace(/\d/, '')) : h('span', { class: 'coming-tbd' }, 'team not out yet'))))))),
     next.later.length > shown.length ? h('p', { class: 'plain' }, `And ${next.later.length - shown.length} more after that.`) : null);
 }
 

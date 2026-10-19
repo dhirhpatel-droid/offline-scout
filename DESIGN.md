@@ -195,7 +195,7 @@ Offline Scout is a counter you hold in the stands. A scout watches a robot, not 
 
 The ground is near-black (or plain white in the light theme) with two slightly raised grey layers. The alliance colour, red or blue, is the only real colour. It fills the match header and every add button. Everything else is white, grey, or black. There is one font, Archivo, used two ways: squeezed and heavy for numbers and headings, normal width for words.
 
-It is meant to feel bold and sporty, like a music app's now-playing screen, not like a school form. It turns down the white form with grey labels and the long scrolling page.
+It is meant to feel bold and sporty, like a music app's now-playing screen, not like a school form. Since Oct 2026 it also borrows from **what you see at the event itself** (chosen by Dhir): team numbers set like robot bumpers, station signs ("Red 1"), the printed match schedule with one column per station, the field clock's period times (0:30, 2:00) and the results screen after a match. It turns down the white form with grey labels and the long scrolling page.
 
 **Key Characteristics:**
 - One committed colour: the alliance (red or blue), everything else is neutral.
@@ -312,6 +312,19 @@ Used for Yes/No, ratings and pick-one options. A Surface track (16px corners, 4p
 
 ### Bottom Sheet (confirm dialog)
 Surface fill, 20px corners, 24px padding, sits at the bottom of the screen so the buttons land under the thumb. Stacked full-width pills.
+
+### Event pieces ("Like the event itself")
+- **Bumper:** a team number on its alliance colour, condensed 800, tabular digits, 6px corners (`--plate-radius`) and a darker lower edge (`--bumper-shade`, an inset, not a cast shadow) like bumper fabric. Neutral grey when the alliance isn't known. The team(s) you watch get a 3px ring in Text colour and "you watch" in their label (never colour alone). Used in the Event schedule, Home's Coming up and Assignments.
+- **Station sign:** "Red 1" in white on the alliance colour, 6px corners. Used wherever a position is listed (Coming up, Assignments); the saved-match badge (R1) is the small form.
+- **Line-up:** "16415 23810 vs 22309 24436" in the alliance block on Home and in the match header on Setup. Outlined plates, the watched team filled white.
+- **Printed schedule:** a real table, Match | Red 1 | Red 2 | Blue 1 | Blue 2 (from the Game config, so FRC gets 6 columns). Station headings carry a 3px alliance bar plus their words. Played rows go outlined; the next match gets a Surface band and "Next".
+- **Field clock:** period tabs show their time under the name (Auto 0:30, Teleop 2:00).
+- **Results:** the finish block lists each period with its points right-aligned, a 3px rule, then the estimated total at hero size.
+
+### Named Rules
+**The Printed Sign Rule.** Things that exist as printed signs at an event (bumpers, station signs) get 6px corners; things you tap stay pills and circles.
+
+**The No Side Stripe Rule.** No coloured left borders on rows; say the alliance with a station sign or bumper instead.
 
 ### Icons
 Inline SVG line icons, 2.5px stroke, round caps, coloured with the text around them.

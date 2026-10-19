@@ -4,7 +4,7 @@
 // assigns anyone by itself (PRODUCT.md: show data, let humans decide).
 // Changes need signal; the plan saved on the phone still shows without it.
 
-import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
+import { h, icon, formField, formMessage, busy, confirmDialog, bumper, station } from '../ui.js';
 import { currentGroup, cachedMembers, listMembers, currentUser } from '../account.js';
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -77,14 +77,17 @@ export async function renderAssign() {
     const rows = [
       ...shifts.map((s) => instructionRow(m, 'shift', s.id,
         `${positionLabel(s.position)} · Q${s.from_match}–Q${s.to_match}`,
-        'Position shift', s.position.replace(/\d/, ''))),
+        [station(positionLabel(s.position), s.position.replace(/\d/, '')), h('span', { class: 'num' }, `Q${s.from_match}–Q${s.to_match}`)],
+        'Position shift')),
       ...watches.map((w) => instructionRow(m, 'watch', w.id,
         `Follows ${w.team_number}`,
-        `Team watch · ${countLabel(mine.filter((a) => a.team === w.team_number).length)} in the schedule`, null)),
+        [bumper(w.team_number), h('span', {}, 'every match')],
+        `Team watch · ${countLabel(mine.filter((a) => a.team === w.team_number).length)} in the schedule`)),
     ];
 
-    const addBtn = h('button', { class: 'pill secondary block', type: 'button', disabled: !online },
-      online ? `Add for ${m.display_name}` : 'Adding needs signal');
+    // Offline: no Add button at all (the note at the top says why).
+    const addBtn = online ? h('button', { class: 'pill secondary block', type: 'button' },
+      icon('plus', 20), `Add for ${m.display_name}`) : null;
     const changed = note?.memberId === m.user_id;
     const section = h('section', { class: 'assign-member', 'data-member': m.user_id },
       h('h2', { class: 'assign-name', tabindex: '-1' }, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
@@ -92,7 +95,7 @@ export async function renderAssign() {
       changed ? h('p', { class: 'form-message info', role: 'status' }, note.text) : null,
       rows.length ? h('ul', { class: 'rows' }, rows) : null,
       addBtn);
-    addBtn.addEventListener('click', () => {
+    addBtn?.addEventListener('click', () => {
       addBtn.replaceWith(addForm(m, { shifts, watches }, () => {
         section.querySelector('form').replaceWith(addBtn);
         addBtn.focus();
@@ -102,10 +105,10 @@ export async function renderAssign() {
     return section;
   }
 
-  function instructionRow(m, kind, id, title, sub, color) {
-    const remove = h('button', { class: 'small-btn danger', type: 'button', disabled: !online,
-      'aria-label': `Remove ${title} from ${m.display_name}` }, 'Remove');
-    remove.addEventListener('click', async () => {
+  function instructionRow(m, kind, id, title, shown, sub) {
+    const remove = online ? h('button', { class: 'small-btn danger', type: 'button',
+      'aria-label': `Remove ${title} from ${m.display_name}` }, 'Remove') : null;
+    remove?.addEventListener('click', async () => {
       const ok = await confirmDialog({
         title: `Remove ${title} from ${m.display_name}?`,
         body: `It disappears from ${m.display_name}’s phone the next time it has signal. Matches already scouted stay.`,
@@ -119,8 +122,8 @@ export async function renderAssign() {
         } catch (err) { message.show(friendlyError(err), 'error'); }
       });
     });
-    return h('li', { class: 'row assign-row', 'data-alliance': color ?? 'none' },
-      h('div', {}, h('div', { class: 'title num' }, title), h('div', { class: 'sub' }, sub)),
+    return h('li', { class: 'row assign-row' },
+      h('div', {}, h('div', { class: 'title assign-what', 'aria-label': title }, shown), h('div', { class: 'sub' }, sub)),
       remove);
   }
 
@@ -236,7 +239,7 @@ export async function renderAssign() {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
       gapsEl,
-      online ? null : h('p', { class: 'plain' }, 'Changes need signal. This is the plan saved on your phone.'),
+      online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
       message.el,
       membersEl),
   );

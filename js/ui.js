@@ -44,6 +44,34 @@ export function icon(name, size = 24) {
   return span.firstElementChild;
 }
 
+// A team number set the way it is on a robot's bumper: heavy white digits on
+// the alliance colour. alliance = 'red' | 'blue' | null (unknown: neutral).
+// mine = this phone's Scout watches it (a ring, and the words "you watch",
+// so it never relies on colour).
+export function bumper(team, alliance = null, { mine = false, size = '' } = {}) {
+  return h('span', {
+    class: ['bumper', alliance, mine && 'mine', size].filter(Boolean).join(' '),
+    'aria-label': team ? `${alliance ? `${alliance[0].toUpperCase()}${alliance.slice(1)} ` : ''}${team}${mine ? ', you watch' : ''}` : 'Team not known yet',
+  }, team ?? '—');
+}
+
+// The match line-up the way the field display reads it: red teams, "vs",
+// blue teams. The team(s) you watch are filled in; the rest are outlined.
+export function lineup(match, watched) {
+  if (!match) return null;
+  const side = (teams) => teams.map((t) => h('span', { class: `lineup-team num${watched.includes(t) ? ' mine' : ''}` }, t));
+  return h('p', { class: 'lineup', 'aria-label': `Red ${match.red.join(' and ')} versus blue ${match.blue.join(' and ')}` },
+    h('span', { class: 'lineup-side' }, side(match.red)),
+    h('span', { class: 'lineup-vs', 'aria-hidden': 'true' }, 'vs'),
+    h('span', { class: 'lineup-side' }, side(match.blue)));
+}
+
+// An alliance station sign: "Red 1" on the alliance colour, square-cornered
+// like the plates over the driver stations.
+export function station(label, alliance) {
+  return h('span', { class: `station ${alliance ?? ''}` }, label);
+}
+
 // The "Saved on this device" line. Never mentions the internet, because the
 // app never needs it.
 export function savedStatus(text = 'Saved on this phone') {
@@ -140,12 +168,14 @@ export function passwordField(label, autocomplete) {
 // A message box for a whole form ("Check your email", "No connection").
 // kind: 'error' (announced right away) or 'info'.
 export function formMessage() {
-  const el = h('p', { class: 'form-message', hidden: true });
+  // A live region that is always in the page (screen readers can miss one
+  // that appears at the same moment as its text).
+  const el = h('p', { class: 'form-message', role: 'status', 'aria-live': 'polite', hidden: true });
   function show(text, kind = 'info') {
     el.textContent = text ?? '';
     el.hidden = !text;
     el.dataset.kind = kind;
-    el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    el.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
   }
   return { el, show };
 }

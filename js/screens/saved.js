@@ -51,7 +51,8 @@ export async function renderSaved({ param }) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   const statusEl = h('p', { class: `status ${st.state}`, role: 'status' },
     icon(st.state === 'sent' ? 'check' : 'device', 18), h('span', {}, st.text));
-  const sendBtn = unsent ? h('button', { class: 'pill', type: 'button', disabled: !isOnline() }, isOnline() ? 'Send now' : 'Send now (needs signal)') : null;
+  // Offline there's nothing to press: the status line says they'll send.
+  const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now') : null;
   sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
