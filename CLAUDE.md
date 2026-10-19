@@ -85,14 +85,14 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Milestone 1.5 (done, Oct 17, 2026):** groundwork. Code and phone storage now match
   GLOSSARY.md (Submissions with UUIDs, Alliance position, Match level, sync marker);
   Milestone 1 data upgrades on the phone.
-- **Milestone 2 (built Oct 18, 2026; waiting on Dhir's real-account test):** email
+- **Milestone 2 (done Oct 18, 2026; tested by Dhir with real accounts):** email
   accounts, Scouting groups, email Invites, roles. Database in `supabase/migrations/`
   (applied), invite emails via `supabase/functions/send-invite` (deployed).
 - **Redesign (Oct 18):** every screen reworked after impeccable critiques (24 → 27/40 on
   two-reviewer rounds). Home is "Now scouting"; 4 match tabs; tap tiles; see DESIGN.md.
 - **Milestone 3 (built Oct 19, 2026):** sync. `submissions` table + rules
   (migration applied), `js/sync.js` + `js/sync-rules.js`, Mine/Everyone, Group settings.
-  Real two-phone sync not yet tested with real accounts (Dhir's test).
+  Tested by Dhir on two phones with real accounts (Oct 19): send, Everyone view, offline edit.
 - **Next:** Milestone 4 (Events from FIRST) in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
