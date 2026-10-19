@@ -10,6 +10,8 @@ import { h, icon, bumper, station } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
+import { withCustom } from '../custom-rules.js';
+import { cachedQuestions } from '../custom.js';
 import { listSubmissions, getSetting, setSetting } from '../db.js';
 import { cachedEvent } from '../events.js';
 import { positionOf, timeOf } from '../schedule.js';
@@ -18,14 +20,19 @@ import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections,
 import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
+import { dataChecks, checksFor } from '../data-checks.js';
+import { checkButtons } from './checks.js';
 
-// Everything both screens need, or a reason they can't show.
-async function load() {
+// Everything the Lead views need (also used by the Checks screen).
+export async function load() {
   const group = await currentGroup();
   const ev = group?.currentEvent;
-  const [config, data, all, lastSyncAt] = await Promise.all([
-    loadConfig(group.game_config_id), cachedEvent(ev?.id), listSubmissions(), getSetting('lastSyncAt'),
+  const [base, data, all, lastSyncAt, questions] = await Promise.all([
+    loadConfig(group.game_config_id), cachedEvent(ev?.id), listSubmissions(), getSetting('lastSyncAt'), cachedQuestions(group.id),
   ]);
+  // Custom questions are summed up on Team pages too, hidden ones included
+  // (their answers are still worth reading).
+  const config = withCustom(base, questions.map((q) => ({ ...q, hidden_at: null })));
   const canSeeAll = isLead(group) || group.settings?.scoutsSeeAll === true;
   const subs = ev ? forEvent(all, { groupId: group.id, eventId: ev.id }) : [];
   return { group, ev, config, data, subs, canSeeAll, lastSyncAt, noEvent: unlinked(all, { groupId: group.id }) };
@@ -164,6 +171,14 @@ export async function renderTeam({ param }) {
         row.submissions > row.scouted ? `${row.submissions} Submissions` : null,
         row.noShows ? `${row.noShows} no-show${row.noShows > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')));
 
+  // Data checks about this Team, first: the Lead should see them before trusting the numbers.
+  const mineChecks = ev ? checksFor(dataChecks(config, subs, data ?? {}, group.settings?.checkSensitivity ?? 'normal'), team) : [];
+  const byId = new Map(subs.map((s) => [s.id, s]));
+  const checksEl = mineChecks.length ? h('section', { class: 'team-checks' },
+    h('h2', { class: 'section-h' }, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'}`),
+    h('ul', { class: 'checks' }, mineChecks.map((c) => h('li', { class: `check ${c.kind}` },
+      h('p', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text), checkButtons(c, byId))))) : null;
+
   // Averages, laid out like the results screen.
   const averages = row?.matches ? h('section', {},
     h('h2', { class: 'section-h' }, 'Average per match'),
@@ -217,7 +232,7 @@ export async function renderTeam({ param }) {
     cover,
     h('main', { class: 'content' },
       !ev ? h('p', { class: 'plain' }, 'Pick your event to see this team’s matches.') : null,
-      averages, schedule, details, list,
+      checksEl, averages, schedule, details, list,
       // Straight to Assignments with this team ready for a Team watch.
       isLead(group) ? h('a', { class: 'pill secondary block team-plan', href: `#assign/${team}` }, `Plan who watches ${team}`, icon('next', 20)) : null,
       !mine.length && ev ? h('p', { class: 'plain teams-empty' }, 'No one in your group has scouted this team here yet.') : null),

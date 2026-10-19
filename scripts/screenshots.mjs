@@ -116,11 +116,14 @@ try {
         const dhir = '00000000-0000-4000-8000-0000000000aa', maya = '00000000-0000-4000-8000-0000000000bb';
         s.put({ shifts: [{ id: 's1', scout_id: dhir, position: 'red1', from_match: 18, to_match: 20 }, { id: 's2', scout_id: maya, position: 'blue1', from_match: 14, to_match: 20 }],
           watches: [{ id: 'w1', scout_id: dhir, team_number: 23810 }], savedAt: new Date().toISOString() }, 'plan:g1:ev1');
+        // Two Custom questions (Milestone 7).
+        s.put([{ id: 'q1', section: 'teleop', type: 'choice', label: 'Scored from', options: ['Near side', 'Far side'], position: 0, created_at: '2026-10-19', hidden_at: null },
+          { id: 'q2', section: 'post', type: 'toggle', label: 'Helped their partner', options: null, position: 0, created_at: '2026-10-19', hidden_at: null }], 'questions:g1');
         s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }], 'members:g1');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));
         // Maya's matches (synced from her phone), so the Teams table has a spread.
-        [[14, 21229, 'blue2', 44, 41], [15, 16415, 'blue2', 66, 31], [16, 14515, 'blue1', 28, 21], [17, 22309, 'blue2', 81, 11], [16, 23810, 'blue1', 58, 22]]
+        [[14, 23810, 'red1', 91, 39], [14, 21229, 'blue2', 44, 41], [15, 16415, 'blue2', 66, 31], [16, 14515, 'blue1', 28, 21], [17, 22309, 'blue2', 81, 11], [16, 23810, 'blue1', 58, 22]]
           .forEach((a) => sub.put({ ...mk(...a, 'Maya'), scoutId: '00000000-0000-4000-8000-0000000000bb' }));
         tx.oncomplete = ok; });
       db.close();
@@ -129,6 +132,10 @@ try {
     await shot(t('05-home'));
     await go('#saved');
     await shot(t('08-saved'));
+    await go('#checks');
+    await shot(t('21-checks'));
+    await go('#questions');
+    await shot(t('22-questions'));
     await go('#teams');
     await shot(t('19-teams'));
     await go('#team/23810');

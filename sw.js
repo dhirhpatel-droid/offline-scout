@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v22';
+const VERSION = 'v24';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -35,6 +35,9 @@ const APP_FILES = [
   'js/schedule.js',
   'js/assignments.js',
   'js/team-stats.js',
+  'js/custom.js',
+  'js/custom-rules.js',
+  'js/data-checks.js',
   'vendor/supabase-2.117.2.js',
   'js/ui.js',
   'js/db.js',
@@ -52,6 +55,8 @@ const APP_FILES = [
   'js/screens/event.js',
   'js/screens/assign.js',
   'js/screens/teams.js',
+  'js/screens/questions.js',
+  'js/screens/checks.js',
   'configs/index.json',
   'configs/ftc-2026-biobuzz.json',
   'icons/icon-192.png',

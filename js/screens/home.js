@@ -12,6 +12,7 @@ import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
 import { planSummary } from '../assignments.js';
 import { forEvent, teamRows } from '../team-stats.js';
+import { dataChecks } from '../data-checks.js';
 import { loadConfig } from '../config.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
@@ -29,9 +30,17 @@ export async function renderHome() {
   const plan = lead && group.currentEvent ? await cachedPlan(group.id, group.currentEvent.id) : null;
   // Teams (Lead view): how many Teams at the event have been scouted (Coverage).
   let teamsRow = null;
+  let checksRow = null;
   if ((lead || group.settings?.scoutsSeeAll === true) && group.currentEvent) {
     const config = await loadConfig(group.game_config_id);
-    const rows = teamRows(config, forEvent(all, { groupId: group.id, eventId: group.currentEvent.id }), eventData?.teams ?? []);
+    const eventSubs = forEvent(all, { groupId: group.id, eventId: group.currentEvent.id });
+    const rows = teamRows(config, eventSubs, eventData?.teams ?? []);
+    // Data checks (Leads): only shown when there's something to look at.
+    const checks = lead ? dataChecks(config, eventSubs, eventData ?? {}, group.settings?.checkSensitivity ?? 'normal') : [];
+    checksRow = checks.length ? h('a', { class: 'row', href: '#checks' },
+      h('div', {}, h('div', { class: 'title' }, 'Data checks'),
+        h('div', { class: 'sub' }, `${checks.length} to look at · ${checks[0].title}`)),
+      h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, checks.length), icon('next', 20))) : null;
     const done = rows.filter((r) => r.scouted).length;
     teamsRow = h('a', { class: 'row', href: '#teams' },
       h('div', {}, h('div', { class: 'title' }, 'Teams'),
@@ -56,6 +65,7 @@ export async function renderHome() {
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
         h('li', {}, eventRow(group, lead, eventData)),
+        checksRow ? h('li', {}, checksRow) : null,
         teamsRow ? h('li', {}, teamsRow) : null,
         plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },
           h('div', {},

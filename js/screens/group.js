@@ -11,6 +11,7 @@ import {
 import { groupLabel, isLead, isLastLead, sortMembers, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { nowScoutingBar } from '../now-scouting.js';
+import { cachedQuestions } from '../custom.js';
 
 export async function renderGroup() {
   const group = await currentGroup();
@@ -181,6 +182,37 @@ export async function renderGroup() {
       }))
       : h('p', { class: 'setting-value' }, SORTS.find(([k]) => k === sortKey)?.[1])) : null;
 
+  // How sensitive Data checks are (Leads).
+  const LEVELS = [['relaxed', 'Relaxed'], ['normal', 'Normal'], ['strict', 'Strict']];
+  let level = group.settings?.checkSensitivity ?? 'normal';
+  const sensitivitySetting = lead ? h('div', { class: 'field' },
+    h('span', { class: 'field-label', id: 'sens-label' }, 'Data checks'),
+    h('p', { class: 'field-hint' }, 'Strict flags smaller differences between scouts and the official score.'),
+    isOnline()
+      ? h('div', { class: 'segmented wide', role: 'group', 'aria-labelledby': 'sens-label' }, LEVELS.map(([key, label]) => {
+        const b = h('button', { type: 'button', 'aria-pressed': String(key === level) }, label);
+        b.addEventListener('click', async () => {
+          const before = level;
+          level = key;
+          b.parentElement.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          try { await setGroupSetting(group.id, 'checkSensitivity', key); } catch (err) {
+            level = before;
+            b.parentElement.querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(LEVELS[i][0] === before)));
+            message.show(friendlyError(err), 'error');
+          }
+        });
+        return b;
+      }))
+      : h('p', { class: 'setting-value' }, LEVELS.find(([k]) => k === level)?.[1])) : null;
+
+  // Custom questions live on their own screen (Leads).
+  const questions = lead ? await cachedQuestions(group.id) : [];
+  const shown = questions.filter((q) => !q.hidden_at).length;
+  const questionsLink = lead ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#questions' },
+    h('div', {}, h('div', { class: 'title' }, 'Custom questions'),
+      h('div', { class: 'sub' }, shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'} in the match` : 'Add your own questions to the match')),
+    icon('next', 20)))) : null;
+
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');
   leave.addEventListener('click', async () => {
     const ok = await confirmDialog({
@@ -213,6 +245,8 @@ export async function renderGroup() {
       membersList,
       settingsSection,
       sortSetting,
+      sensitivitySetting,
+      questionsLink,
       h('div', { class: 'danger-zone group-footer' },
         h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),

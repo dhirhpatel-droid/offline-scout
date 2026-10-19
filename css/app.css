@@ -1101,3 +1101,21 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .team-match-games { display: block; font-size: var(--fs-xs); font-weight: 600; font-stretch: 100%; color: var(--text-2); }
 .team-matches li.off-schedule { grid-template-columns: 3.5rem 1fr auto; }
 .team-match-when.off { color: var(--text); font-weight: 600; }
+
+/* Custom questions (Leads) */
+.segmented.wrap { flex-wrap: wrap; }
+.segmented.wrap button { flex: 1 1 auto; }
+.question-row.hidden-q .title { color: var(--text-2); }
+.question-form { margin-top: var(--s5); }
+
+/* Data checks: each one a plain block with what looks off and buttons to open
+   the Submissions. Not red: a check is something to look at, not an error. */
+.checks { list-style: none; padding: 0; display: grid; gap: var(--s3); }
+.check { padding: var(--s3) var(--s4); border-radius: var(--radius); background: var(--surface); }
+.check-title { font-weight: 800; font-size: var(--fs-md); }
+.check-text { color: var(--text-2); font-size: var(--fs-sm); margin-top: var(--s1); }
+.check-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
+/* links styled as small buttons: centre the words like a <button> does */
+.check-actions .small-btn { display: inline-flex; align-items: center; text-decoration: none; background: var(--bg); }
+.checks-about { font-size: var(--fs-sm); margin: calc(-1 * var(--s1)) 0 var(--s3); }
+.team-checks { margin-bottom: var(--s4); }
