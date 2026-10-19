@@ -17,6 +17,8 @@ import {
 import { toServer, decide, fromServer, hasUnsentChanges, claim } from './sync-rules.js';
 
 let running = null;
+// The last sync's result, so screens drawn later can show it too.
+export let lastResult = null;
 
 // Start a sync (or join the one already running). Resolves to a summary:
 // { ok, sent, received, waiting, error? }
@@ -96,6 +98,7 @@ async function doSync() {
 // Tell the screens (they listen for "scout-sync" and refresh their status).
 function finish(result, error) {
   if (error) result.error = error;
+  lastResult = result;
   window.dispatchEvent(new CustomEvent('scout-sync', { detail: result }));
   return result;
 }
@@ -110,4 +113,22 @@ export function startAutoSync() {
   setInterval(() => {
     if (document.visibilityState === 'visible') syncNow();
   }, 60_000);
+}
+
+// The phrase for "where are my matches?" in the Home and My matches footers.
+//   { text, state: 'waiting' | 'failed' | 'sent' | 'none' }
+export function sendStatus({ unsent, lastSyncAt, result }) {
+  if (unsent && result?.error && result.error !== 'offline' && result.error !== 'signed-out') {
+    return { state: 'failed', text: 'Couldn’t reach your group. Your matches are safe on this phone.' };
+  }
+  if (unsent) return { state: 'waiting', text: `${unsent} waiting · sends when you have signal` };
+  if (lastSyncAt) return { state: 'sent', text: `All sent · ${timeAgo(lastSyncAt)}` };
+  return { state: 'none', text: 'Works with no signal' };
+}
+
+export function timeAgo(iso) {
+  const min = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min} min ago`;
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }

@@ -156,8 +156,8 @@ export function matchCode(summary) {
   return `${prefix}${summary?.match ?? '—'}`;
 }
 
-// Where this Submission's data is. Sending arrives with sync (Milestone 3);
-// until then everything is honestly "on this phone".
+// Where this Submission's data is: still a Draft, on this phone waiting to
+// send, or sent to the group (js/sync.js sets syncedAt when the server has it).
 export function syncStatus(submission) {
   if (!submission.submittedAt) return { state: 'draft', text: 'Not saved yet' };
   if (needsSync(submission)) return { state: 'local', text: 'On this phone · not sent yet' };

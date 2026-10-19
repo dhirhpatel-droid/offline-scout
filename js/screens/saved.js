@@ -9,7 +9,7 @@ import { positionLabel, matchCode, syncStatus, needsSync } from '../submissions.
 import { nowScoutingBar } from '../now-scouting.js';
 import { currentUser, currentGroup } from '../account.js';
 import { isLead } from '../group-rules.js';
-import { syncNow } from '../sync.js';
+import { syncNow, sendStatus, lastResult } from '../sync.js';
 import { isOnline } from '../supabase.js';
 
 export async function renderSaved({ param }) {
@@ -33,13 +33,13 @@ export async function renderSaved({ param }) {
   }
 
   const switcher = canSeeAll ? h('div', { class: 'segmented wide list-switch', role: 'group', 'aria-label': 'Whose matches' },
-    h('a', { class: 'seg-link', href: '#saved', 'aria-current': everyone ? null : 'page', 'aria-pressed': String(!everyone) }, 'Mine'),
-    h('a', { class: 'seg-link', href: '#saved/everyone', 'aria-current': everyone ? 'page' : null, 'aria-pressed': String(everyone) }, 'Everyone')) : null;
+    h('a', { class: 'seg-link', href: '#saved', 'aria-current': everyone ? null : 'page' }, 'Mine'),
+    h('a', { class: 'seg-link', href: '#saved/everyone', 'aria-current': everyone ? 'page' : null }, 'Everyone')) : null;
 
   const body = submissions.length
     ? [...byEvent].map(([event, subs]) => h('section', {},
         h('h2', { class: 'section-h' }, `${event} · ${subs.length}`),
-        h('ul', { class: 'submission-list' }, subs.map((s) => h('li', {}, submissionRow(s, submissions))))))
+        h('ul', { class: 'submission-list' }, subs.map((s) => h('li', {}, submissionRow(s, submissions, everyone))))))
     : h('div', { class: 'empty-state' },
         h('h2', {}, everyone ? 'No matches from your group yet' : 'No matches yet'),
         h('p', {}, everyone
@@ -47,37 +47,33 @@ export async function renderSaved({ param }) {
           : 'Every match you save shows up here, newest first. They stay on this phone even with no signal.'),
         everyone ? null : h('a', { class: 'pill', href: '#match' }, 'Start scouting'));
 
-  // Footer: where my matches are, and a way to send now.
-  const statusText = unsent
-    ? `${unsent} waiting to send`
-    : lastSyncAt ? `All sent · ${timeAgo(lastSyncAt)}` : 'Nothing to send';
+  // Footer: where my matches are, and a way to send now that says what happened.
+  const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
+  const statusEl = h('p', { class: `status ${st.state}`, role: 'status' },
+    icon(st.state === 'sent' ? 'check' : 'device', 18), h('span', {}, st.text));
   const sendBtn = unsent ? h('button', { class: 'pill', type: 'button', disabled: !isOnline() }, isOnline() ? 'Send now' : 'Needs signal') : null;
-  sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', () => syncNow()));
+  sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
+    const r = await syncNow();
+    if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
+  }));
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
       h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
-      h('h1', { tabindex: '-1' }, everyone ? 'Group matches' : 'My matches')),
+      h('h1', { tabindex: '-1' }, everyone ? 'Everyone’s matches' : 'My matches')),
     h('main', { class: 'content' }, switcher, body),
     bar,
     h('footer', { class: 'bottombar' },
-      h('p', { class: 'status' }, icon(unsent ? 'device' : 'check', 18), h('span', {}, statusText)),
+      statusEl,
       sendBtn),
   );
   return { el };
 }
 
-function timeAgo(iso) {
-  const min = Math.round((Date.now() - new Date(iso)) / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
-  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
 // One row: the alliance position as a coloured block, the match and team,
 // the points, and where the data is. The status chip only shows when rows
 // differ, so it means something when it's there.
-export function submissionRow(sub, all = [sub]) {
+export function submissionRow(sub, all = [sub], showScout = false) {
   const mixed = new Set(all.map((x) => syncStatus(x).state)).size > 1;
   const { team, position, alliance, scout } = sub.summary ?? {};
   const code = matchCode(sub.summary);
@@ -95,7 +91,7 @@ export function submissionRow(sub, all = [sub]) {
     h('span', { class: `badge ${alliance ?? ''}`, 'aria-hidden': 'true' }, badge),
     h('span', { class: 'submission-main' },
       h('span', { class: 'submission-title num' }, `${code} · ${team ?? '—'}`),
-      h('span', { class: 'sub' }, [where, scout, time].filter(Boolean).join(' · '))),
+      h('span', { class: 'sub' }, [where, showScout && scout, time].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),
       mixed ? h('span', { class: `sync-chip ${status.state}` }, status.state === 'sent' ? 'Sent' : 'Not sent') : null),

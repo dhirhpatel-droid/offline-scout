@@ -115,5 +115,10 @@ startAutoSync(); // send and receive Submissions whenever there's signal
 window.addEventListener('scout-sync', (e) => {
   const { sent, received } = e.detail;
   const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
-  if ((sent || received) && ['home', 'saved'].includes(name)) route();
+  const realFailure = e.detail.error && !['offline', 'signed-out'].includes(e.detail.error);
+  if ((sent || received || realFailure) && ['home', 'saved'].includes(name)) route();
+});
+window.addEventListener('online', () => {
+  const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
+  if (['home', 'saved', 'group'].includes(name)) route();
 });

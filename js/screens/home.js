@@ -8,11 +8,12 @@ import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
 import { whatsNext } from '../now-scouting.js';
+import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [eventName, all, group, next, me] = await Promise.all([
-    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), currentUser(),
+  const [eventName, all, group, next, me, lastSyncAt] = await Promise.all([
+    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), currentUser(), getSetting('lastSyncAt'),
   ]);
   // My matches in this group (matches from before accounts existed count as mine).
   const submissions = all.filter((s) => (!s.scoutId || s.scoutId === me?.id) && (!s.groupId || s.groupId === group.id));
@@ -28,7 +29,7 @@ export async function renderHome() {
           h('div', {},
             h('div', { class: 'title' }, 'My matches'),
             h('div', { class: 'sub' }, submissions.length
-              ? (unsent ? `${unsent} waiting to send` : 'All sent to your group')
+              ? (unsent ? `${unsent} waiting to send` : lastSyncAt ? 'All sent to your group' : 'On this phone')
               : 'None yet. Matches you save show up here.')),
           h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, submissions.length), icon('next', 20)))),
         h('li', {}, h('a', { class: 'row', href: '#group' },
@@ -44,8 +45,7 @@ export async function renderHome() {
         h('ul', { class: 'submission-list' }, submissions.slice(0, 3).map((s) => h('li', {}, submissionRow(s, submissions))))) : null,
     ),
     h('footer', { class: 'bottombar' },
-      h('p', { class: 'status' }, icon('device', 18),
-        h('span', {}, unsent ? `${unsent} waiting to send · sends when you have signal` : 'Works with no signal'))),
+      footerStatus(unsent, lastSyncAt)),
   );
 
   // The phone's status bar matches the block's colour.
@@ -74,9 +74,9 @@ function nowBlock(next) {
   if (next.kind === 'next') {
     return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
       top,
-      h('p', { class: 'now-meta num' }, next.position ? `Next · ${positionLabel(next.position)}` : 'Next'),
       h('h1', { class: 'now-hero num', tabindex: '-1' }, next.code),
-      h('p', { class: 'now-sub' }, 'You’ll enter the team number on the next screen.'),
+      h('p', { class: 'now-sub' }, [next.position && positionLabel(next.position), 'you’ll enter the team on the next screen']
+        .filter(Boolean).join(' · ').replace(/^y/, 'Y')),
       h('a', { class: 'pill big block now-go', href: '#match' }, `Scout ${next.code}`, icon('next', 22)));
   }
   return h('section', { class: 'now', 'data-alliance': 'none' },
@@ -124,4 +124,11 @@ function eventRow(eventName, lead) {
     f.input.focus();
   });
   return view;
+}
+
+// The footer says where your matches are (sending is the one thing it reports).
+function footerStatus(unsent, lastSyncAt) {
+  const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
+  return h('p', { class: `status ${st.state}` }, icon(st.state === 'sent' ? 'check' : 'device', 18),
+    h('span', {}, st.state === 'waiting' ? 'Sends when you have signal' : st.text));
 }

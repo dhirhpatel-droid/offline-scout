@@ -19,6 +19,7 @@ import {
 import * as db from '../db.js';
 import { currentGroup, cachedProfile, currentUser } from '../account.js';
 import { syncNow } from '../sync.js';
+import { listenFor } from '../ui.js';
 import { isLead } from '../group-rules.js';
 
 export async function renderMatch({ param }) {
@@ -54,6 +55,7 @@ export async function renderMatch({ param }) {
 
   // A Draft nobody typed anything into is thrown away when you leave.
   let touched = editing;
+  let stopListening = null;
 
   // Start on Setup if something needed there is still empty (the team, on a
   // fresh match); otherwise on the first period.
@@ -184,7 +186,8 @@ export async function renderMatch({ param }) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }
     if (readOnly) {
-      panel.prepend(h('p', { class: 'notice' }, `View only: ${submission.summary.scout ?? 'another scout'} scouted this match.`));
+      panel.prepend(h('p', { class: 'notice' }, `${submission.summary.scout ?? 'Another scout'}’s match · view only. ${
+        isLead(group) ? 'Lead edits are turned off for this group.' : 'Only the scout who saved it, or a Lead, can change it.'}`));
     } else if (editing && i === tabSections.length - 1) {
       panel.append(deleteButton());
     }
@@ -246,7 +249,9 @@ export async function renderMatch({ param }) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
         `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     }
-    bottombar.replaceChildren(savedStatus('Saved'), action);
+    bottombar.replaceChildren(
+      readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`)) : savedStatus('Saved'),
+      action);
   }
 
   // ---------- submit / next match ----------
@@ -288,15 +293,24 @@ export async function renderMatch({ param }) {
   function showFinish() {
     const code = matchCode(submission.summary);
     const carry = nextMatchCarry(submission);
-    // Starts as "On this phone"; becomes "Sent to your group" once the server has it.
-    const statusEl = h('p', { class: 'finish-status', role: 'status' }, icon('device', 18), h('span', {}, syncStatus(submission).text));
-    syncNow().then(async () => {
+    // Leads with the reassurance ("Saved on this phone"), then changes to
+    // "Sent to your group" the moment a sync gets it there, even if signal
+    // only comes back while this screen is open.
+    const statusEl = h('p', { class: 'finish-status', role: 'status' });
+    const showStatus = async (result) => {
       const latest = await db.getSubmission(submission.id);
       if (!latest) return;
-      const st = syncStatus(latest);
-      statusEl.replaceChildren(icon(st.state === 'sent' ? 'check' : 'device', 18),
-        h('span', {}, st.state === 'sent' ? 'Sent to your group' : `${st.text} · sends when you have signal`));
-    });
+      const sent = syncStatus(latest).state === 'sent';
+      const failed = !sent && result?.error && !['offline', 'signed-out'].includes(result.error);
+      statusEl.classList.toggle('just-sent', sent);
+      statusEl.replaceChildren(icon(sent ? 'check' : 'device', 18), h('span', {},
+        sent ? 'Sent to your group'
+          : failed ? 'Saved on this phone · couldn’t reach your group, will retry'
+            : 'Saved on this phone · sends when you have signal'));
+    };
+    showStatus(null);
+    syncNow().then(showStatus);
+    stopListening = listenFor('scout-sync', (e) => showStatus(e.detail));
     const nextCode = carry.match ? matchCode({ level: carry.level, match: carry.match }) : null;
     const parts = pointsBySection(config, submission.values);
     const breakdown = config.sections
@@ -306,7 +320,7 @@ export async function renderMatch({ param }) {
         h('span', { class: 'part-label' }, s.label)));
     tabs.hidden = true;
     backBtn.hidden = true; // the buttons below say where to go next
-    metaEl.textContent = positionLabel(submission.summary.position ?? ''); // "Q18" is in the result below
+    metaEl.textContent = ''; // match and position are in the result below
     screen.classList.add('finished');
     panel.removeAttribute('role');
     panel.removeAttribute('aria-labelledby');
@@ -375,6 +389,7 @@ export async function renderMatch({ param }) {
     el: screen,
     cleanup: () => {
       observer?.disconnect();
+      stopListening?.();
       // Opened by mistake and left without typing anything: don't keep it.
       if (freshDraft && !touched && !submission.submittedAt) db.clearDraft();
     },

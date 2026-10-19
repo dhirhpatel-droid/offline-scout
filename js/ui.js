@@ -164,3 +164,10 @@ export async function busy(button, text, task) {
     button.textContent = before;
   }
 }
+
+// Listen for a window event; returns a function that stops listening
+// (screens call it when you leave them).
+export function listenFor(name, handler) {
+  window.addEventListener(name, handler);
+  return () => window.removeEventListener(name, handler);
+}

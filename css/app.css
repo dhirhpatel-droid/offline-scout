@@ -247,7 +247,7 @@ input, textarea { caret-color: var(--text); }
   color: var(--on-alliance);
 }
 .round:active { transform: scale(0.92); }
-.round:disabled { color: var(--text-3); } /* nothing to undo yet (dashed outlines mean 'disabled' only) */
+.round:disabled { color: var(--text-3); } /* zero: nothing to undo yet (a quieter minus, not 'disabled') */
 
 /* Signature moment: adding flashes the row in the alliance colour and the
    number jumps. Skipped for people who turn off motion in their phone settings. */
@@ -285,7 +285,6 @@ input, textarea { caret-color: var(--text); }
   min-height: var(--tap);
   border-radius: 12px;
   font-weight: 700;
-  color: var(--text-2);
 }
 .segmented button[aria-pressed='true'] {
   background: var(--alliance);
@@ -461,13 +460,13 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 .lede { color: var(--text-2); margin-bottom: var(--s3); max-width: 36ch; }
 
 /* Show/Hide sits inside the password box, on the right. */
-.input-wrap { position: relative; }
-.input-wrap .input { padding-right: 88px; }
+.input-wrap { position: relative; margin-top: var(--s2); }
+.input-wrap .input { margin-top: 0; padding-right: 88px; }
 .reveal {
   position: absolute;
   right: var(--s1);
-  top: var(--s2); /* the box has an 8px gap above it */
-  height: var(--tap);
+  top: 0;
+  bottom: 0; /* exactly as tall as the box, so the label sits in its middle */
   min-height: var(--tap);
   min-width: 72px;
   border-radius: 10px;
@@ -602,6 +601,7 @@ a.row { color: inherit; }
 .scouting-as { margin-top: var(--s4); }
 .danger-zone { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
+.danger-zone .text-btn { padding-left: 0; }
 
 /* ---------- Finish ("Q18 saved") ---------- */
 
@@ -734,7 +734,7 @@ a.row { color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: var(--s1);
-  min-height: 48px;
+  min-height: var(--tap);
   margin-top: var(--s1);
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -752,7 +752,19 @@ a.row { color: inherit; }
   border: 2px solid var(--control-line);
   font-weight: 700;
 }
-.seg-link[aria-pressed='true'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
-.field.tile:disabled { border-style: dashed; color: var(--text-3); }
+.seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+.field.tile:disabled { border-style: dashed; cursor: not-allowed; } /* readable, just not changeable */
+.field.tile[aria-pressed='true']:disabled { background: transparent; border-color: var(--control-line); color: var(--text); }
+.field.tile[aria-pressed='true']:disabled .tile-check { background: var(--text); border-color: var(--text); color: var(--bg); }
+/* Off the match screen (no alliance), a ticked tile uses the main colour. */
+.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) .tile-check { background: var(--primary-text); border-color: var(--primary-text); color: var(--primary-bg); }
 /* Someone else's match, view only */
-.read-only .field, .read-only .field.tile { opacity: 0.85; }
+.read-only .round { display: none; } /* view only: just the numbers */
+.read-only .counter { grid-template-columns: 1fr 4.5rem; }
+
+.status.failed { color: var(--danger); font-weight: 700; }
+.finish-status.just-sent { background: var(--on-alliance); color: var(--alliance); }
+@media (prefers-reduced-motion: no-preference) {
+  .finish-status.just-sent { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+}

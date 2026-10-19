@@ -1,7 +1,7 @@
 // The current Scouting group: its members and Invites.
 // Everyone sees the members. Leads can invite people, make someone a Lead or
 // a Scout, remove members and cancel Invites. Anyone can leave.
-// Needs signal for changes; without it, the last saved copy is shown.
+// Needs signal: members and settings changes only load or save with it.
 
 import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
 import {
@@ -125,15 +125,16 @@ export async function renderGroup() {
 
   // Group settings (Leads only): how this group scouts.
   const SETTINGS = [
-    ['scoutsSeeAll', false, 'Scouts see everyone’s matches', 'Off: Scouts see only what they scouted.'],
+    ['scoutsSeeAll', false, 'Scouts see everyone’s matches', 'When off, Scouts see only their own matches.'],
     ['leadsCanEdit', true, 'Leads can edit scouts’ matches', 'Every change is kept, so nothing is lost.'],
   ];
   const settingsSection = lead ? h('section', {},
     h('h2', { class: 'section-title sub' }, 'Group settings'),
+    isOnline() ? null : h('p', { class: 'plain' }, 'Needs signal to change.'),
     ...SETTINGS.map(([key, fallback, label, hint]) => {
       let on = group.settings?.[key] ?? fallback;
       const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on), disabled: !isOnline() },
-        h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, isOnline() ? hint : 'Changing this needs signal')),
+        h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
         h('span', { class: 'tile-check', 'aria-hidden': 'true' }, icon('check', 26)));
       tile.addEventListener('click', async () => {
         on = !on;
