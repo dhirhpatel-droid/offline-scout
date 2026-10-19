@@ -160,7 +160,7 @@ export async function renderGroup() {
     })) : null;
 
   // The Teams table's starting sort (each phone can still re-sort).
-  const SORTS = [['avg', 'Average points'], ['team', 'Team number'], ['scouted', 'Times scouted']];
+  const SORTS = [['avg', 'Average points'], ['team', 'Team number'], ['scouted', 'Matches scouted']];
   let sortKey = group.settings?.teamsSort ?? 'avg';
   const sortSetting = lead ? h('div', { class: 'field' },
     h('span', { class: 'field-label', id: 'sort-label' }, 'Teams table starts sorted by'),

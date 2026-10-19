@@ -16,7 +16,9 @@ import { isAtEvent, timeOf } from '../schedule.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
 
-export async function renderAssign() {
+export async function renderAssign({ param } = {}) {
+  // #assign/23810 (from a Team page): Add forms start on a Team watch for it.
+  const watchTeam = Number(param) || null;
   const group = await currentGroup();
   if (!isLead(group)) {
     location.hash = '#home';
@@ -92,7 +94,11 @@ export async function renderAssign() {
 
   const membersEl = h('div', { class: 'assign-members' });
   let shownIds = '';
+  // The latest member list, for names in messages.
+  let lastMembers = [];
+  const memberName = (id) => lastMembers.find((x) => x.user_id === id)?.display_name ?? 'someone';
   const drawMembers = (members) => {
+    lastMembers = members;
     // Don't redraw under an open Add form unless the members really changed.
     const ids = members.map((m) => `${m.user_id}:${m.display_name}`).sort().join();
     if (ids === shownIds) return;
@@ -166,7 +172,7 @@ export async function renderAssign() {
 
   // ---------- the Add form ----------
   function addForm(m, current, close) {
-    let kind = 'shift';
+    let kind = watchTeam ? 'watch' : 'shift';
     let position = null;
     const lastTo = Math.max(0, ...current.shifts.map((s) => s.to_match));
     const lastQual = quals.at(-1)?.number;
@@ -180,13 +186,29 @@ export async function renderAssign() {
     const posField = renderField({ id: 'position', type: 'position', label: 'Position' }, null, (v) => { position = v; posError.hidden = true; }, config);
     const posError = h('p', { class: 'error-text', role: 'alert', hidden: true }, 'Pick a position.');
     const listId = `teams-${m.user_id}`;
-    const team = formField('Team number', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', list: listId, autocomplete: 'off' },
+    const team = formField('Team number', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', list: listId, autocomplete: 'off',
+      value: watchTeam ? String(watchTeam) : null },
       'Every match they play here, playoffs included.');
     const teamList = h('datalist', { id: listId }, (data?.teams ?? []).map((t) => h('option', { value: t.team_number }, t.team_name ?? '')));
-    const shiftPart = h('div', { class: 'assign-shift' }, posField, posError, h('div', { class: 'two' }, from.el, to.el),
+    // Someone else already on this position in these matches? Say so (it's
+    // allowed: two Scouts on one robot can be on purpose).
+    const overlapEl = h('p', { class: 'field-hint overlap', 'aria-live': 'polite' });
+    const showOverlap = () => {
+      const a = Number(from.input.value);
+      const b = Number(to.input.value) || a;
+      const others = position ? grid.filter((r) => r.number >= a && r.number <= b)
+        .flatMap((r) => r.scouts[position].filter((id) => id !== m.user_id).map((id) => ({ id, n: r.number }))) : [];
+      if (!others.length) { overlapEl.textContent = ''; return; }
+      const who = [...new Set(others.map((o) => memberName(o.id)))].join(' and ');
+      const nums = others.map((o) => o.n);
+      overlapEl.textContent = `${positionLabel(position)} is already covered by ${who} in Q${Math.min(...nums)}–Q${Math.max(...nums)}. You can still add it.`;
+    };
+    [from.input, to.input].forEach((i) => i.addEventListener('input', showOverlap));
+    posField.addEventListener('click', () => queueMicrotask(showOverlap));
+    const shiftPart = h('div', { class: 'assign-shift', hidden: kind !== 'shift' }, posField, posError, h('div', { class: 'two' }, from.el, to.el), overlapEl,
       // Under both fields (a hint over one would push the boxes out of line).
       lastQual ? h('p', { class: 'field-hint' }, `Qualifications run Q${quals[0].number}–Q${lastQual}.`) : null);
-    const watchPart = h('div', { class: 'assign-watch', hidden: true }, team.el, teamList);
+    const watchPart = h('div', { class: 'assign-watch', hidden: kind !== 'watch' }, team.el, teamList);
 
     const kindBtns = [['shift', 'Position shift'], ['watch', 'Team watch']].map(([k, label]) =>
       h('button', { type: 'button', 'aria-pressed': String(k === kind), onclick: () => {
@@ -196,7 +218,7 @@ export async function renderAssign() {
         watchPart.hidden = kind !== 'watch';
         save.textContent = kind === 'shift' ? 'Add shift' : 'Add watch';
       } }, label));
-    const save = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
+    const save = h('button', { class: 'pill block', type: 'submit' }, kind === 'shift' ? 'Add shift' : 'Add watch');
     const cancel = h('button', { class: 'pill secondary block', type: 'button', onclick: close }, 'Cancel');
     const formMsg = formMessage(); // problems show here, next to the Add button
 
@@ -368,14 +390,24 @@ export async function renderAssign() {
       input.addEventListener('change', () => { chosen = m; msg.show(null); });
       return { m, input, why, label };
     });
+    const legend = h('legend', { class: 'visually-hidden' });
     const recheck = () => {
+      let full = 0;
       for (const x of people) {
         const clash = clashFor(x.m);
+        // Allowed, but they'd watch two Teams at once somewhere: say where.
+        const doubled = !clash && byMatch(assignmentsFor({ scoutId: x.m.user_id, matches,
+          shifts: plan.shifts.filter((s) => s.scout_id === x.m.user_id).concat(shiftFor(x.m)),
+          watches: plan.watches.filter((w) => w.scout_id === x.m.user_id) })).find((g) => g.items.length > 1);
         x.input.disabled = Boolean(clash);
         x.label.classList.toggle('full', Boolean(clash));
-        x.why.textContent = clash ? `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}` : '';
+        x.why.textContent = clash ? `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}`
+          : doubled ? `Would watch 2 teams in Q${doubled.number}` : '';
+        if (clash) full += 1;
         if (clash && chosen === x.m) { chosen = null; x.input.checked = false; }
       }
+      // Screen readers skip disabled radios, so the legend says how many can't.
+      legend.textContent = `Who watches it${full ? ` (${full} ${full === 1 ? 'person is' : 'people are'} already full for these matches)` : ''}`;
     };
     recheck();
     to.input.addEventListener('input', recheck);
@@ -384,7 +416,7 @@ export async function renderAssign() {
     const dialog = h('dialog', { 'aria-labelledby': 'fill-title' },
       h('form', { class: 'form', novalidate: true, method: 'dialog' },
         h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)}${stationTeam ? ` (${stationTeam})` : ''} from Q${row.number}?`),
-        h('fieldset', { class: 'pick-people' }, h('legend', { class: 'visually-hidden' }, 'Who watches it'), people.map((x) => x.label)),
+        h('fieldset', { class: 'pick-people' }, legend, people.map((x) => x.label)),
         to.el, msg.el,
         h('div', { class: 'actions' }, add,
           h('button', { class: 'pill secondary block', type: 'button', onclick: () => close() }, 'Cancel'))));
@@ -445,6 +477,7 @@ export async function renderAssign() {
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
+      watchTeam && online ? h('p', { class: 'notice' }, `Choose who follows ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
       online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
       showGrid ? coverageEl : null,
       grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,
