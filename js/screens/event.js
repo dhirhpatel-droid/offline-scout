@@ -18,6 +18,9 @@ export async function renderEvent() {
   const lead = isLead(group);
   const config = await loadConfig(group.game_config_id);
   const season = seasonOf(config);
+  // Events follow the GAME the group scouts (e.g. an FRC team practising
+  // with the FTC game picks FTC events), not the group's own program label.
+  const program = config.program;
   const ev = group.currentEvent;
   const data = ev ? await cachedEvent(ev.id) : null;
   const message = formMessage();
@@ -51,7 +54,7 @@ export async function renderEvent() {
         ]
       : [
           h('h1', { class: 'now-hero', tabindex: '-1' }, 'No event yet'),
-          h('p', { class: 'now-sub' }, group.program !== 'FTC'
+          h('p', { class: 'now-sub' }, program !== 'FTC'
             ? 'FRC events arrive with the FRC game after kickoff in January.'
             : lead
               ? 'Pick the event your team is at. Its teams and schedule download to everyone’s phone, so team numbers fill in by themselves.'
@@ -73,7 +76,7 @@ export async function renderEvent() {
   // ---------- Leads: find and pick an event ----------
   let picker = null;
   if (lead) {
-    if (group.program !== 'FTC') {
+    if (program !== 'FTC') {
       picker = ev ? h('p', { class: 'notice' }, 'FRC events arrive with the FRC game after kickoff in January.') : null;
     } else if (!isOnline()) {
       picker = h('p', { class: 'plain' }, ev ? 'Changing the event needs signal. This schedule is saved on your phone.' : 'Picking the event needs signal.');
@@ -92,7 +95,7 @@ export async function renderEvent() {
         e.preventDefault();
         busy(go, 'Searching…', async () => {
           try {
-            const found = await searchEvents({ program: group.program, season, text: search.input.value });
+            const found = await searchEvents({ program, season, text: search.input.value });
             results.replaceChildren(...(found.length ? found.map(resultRow) : [
               h('li', { class: 'plain', style: 'padding: 12px 0' }, 'No events match. Try the city, or part of the name.')]));
           } catch (err) { message.show(friendlyError(err), 'error'); }
@@ -118,7 +121,7 @@ export async function renderEvent() {
           }
           busy(use, 'Downloading…', async () => {
             try {
-              const id = await chooseEvent(group, { program: group.program, season, code: r.code });
+              const id = await chooseEvent(group, { program, season, code: r.code });
               const saved = await cachedEvent(id);
               const q = saved?.matches.filter((m) => m.level === 'qual').length ?? 0;
               await setSetting('eventNote', `Downloaded ${r.name}: ${saved?.teams.length ?? 0} teams, ${q ? `${q} qualification matches` : 'schedule not out yet'}. Your scouts’ phones get it next time they have signal.`);
