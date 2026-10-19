@@ -36,7 +36,8 @@ export function positionOf(match, team) {
 // the event's when you're at it).
 export function timeOf(match) {
   if (!match?.scheduled_at) return null;
-  return new Date(match.scheduled_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  // A no-break space keeps "11:06 AM" on one line.
+  return new Date(match.scheduled_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s/g, '\u00a0');
 }
 
 // Is this team on the event's team list? (Unknown list → don't complain.)

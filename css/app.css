@@ -164,7 +164,8 @@ input, textarea { caret-color: var(--text); }
 .match-head .team {
   font-size: var(--fs-hero);
   line-height: 0.95;
-  padding: 0 var(--s1) var(--s3);
+  padding: 0 0 var(--s3);
+  margin-left: -0.04em; /* the digits' own side space: line them up with the text */
 }
 .screen[data-first-tab='true'] .match-head .points { visibility: hidden; } /* nothing scored yet on Setup */
 
@@ -770,14 +771,60 @@ a.row { color: inherit; }
 }
 
 /* ---------- Event ---------- */
-.event-current { padding: var(--s4) 0 var(--s3); }
-.event-code { font-size: var(--fs-lg); color: var(--text-2); }
-.event-name { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1.05; margin: var(--s1) 0; }
-.event-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); margin: var(--s4) 0 0; }
-.fact dt { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
-.fact dd { margin: 0; font-size: var(--fs-2xl); line-height: 1.1; white-space: nowrap; }
-.event-current + .pill { margin-bottom: var(--s5); }
+.event-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+.event-title { font-size: var(--fs-display-words); line-height: 1; }
+.event-facts { font-weight: 700; }
+.schedule { list-style: none; padding: 0; }
+.schedule-row {
+  display: grid;
+  grid-template-columns: 3.5rem 6.5rem 1fr;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 64px;
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.schedule-row.played .schedule-code { color: var(--text-2); }
+.schedule-row.next-up .schedule-time { color: var(--text); font-weight: 800; }
+.schedule-code { font-size: var(--fs-xl); }
+.schedule-time { font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
+.schedule-teams { display: grid; gap: 2px; font-variant-numeric: tabular-nums; font-weight: 700; }
+/* Colour AND a letter (R / B), so red/blue reads without colour vision. */
+.alliance-teams .side {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--s2);
+  border-radius: 10px; /* the badge corner, from DESIGN.md */
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--on-alliance);
+}
+.alliance-teams.red .side { background: var(--red); }
+.alliance-teams.blue .side { background: var(--blue); }
+.nowrap { white-space: nowrap; }
+.team-list { margin: var(--s4) 0; }
+.team-list summary { min-height: var(--tap); display: flex; align-items: center; gap: var(--s2); font-weight: 700; cursor: pointer; list-style: none; }
+.team-list summary::-webkit-details-marker { display: none; }
+.team-list summary svg { transform: rotate(90deg); transition: transform 150ms ease-out; } /* points down: tap to open */
+.team-list[open] summary svg { transform: rotate(-90deg); }
+.team-list ul { list-style: none; padding: 0; columns: 2; font-size: var(--fs-sm); }
+.team-list li { padding: 2px 0; break-inside: avoid; }
 .event-result { width: 100%; text-align: left; }
 
-.team-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
-.team-note.warn { color: var(--danger); }
+.team-note { display: flex; align-items: center; gap: var(--s1); margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
+/* A warning is a bordered box (not just red text, which blends into a red
+   alliance screen), with the fix as a button. */
+.team-note.warn {
+  display: grid;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+.team-note.warn strong { color: var(--danger); }
+.team-note.warn .small-btn { justify-self: start; }

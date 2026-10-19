@@ -92,7 +92,7 @@ try {
     // Now in a group, with saved matches
     await run(`
       const db = await new Promise((ok) => { const r = indexedDB.open('offline-scout'); r.onsuccess = () => ok(r.result); });
-      const mk = (match, team, position, pts, mins) => ({ id: crypto.randomUUID(), configId: 'ftc-2026-biobuzz', configVersion: 2, event: 'Northern Ontario Qualifier',
+      const mk = (match, team, position, pts, mins) => ({ id: crypto.randomUUID(), configId: 'ftc-2026-biobuzz', configVersion: 2, event: 'Sudbury Qualifier',
         values: { 'pre.scout': 'Dhir', 'pre.level': 'qual', 'pre.match': match, 'pre.team': team, 'pre.position': position },
         summary: { scout: 'Dhir', level: 'qual', match, team, position, alliance: position.replace(/\\d/, '') }, estimatedPoints: pts,
         createdAt: new Date(Date.now() - mins * 60000).toISOString(), updatedAt: new Date().toISOString(), submittedAt: new Date().toISOString(), syncedAt: null });

@@ -8,12 +8,14 @@ import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
 import { whatsNext } from '../now-scouting.js';
+import { currentEventData } from '../events.js';
+import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [all, group, next, me, lastSyncAt] = await Promise.all([
-    listSubmissions(), currentGroup(), whatsNext(), currentUser(), getSetting('lastSyncAt'),
+  const [all, group, next, me, lastSyncAt, eventData] = await Promise.all([
+    listSubmissions(), currentGroup(), whatsNext(), currentUser(), getSetting('lastSyncAt'), currentEventData(),
   ]);
   // My matches in this group (matches from before accounts existed count as mine).
   const submissions = all.filter((s) => (!s.scoutId || s.scoutId === me?.id) && (!s.groupId || s.groupId === group.id));
@@ -37,7 +39,7 @@ export async function renderHome() {
             h('div', { class: 'title' }, group.name),
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
-        h('li', {}, eventRow(group, lead)),
+        h('li', {}, eventRow(group, lead, eventData)),
       ),
 
       submissions.length ? h('section', {},
@@ -65,7 +67,7 @@ function nowBlock(next) {
       h('p', { class: 'now-sub' }, [
         next.team ? next.code : null,
         next.position && positionLabel(next.position),
-        `started ${next.started}`,
+        `Started ${next.started}`,
         next.points ? `${next.points} est. pts so far` : null,
       ].filter(Boolean).join(' · ')),
       h('a', { class: 'pill big block now-go', href: '#match' }, next.code ? `Resume ${next.code}` : 'Resume this match', icon('next', 22)),
@@ -76,7 +78,7 @@ function nowBlock(next) {
       top,
       h('h1', { class: 'now-hero num', tabindex: '-1' }, next.team ?? next.code),
       h('p', { class: 'now-sub' }, next.team
-        ? [next.code, next.position && positionLabel(next.position), next.time].filter(Boolean).join(' · ')
+        ? [next.code, next.position && `${positionLabel(next.position)}, same as last match`, next.time].filter(Boolean).join(' · ')
         : [next.position && positionLabel(next.position), 'you’ll enter the team on the next screen']
           .filter(Boolean).join(' · ').replace(/^y/, 'Y')),
       h('a', { class: 'pill big block now-go', href: '#match' }, `Scout ${next.code}`, icon('next', 22)));
@@ -103,12 +105,16 @@ function discardLink() {
 }
 
 // The group's Current event; tapping it opens the Event screen.
-function eventRow(group, lead) {
+function eventRow(group, lead, data) {
   const ev = group.currentEvent;
+  const upcoming = data?.matches.filter((m) => m.level === 'qual' && !m.played) ?? [];
+  const sub = !ev ? (lead ? 'Pick your event to load its schedule' : 'Your Lead picks the event')
+    : !data ? 'Schedule downloads when you have signal'
+      : !data.matches.length ? `${data.teams.length} teams · schedule not out yet`
+        : upcoming.length ? `${data.teams.length} teams · next match ${timeOf(upcoming[0]) ?? `Q${upcoming[0].number}`}`
+          : `${data.teams.length} teams · qualifications done`;
   return h('a', { class: 'row', href: '#event' },
-    h('div', {},
-      h('div', { class: 'title' }, ev ? ev.name : 'No event yet'),
-      h('div', { class: 'sub' }, ev ? `Event · ${ev.code}` : lead ? 'Pick your event to load its schedule' : 'Your Lead picks the event')),
+    h('div', {}, h('div', { class: 'title' }, ev ? ev.name : 'No event yet'), h('div', { class: 'sub' }, sub)),
     icon('next', 20));
 }
 

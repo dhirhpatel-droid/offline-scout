@@ -51,7 +51,7 @@ export async function renderSaved({ param }) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   const statusEl = h('p', { class: `status ${st.state}`, role: 'status' },
     icon(st.state === 'sent' ? 'check' : 'device', 18), h('span', {}, st.text));
-  const sendBtn = unsent ? h('button', { class: 'pill', type: 'button', disabled: !isOnline() }, isOnline() ? 'Send now' : 'Needs signal') : null;
+  const sendBtn = unsent ? h('button', { class: 'pill', type: 'button', disabled: !isOnline() }, isOnline() ? 'Send now' : 'Send now (needs signal)') : null;
   sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
@@ -91,7 +91,7 @@ export function submissionRow(sub, all = [sub], showScout = false) {
     h('span', { class: `badge ${alliance ?? ''}`, 'aria-hidden': 'true' }, badge),
     h('span', { class: 'submission-main' },
       h('span', { class: 'submission-title num' }, `${code} · ${team ?? '—'}`),
-      h('span', { class: 'sub' }, [where, showScout && scout, time].filter(Boolean).join(' · '))),
+      h('span', { class: 'sub' }, [where, showScout && scout, `saved ${time}`].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),
       mixed ? h('span', { class: `sync-chip ${status.state}` }, status.state === 'sent' ? 'Sent' : 'Not sent') : null),

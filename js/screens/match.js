@@ -129,7 +129,7 @@ export async function renderMatch({ param }) {
   function onFieldChange(section, field, value) {
     submission.values[`${section.id}.${field.id}`] = value;
     if (['matchLevel', 'matchNumber', 'alliancePosition'].includes(field.role)) fillTeamFromSchedule();
-    if (field.role === 'teamNumber') queueMicrotask(updateTeamNote);
+    if (['teamNumber', 'matchNumber', 'matchLevel'].includes(field.role)) queueMicrotask(updateTeamNote);
     // Clear the "needed" message once the field is filled in.
     const row = panel.querySelector(`[data-field-id="${field.id}"]`);
     touched = true;
@@ -158,20 +158,49 @@ export async function renderMatch({ param }) {
     queueMicrotask(updateTeamNote);
   }
 
-  // A line under the team number: where it came from, or a warning.
+  // Under the team number: where it came from, or a warning with a one-tap fix.
   function updateTeamNote() {
     const row = teamKey && panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"]`);
     if (!row) return;
-    row.querySelector('.team-note')?.remove();
-    const team = submission.values[teamKey];
-    let text = null;
-    let warn = false;
-    if (team && autoTeam === team) text = `From the ${eventData.event.code} schedule`;
-    else if (team && !isAtEvent(eventData?.teams, team)) { text = `${team} isn’t on this event’s team list. Check the number.`; warn = true; }
-    else if (team && eventData && teamAt(scheduled(), submission.summary.position) && teamAt(scheduled(), submission.summary.position) !== Number(team)) {
-      text = `The schedule has ${teamAt(scheduled(), submission.summary.position)} in this position.`; warn = true;
+    const team = Number(submission.values[teamKey]) || null;
+    const { match, position } = submission.summary;
+    const m = scheduled();
+    const scheduledTeam = teamAt(m, position);
+    const where = position ? positionLabel(position) : '';
+
+    let note = null;
+    if (team && autoTeam === team) {
+      note = h('p', { class: 'team-note' }, icon('check', 16), 'From the event schedule');
+    } else if (team && scheduledTeam && scheduledTeam !== team) {
+      const use = h('button', { class: 'small-btn primary', type: 'button' }, `Use ${scheduledTeam}`);
+      use.addEventListener('click', () => {
+        submission.values[teamKey] = scheduledTeam;
+        autoTeam = scheduledTeam;
+        row.querySelector('input').value = scheduledTeam;
+        touched = true;
+        updateHeaderSoon();
+        save();
+        updateTeamNote();
+      });
+      note = warning(`The schedule has ${scheduledTeam} in ${matchCode(submission.summary)} ${where}.`, use);
+    } else if (team && !isAtEvent(eventData?.teams, team)) {
+      note = warning(`${team} isn’t on this event’s team list. Check the number.`);
+    } else if (eventData?.matches?.length && match && !m) {
+      const quals = eventData.matches.filter((x) => x.level === 'qual').map((x) => x.number);
+      note = warning(`${matchCode(submission.summary)} isn’t in the schedule on this phone${
+        quals.length ? ` (it has Q${Math.min(...quals)}–Q${Math.max(...quals)})` : ''}. Check the match number.`);
     }
-    if (text) row.append(h('p', { class: `team-note${warn ? ' warn' : ''}`, role: warn ? 'alert' : null }, text));
+    // Only replace the note when its text changes, so a screen reader
+    // announces a warning once, not on every keystroke.
+    const old = row.querySelector('.team-note');
+    if (old?.textContent === note?.textContent) return;
+    old?.remove();
+    if (note) row.append(note);
+  }
+
+  function warning(text, action = null) {
+    return h('div', { class: 'team-note warn', role: 'alert' },
+      h('p', {}, h('strong', {}, 'Check this: '), text), action);
   }
 
   // Header + points update on the next frame (keeps fast tapping smooth).
@@ -365,6 +394,7 @@ export async function renderMatch({ param }) {
     syncNow().then(showStatus);
     stopListening = listenFor('scout-sync', (e) => showStatus(e.detail));
     const nextCode = carry.match ? matchCode({ level: carry.level, match: carry.match }) : null;
+    const nextTeam = carry.match ? teamAt(findMatch(eventData?.matches, carry.level, carry.match), carry.position) : null;
     const parts = pointsBySection(config, submission.values);
     const breakdown = config.sections
       .filter((s) => s.fields.some((f) => f.points))
@@ -387,7 +417,7 @@ export async function renderMatch({ param }) {
         statusEl),
       h('div', { class: 'finish-actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: startNext },
-          nextCode ? `Scout ${nextCode}` : 'Scout the next match', icon('next', 22)),
+          nextCode ? `Scout ${nextCode}${nextTeam ? ` · ${nextTeam}` : ''}` : 'Scout the next match', icon('next', 22)),
         h('div', { class: 'two' },
           h('a', { class: 'pill secondary block', href: `#match/${submission.id}` }, `Edit ${code}`),
           h('a', { class: 'pill secondary block', href: '#saved' }, 'My matches'))),
