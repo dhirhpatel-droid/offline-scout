@@ -71,3 +71,26 @@ export function byMatch(assignments) {
   }
   return groups;
 }
+
+// Coverage of the plan per qualification match: how many positions someone
+// is assigned to watch. [{ number, covered, total, played }]
+// (Used by the Assignments screen and Home.)
+export function coverage(plan, matches) {
+  const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
+  const all = [...scouts].flatMap((scoutId) => assignmentsFor({ scoutId, ...plan, matches }));
+  return matches.filter((m) => m.level === 'qual').map((m) => ({
+    number: m.number,
+    played: Boolean(m.played),
+    total: m.red.length + m.blue.length,
+    covered: new Set(all.filter((a) => a.level === 'qual' && a.number === m.number).map((a) => a.position)).size,
+  }));
+}
+
+// Used by Home for the Lead's row: "3 of 4 positions covered in Q18".
+export function planSummary(plan, matches) {
+  const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
+  if (!scouts.size) return null;
+  const next = coverage(plan, matches).find((c) => !c.played);
+  if (!next) return `${scouts.size} ${scouts.size === 1 ? 'scout' : 'scouts'} assigned`;
+  return `${next.covered} of ${next.total} positions covered in Q${next.number}`;
+}

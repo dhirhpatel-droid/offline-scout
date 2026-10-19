@@ -7,10 +7,10 @@ import { getSetting, listSubmissions, finishDraft } from '../db.js';
 import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
-import { whatsNext } from '../now-scouting.js';
+import { whatsNext, sharedAlliance } from '../now-scouting.js';
 import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
-import { planSummary } from './assign.js';
+import { planSummary } from '../assignments.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
@@ -95,7 +95,7 @@ function nowBlock(next) {
         next.team ? next.code : null,
         next.items.map((a) => positionLabel(a.position)).join(' and '),
         next.time,
-        two ? 'your next two teams' : 'your next assignment',
+        two ? null : 'your next assignment',
       ].filter(Boolean).join(' · ')),
       go);
   }
@@ -128,7 +128,7 @@ function comingUp(next) {
   const shown = next.later.slice(0, 5);
   return h('section', {},
     h('h2', { class: 'section-h' }, 'Coming up'),
-    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', { 'data-alliance': g.items[0].position.replace(/\d/, '') },
+    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', { 'data-alliance': sharedAlliance(g.items) ?? 'none' },
       h('span', { class: 'num coming-code' }, g.code),
       h('span', { class: 'coming-what' },
         h('span', { class: 'num coming-team' }, g.items.map((a) => a.team ?? positionLabel(a.position)).join(' + ')),

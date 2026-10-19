@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { assignmentsFor, isDone, upcoming, byMatch } from '../js/assignments.js';
+import { assignmentsFor, isDone, upcoming, byMatch, coverage, planSummary } from '../js/assignments.js';
 
 const matches = [
   { level: 'qual', number: 1, game: 1, red: [23810, 16012], blue: [19455, 21229], played: true },
@@ -54,4 +54,21 @@ test('two Teams in the same match are grouped, so the Scout can switch between t
   });
   const q3 = byMatch(a).find((g) => g.level === 'qual' && g.number === 3);
   assert.deepEqual(q3.items.map((x) => x.team).sort(), [16012, 23810]);
+});
+
+test('coverage counts watched positions per qualification match', () => {
+  const matches = [
+    { level: 'qual', number: 1, red: [1, 2], blue: [3, 4], played: true },
+    { level: 'qual', number: 2, red: [5, 1], blue: [6, 7], played: false },
+  ];
+  const plan = {
+    shifts: [{ scout_id: 'a', position: 'red1', from_match: 1, to_match: 2 }],
+    watches: [{ scout_id: 'b', team_number: 1 }], // red1 in Q1 (same position), red2 in Q2
+  };
+  assert.deepEqual(coverage(plan, matches), [
+    { number: 1, played: true, total: 4, covered: 1 },
+    { number: 2, played: false, total: 4, covered: 2 },
+  ]);
+  assert.equal(planSummary(plan, matches), '2 of 4 positions covered in Q2');
+  assert.equal(planSummary({ shifts: [], watches: [] }, matches), null);
 });

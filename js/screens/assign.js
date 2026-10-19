@@ -4,14 +4,14 @@
 // assigns anyone by itself (PRODUCT.md: show data, let humans decide).
 // Changes need signal; the plan saved on the phone still shows without it.
 
-import { h, icon, formField, formMessage, busy } from '../ui.js';
+import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
 import { currentGroup, cachedMembers, listMembers, currentUser } from '../account.js';
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
 import { renderField } from '../fields.js';
 import { positionLabel, matchCode } from '../submissions.js';
 import { cachedEvent, cachedPlan, addShift, addWatch, removeAssignment } from '../events.js';
-import { assignmentsFor, byMatch } from '../assignments.js';
+import { assignmentsFor, byMatch, coverage } from '../assignments.js';
 import { isAtEvent, timeOf } from '../schedule.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
@@ -32,14 +32,12 @@ export async function renderAssign() {
   const message = formMessage();
   const twoTeams = group.settings?.twoTeams ?? true;
 
-  // A note left by the last change ("Added Red 1 for Q1–Q20 to Maya").
+  // A note left by the last change ({ memberId, text }), shown in that
+  // member's section, which is scrolled back into view.
   const note = await getSetting('assignNote');
-  if (note) {
-    message.show(note, 'info');
-    await setSetting('assignNote', null);
-  }
-  const reload = async (text) => {
-    await setSetting('assignNote', text);
+  if (note) await setSetting('assignNote', null);
+  const reload = async (memberId, text) => {
+    await setSetting('assignNote', { memberId, text });
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   };
 
@@ -54,7 +52,15 @@ export async function renderAssign() {
   }
 
   const membersEl = h('div', { class: 'assign-members' });
-  const drawMembers = (members) => membersEl.replaceChildren(...sortMembers(members).map(memberSection));
+  let shownIds = '';
+  const drawMembers = (members) => {
+    // Don't redraw under an open Add form unless the members really changed.
+    const ids = members.map((m) => `${m.user_id}:${m.display_name}`).sort().join();
+    if (ids === shownIds) return;
+    if (shownIds && membersEl.querySelector('form')) return;
+    shownIds = ids;
+    membersEl.replaceChildren(...sortMembers(members).map(memberSection));
+  };
 
   // ---------- one member ----------
   function memberSection(m) {
@@ -74,21 +80,21 @@ export async function renderAssign() {
         'Position shift', s.position.replace(/\d/, ''))),
       ...watches.map((w) => instructionRow(m, 'watch', w.id,
         `Follows ${w.team_number}`,
-        `Team watch · ${mine.filter((a) => a.team === w.team_number).length} matches so far`, null)),
+        `Team watch · ${countLabel(mine.filter((a) => a.team === w.team_number).length)} in the schedule`, null)),
     ];
 
-    const addBtn = h('button', { class: 'pill secondary block', type: 'button', disabled: !online, 'aria-expanded': 'false' },
+    const addBtn = h('button', { class: 'pill secondary block', type: 'button', disabled: !online },
       online ? `Add for ${m.display_name}` : 'Adding needs signal');
-    const section = h('section', { class: 'assign-member' },
-      h('h2', { class: 'assign-name' }, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
+    const changed = note?.memberId === m.user_id;
+    const section = h('section', { class: 'assign-member', 'data-member': m.user_id },
+      h('h2', { class: 'assign-name', tabindex: '-1' }, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
       h('p', { class: 'assign-summary' }, summary),
+      changed ? h('p', { class: 'form-message info', role: 'status' }, note.text) : null,
       rows.length ? h('ul', { class: 'rows' }, rows) : null,
       addBtn);
     addBtn.addEventListener('click', () => {
-      addBtn.setAttribute('aria-expanded', 'true');
       addBtn.replaceWith(addForm(m, { shifts, watches }, () => {
         section.querySelector('form').replaceWith(addBtn);
-        addBtn.setAttribute('aria-expanded', 'false');
         addBtn.focus();
       }));
       section.querySelector('form button[aria-pressed]')?.focus();
@@ -99,12 +105,20 @@ export async function renderAssign() {
   function instructionRow(m, kind, id, title, sub, color) {
     const remove = h('button', { class: 'small-btn danger', type: 'button', disabled: !online,
       'aria-label': `Remove ${title} from ${m.display_name}` }, 'Remove');
-    remove.addEventListener('click', () => busy(remove, '…', async () => {
-      try {
-        await removeAssignment(group, kind, id);
-        await reload(`Removed ${title} from ${m.display_name}.`);
-      } catch (err) { message.show(friendlyError(err), 'error'); }
-    }));
+    remove.addEventListener('click', async () => {
+      const ok = await confirmDialog({
+        title: `Remove ${title} from ${m.display_name}?`,
+        body: `It disappears from ${m.display_name}’s phone the next time it has signal. Matches already scouted stay.`,
+        confirmLabel: 'Remove',
+      });
+      if (!ok) return;
+      busy(remove, '…', async () => {
+        try {
+          await removeAssignment(group, kind, id);
+          await reload(m.user_id, `Removed ${title}.`);
+        } catch (err) { message.show(friendlyError(err), 'error'); }
+      });
+    });
     return h('li', { class: 'row assign-row', 'data-alliance': color ?? 'none' },
       h('div', {}, h('div', { class: 'title num' }, title), h('div', { class: 'sub' }, sub)),
       remove);
@@ -138,10 +152,12 @@ export async function renderAssign() {
       } }, label));
     const save = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
     const cancel = h('button', { class: 'pill secondary block', type: 'button', onclick: close }, 'Cancel');
+    const formMsg = formMessage(); // problems show here, next to the Add button
 
     const form = h('form', { class: 'form assign-form', novalidate: true, 'aria-label': `Add an assignment for ${m.display_name}` },
       h('div', { class: 'segmented', role: 'group', 'aria-label': 'Kind of assignment' }, kindBtns),
       shiftPart, watchPart,
+      formMsg.el,
       h('div', { class: 'two' }, cancel, save));
 
     form.addEventListener('submit', (e) => {
@@ -166,7 +182,7 @@ export async function renderAssign() {
       const clash = byMatch(assignmentsFor({ scoutId: m.user_id, ...added, matches })).find((g) => g.items.length > (twoTeams ? 2 : 1));
       if (clash) {
         const code = matchCode({ level: clash.level, match: clash.number });
-        message.show(twoTeams
+        formMsg.show(twoTeams
           ? `That gives ${m.display_name} three teams in ${code}. Two at once is the most one person can watch.`
           : `That gives ${m.display_name} two teams in ${code}. Watching two teams at once is turned off in Group settings.`, 'error');
         return;
@@ -177,13 +193,13 @@ export async function renderAssign() {
           if (kind === 'shift') {
             const s = added.shifts.at(-1);
             await addShift(group, { scoutId: m.user_id, position: s.position, from: s.from_match, to: s.to_match });
-            await reload(`${m.display_name} now watches ${positionLabel(s.position)} for Q${s.from_match}–Q${s.to_match}.`);
+            await reload(m.user_id, `Added ${positionLabel(s.position)} for Q${s.from_match}–Q${s.to_match}.`);
           } else {
             const n = added.watches.at(-1).team_number;
             await addWatch(group, { scoutId: m.user_id, team: n });
-            await reload(`${m.display_name} now follows ${n} in every match they play.`);
+            await reload(m.user_id, `Added: follows ${n} in every match they play.`);
           }
-        } catch (err) { message.show(friendlyError(err), 'error'); }
+        } catch (err) { formMsg.show(friendlyError(err), 'error'); }
       });
     });
     return form;
@@ -195,12 +211,31 @@ export async function renderAssign() {
 
   const lede = !quals.length
     ? 'The schedule isn’t out yet. You can still plan Position shifts; teams fill in when it arrives.'
-    : `${ev.name} · Q1–Q${quals.at(-1).number}${twoTeams ? '' : ' · one team per match'}`;
+    : `${ev.name} · Q${quals[0].number}–Q${quals.at(-1).number}${twoTeams ? '' : ' · one team per match'}`;
+
+  // Coverage of the plan: which matches still to play have positions no one
+  // watches. Shown so the Lead can decide; the app never fills gaps itself.
+  const gaps = coverage(plan, matches).filter((c) => !c.played && c.covered < c.total);
+  const gapsEl = quals.length && (plan.shifts.length || plan.watches.length)
+    ? h('p', { class: 'assign-gaps' }, gaps.length
+      ? `Not fully covered: ${gaps.slice(0, 6).map((c) => `Q${c.number} (${c.covered} of ${c.total})`).join(', ')}${gaps.length > 6 ? ` and ${gaps.length - 6} more` : ''}.`
+      : 'Every position is covered in every match still to play.')
+    : null;
+
+  // After an Add or Remove, go back to the member it changed.
+  if (note?.memberId) {
+    setTimeout(() => {
+      const target = membersEl.querySelector(`[data-member="${note.memberId}"] h2`);
+      target?.scrollIntoView({ block: 'start' });
+      target?.focus({ preventScroll: true });
+    }, 60);
+  }
 
   const el = h('div', { class: 'screen' },
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
+      gapsEl,
       online ? null : h('p', { class: 'plain' }, 'Changes need signal. This is the plan saved on your phone.'),
       message.el,
       membersEl),
@@ -208,16 +243,4 @@ export async function renderAssign() {
   return { el };
 }
 
-// Used by Home for the Lead's row: "6 of 8 positions covered for Q14".
-export function planSummary(plan, matches) {
-  const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
-  if (!scouts.size) return null;
-  const next = matches.find((m) => m.level === 'qual' && !m.played);
-  if (!next) return `${scouts.size} ${scouts.size === 1 ? 'scout' : 'scouts'} assigned`;
-  const all = [...scouts].flatMap((scoutId) => assignmentsFor({ scoutId, ...plan, matches })
-    .filter((a) => a.level === 'qual' && a.number === next.number));
-  const covered = new Set(all.map((a) => a.position)).size;
-  const total = next.red.length + next.blue.length;
-  return `${covered} of ${total} positions watched in Q${next.number}`;
-}
-
+const countLabel = (n) => `${n} ${n === 1 ? 'match' : 'matches'}`;

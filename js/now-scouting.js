@@ -60,7 +60,8 @@ export async function whatsNext() {
       time: first.time,
       team: first.items.map((a) => a.team).filter(Boolean).join(' + ') || null,
       position: first.items[0].position,
-      alliance: allianceOf(first.items[0].position),
+      // Red 1 + Blue 2? Then no single alliance colour (the words say both).
+      alliance: sharedAlliance(first.items),
       later,
     };
   }
@@ -91,6 +92,12 @@ export async function whatsNext() {
     }, last.summary.level, last.summary.match + 1);
   }
   return { kind: 'none' };
+}
+
+// The alliance all these Assignments share, or null if they're mixed.
+export function sharedAlliance(items) {
+  const sides = new Set(items.map((a) => allianceOf(a.position)));
+  return sides.size === 1 ? [...sides][0] : null;
 }
 
 // The thin bar shown at the bottom of other screens while a match is unfinished.

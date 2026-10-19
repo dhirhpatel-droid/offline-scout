@@ -74,7 +74,8 @@ export async function renderMatch({ param }) {
   let nextUp = null; // my remaining Assignments, worked out after saving
 
   // Start on Setup if something needed there is still empty (the team, on a
-  // fresh match); otherwise on the first period.
+  // fresh match); otherwise on the first period. (Set again below when
+  // switching between two Teams, to stay on the same period.)
   let current = missingRequired(config, submission).length ? 0 : Math.min(1, tabSections.length - 1);
 
   // ---------- header ----------
@@ -84,6 +85,7 @@ export async function renderMatch({ param }) {
   }, icon('back'));
   const metaEl = h('div', { class: 'meta' });
   const pointsEl = h('span', { class: 'value num' });
+  const pointsLabel = h('div', { class: 'label' }, 'est. pts');
   const teamEl = h('h1', { class: 'team num', tabindex: '-1' });
   const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Match periods' });
 
@@ -92,14 +94,21 @@ export async function renderMatch({ param }) {
   const sameMatch = (a, b) => a && b && a.summary?.match === b.summary?.match
     && (a.summary?.level ?? 'qual') === (b.summary?.level ?? 'qual');
   const pair = sameMatch(submission, other) ? other : null;
+  // Switching Teams keeps you on the period you were watching.
+  const handover = pair ? pairHandover : null;
+  pairHandover = null;
+  if (handover?.tab) current = Math.max(0, tabSections.findIndex((t) => t.id === handover.tab));
   // The two Teams become the big numbers (the plain team number is then only
   // for screen readers), with the position under each.
-  const pill = (sub, pressed) => h('button', { type: 'button', 'aria-pressed': String(pressed) },
+  const pill = (sub, active) => h('button', { type: 'button', ...(active ? { 'aria-current': 'true' } : {}),
+    'aria-label': active ? `${sub.summary.team ?? 'This team'}, ${positionLabel(sub.summary.position)}, showing now`
+      : `Switch to ${sub.summary.team ?? 'the other team'}, ${positionLabel(sub.summary.position)}` },
     h('span', { class: 'num switch-team' }, sub.summary.team ?? '?'),
     h('span', { class: 'switch-pos' }, positionLabel(sub.summary.position)));
   const thisPill = pair ? pill(submission, true) : null;
   const otherPill = pair ? pill(pair, false) : null;
   otherPill?.addEventListener('click', async () => {
+    pairHandover = { tab: tabSections[current].id };
     await save();
     await db.swapDrafts();
     window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -111,7 +120,7 @@ export async function renderMatch({ param }) {
     h('div', { class: 'row1' },
       backBtn, metaEl,
       h('div', { class: 'points', 'aria-live': 'polite' },
-        pointsEl, h('div', { class: 'label' }, 'est. pts')),
+        pointsEl, pointsLabel),
     ),
     teamEl,
     teamSwitch,
@@ -130,7 +139,8 @@ export async function renderMatch({ param }) {
     if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
-      position ? positionLabel(position) : 'pick a position',
+      // With two Teams, each pill already says its position.
+      pair ? null : position ? positionLabel(position) : 'pick a position',
       timeOf(scheduled()),
     ].filter(Boolean).join(' · ');
     // When the estimate goes up, the header number jumps too.
@@ -141,6 +151,8 @@ export async function renderMatch({ param }) {
       pointsEl.classList.add('jump');
     }
     pointsEl.textContent = submission.estimatedPoints;
+    // Two Teams on screen: say whose estimate this is.
+    if (pair) pointsLabel.textContent = `${team ?? '?'} est. pts`;
     // Tint the phone's status bar with the alliance colour.
     setThemeColor(getComputedStyle(screen).getPropertyValue('--alliance').trim());
   }
@@ -357,7 +369,8 @@ export async function renderMatch({ param }) {
         `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     }
     bottombar.replaceChildren(
-      readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`)) : savedStatus('Saved'),
+      readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`))
+        : savedStatus(handover?.note ?? 'Saved'),
       action);
   }
 
@@ -380,7 +393,7 @@ export async function renderMatch({ param }) {
     const waiting = await db.finishDraft();
     if (waiting) {
       // The other Team in this match is still to finish: go straight to it.
-      await db.setSetting('authNote', null);
+      pairHandover = { note: `${submission.summary.team ?? 'Team'} saved. Now ${waiting.summary.team ?? 'the other team'}.` };
       syncNow();
       window.dispatchEvent(new HashChangeEvent('hashchange'));
       return;
@@ -517,6 +530,10 @@ export async function renderMatch({ param }) {
 
 // Creates and saves a fresh Draft, pre-filled from the last match.
 // The scout's name comes from their account; the game config from their group.
+// Passed from one render to the next when switching between two Teams:
+// { tab } = the period to stay on, { note } = what just happened.
+let pairHandover = null;
+
 export async function startNewMatch(planned = null, slot = 'current') {
   const [group, profile, configId, event, savedCarry] = await Promise.all([
     currentGroup(), cachedProfile(), db.getSetting('configId'), db.getSetting('eventName'), db.getSetting('nextCarry'),

@@ -98,7 +98,13 @@ form would not even open, so we lost scouting data when we needed it most.
   server function, deployed; `events`/`event_teams`/`event_matches`/`group_events`,
   migration applied). Teams fill in from the schedule; Home shows the next team.
   Not yet tested by Dhir with a real event pick.
-- **Next:** Milestone 5 (Assignments) in docs/roadmap.md. Re-run the impeccable
+- **Milestone 5 (built Oct 19, 2026):** Assignments. `position_shifts`/`team_watches`
+  (migration applied, Leads-only writes); `js/assignments.js` works Assignments out on the
+  phone from the plan + schedule (nothing about Assignments is stored). Home shows "your
+  next assignment" + Coming up; Leads plan on #assign (with Coverage gaps); two Teams in
+  one match = two Drafts ('current'/'second') with a switch. Critique 27/26 → findings fixed.
+  Not yet tested by Dhir on two phones.
+- **Next:** Milestone 6 in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands

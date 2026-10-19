@@ -552,6 +552,7 @@ a.row { color: inherit; }
   font-size: var(--fs-sm);
 }
 .small-btn.danger { color: var(--danger); background: transparent; border-color: transparent; }
+.small-btn:disabled { color: var(--text-3); cursor: not-allowed; }
 .small-btn.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
 .group-footer { display: grid; gap: var(--s3); }
 .group-footer .text-btn { justify-self: start; padding-left: 0; }
@@ -844,7 +845,7 @@ a.row { color: inherit; }
 }
 .switch-team { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
 .switch-pos { font-size: var(--fs-sm); font-weight: 600; }
-.team-switch button[aria-pressed='true'] { background: var(--on-alliance); color: var(--alliance); }
+.team-switch button[aria-current='true'] { background: var(--on-alliance); color: var(--alliance); }
 
 /* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
 .now-hero.two { font-size: var(--fs-hero); }
@@ -859,7 +860,7 @@ a.row { color: inherit; }
   gap: var(--s3);
   min-height: var(--tap);
   padding: var(--s2) 0 var(--s2) var(--s3);
-  border-left: 4px solid var(--neutral-alliance);
+  border-left: 4px solid transparent; /* mixed or unknown alliance: no stripe */
   border-bottom: 1px solid var(--line);
 }
 .coming-up li[data-alliance='red'] { border-left-color: var(--red); }
@@ -879,3 +880,6 @@ a.row { color: inherit; }
 .assign-member > .pill { margin-top: var(--s3); }
 .assign-form { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
 .assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.assign-gaps { color: var(--text-2); margin-top: var(--s2); }
+.assign-member .form-message { margin: 0 0 var(--s3); }
+.assign-gaps + .plain { margin-top: var(--s3); }
