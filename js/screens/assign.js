@@ -32,14 +32,44 @@ export async function renderAssign() {
   const message = formMessage();
   const twoTeams = group.settings?.twoTeams ?? true;
 
-  // A note left by the last change ({ memberId, text }), shown in that
-  // member's section, which is scrolled back into view.
+  // A note left by the last change ({ memberId, text, undo }), shown in that
+  // member's section, which is scrolled back into view. undo says how to
+  // reverse it: { op: 'add', kind, row } re-adds a removed row,
+  // { op: 'remove', kind, id } removes a row that was just added.
   const note = await getSetting('assignNote');
   if (note) await setSetting('assignNote', null);
-  const reload = async (memberId, text) => {
-    await setSetting('assignNote', { memberId, text });
+  const reload = async (memberId, text, undo = null) => {
+    await setSetting('assignNote', { memberId, text, undo });
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   };
+
+  // Add a shift or watch, and remember how to undo it (the new row's id).
+  async function addAndNote(memberId, kind, row, text) {
+    const before = new Set([...plan.shifts, ...plan.watches].map((x) => x.id));
+    const after = kind === 'shift'
+      ? await addShift(group, { scoutId: memberId, position: row.position, from: row.from_match, to: row.to_match })
+      : await addWatch(group, { scoutId: memberId, team: row.team_number });
+    const added = (kind === 'shift' ? after.shifts : after.watches).find((x) => !before.has(x.id));
+    await reload(memberId, text, added ? { op: 'remove', kind, id: added.id } : null);
+  }
+
+  // The Undo button in a note.
+  function undoButton(n) {
+    if (!n?.undo || !online) return null;
+    const btn = h('button', { class: 'small-btn', type: 'button' }, 'Undo');
+    btn.addEventListener('click', () => busy(btn, '…', async () => {
+      try {
+        const u = n.undo;
+        if (u.op === 'remove') {
+          await removeAssignment(group, u.kind, u.id);
+          await reload(n.memberId, 'Undone.');
+        } else {
+          await addAndNote(n.memberId, u.kind, u.row, 'Put back.');
+        }
+      } catch (err) { message.show(friendlyError(err), 'error'); }
+    }));
+    return btn;
+  }
 
   const header = h('header', { class: 'topbar' },
     h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
@@ -76,11 +106,11 @@ export async function renderAssign() {
       ].join(' · ');
 
     const rows = [
-      ...shifts.map((s) => instructionRow(m, 'shift', s.id,
+      ...shifts.map((s) => instructionRow(m, 'shift', s,
         `${positionLabel(s.position)} · Q${s.from_match}–Q${s.to_match}`,
         [station(positionLabel(s.position), s.position.replace(/\d/, '')), h('span', { class: 'num' }, `Q${s.from_match}–Q${s.to_match}`)],
         'Position shift')),
-      ...watches.map((w) => instructionRow(m, 'watch', w.id,
+      ...watches.map((w) => instructionRow(m, 'watch', w,
         `Follows ${w.team_number}`,
         [bumper(w.team_number), h('span', {}, 'every match')],
         `Team watch · ${countLabel(mine.filter((a) => a.team === w.team_number).length)} in the schedule`)),
@@ -93,7 +123,7 @@ export async function renderAssign() {
     const section = h('section', { class: 'assign-member', 'data-member': m.user_id },
       h('h2', { class: 'assign-name', tabindex: '-1' }, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
       h('p', { class: 'assign-summary' }, summary),
-      changed ? h('p', { class: 'form-message info', role: 'status' }, note.text) : null,
+      changed ? h('div', { class: 'form-message info assign-note', role: 'status' }, h('span', {}, note.text), undoButton(note)) : null,
       rows.length ? h('ul', { class: 'rows' }, rows) : null,
       addBtn);
     addBtn?.addEventListener('click', () => {
@@ -106,7 +136,7 @@ export async function renderAssign() {
     return section;
   }
 
-  function instructionRow(m, kind, id, title, shown, sub) {
+  function instructionRow(m, kind, row, title, shown, sub) {
     // Text colour + bin icon (red text would read like the red alliance here).
     const remove = online ? h('button', { class: 'small-btn plain-remove', type: 'button',
       'aria-label': `Remove ${title} from ${m.display_name}` }, h('span', { class: 'icon-label' }, icon('trash', 18), 'Remove')) : null;
@@ -119,8 +149,9 @@ export async function renderAssign() {
       if (!ok) return;
       busy(remove, '…', async () => {
         try {
-          await removeAssignment(group, kind, id);
-          await reload(m.user_id, `Removed ${title}.`);
+          await removeAssignment(group, kind, row.id);
+          // Undo puts the same instruction back.
+          await reload(m.user_id, `Removed ${title}.`, { op: 'add', kind, row });
         } catch (err) { message.show(friendlyError(err), 'error'); }
       });
     });
@@ -201,12 +232,10 @@ export async function renderAssign() {
         try {
           if (kind === 'shift') {
             const s = added.shifts.at(-1);
-            await addShift(group, { scoutId: m.user_id, position: s.position, from: s.from_match, to: s.to_match });
-            await reload(m.user_id, `Added ${positionLabel(s.position)} for Q${s.from_match}–Q${s.to_match}.`);
+            await addAndNote(m.user_id, 'shift', s, `Added ${positionLabel(s.position)} for Q${s.from_match}–Q${s.to_match}.`);
           } else {
-            const n = added.watches.at(-1).team_number;
-            await addWatch(group, { scoutId: m.user_id, team: n });
-            await reload(m.user_id, `Added: follows ${n} in every match they play.`);
+            const w = added.watches.at(-1);
+            await addAndNote(m.user_id, 'watch', w, `Added: follows ${w.team_number} in every match they play.`);
           }
         } catch (err) { formMsg.show(friendlyError(err), 'error'); }
       });
@@ -245,7 +274,14 @@ export async function renderAssign() {
     const cell = (row, p) => {
       const ids = row.scouts[p];
       const color = p.replace(/\d/, '');
-      if (!ids.length) return h('td', {}, h('span', { class: 'bumper open' }, 'Open'));
+      if (!ids.length) {
+        const plate = h('span', { class: 'bumper open' }, 'Open');
+        if (!online) return h('td', {}, plate);
+        // Tap an open station to choose who watches it (the Lead decides).
+        return h('td', {}, h('button', { class: 'schedule-pick', type: 'button',
+          'aria-label': `Q${row.number} ${positionLabel(p)} is open. Choose who watches it.`,
+          onclick: () => fillOpen(row, p, members) }, plate));
+      }
       return h('td', {}, h('span', { class: `bumper ${color}` },
         h('span', { 'aria-hidden': 'true' }, ids.map((id) => labels.get(id) ?? '?').join(' ')),
         h('span', { class: 'visually-hidden' }, ids.map(nameOf).join(' and '))));
@@ -287,6 +323,60 @@ export async function renderAssign() {
           positions.map((p) => cell(r, p)))))),
       showAllBtn,
     ].filter(Boolean));
+  }
+
+  // ---------- filling an open station ----------
+  // A sheet: "Who watches Blue 2 from Q18?" The Lead picks the Scout; "To"
+  // starts at the last match in a row where that station is still open.
+  function fillOpen(row, p, members) {
+    let until = row.number;
+    for (const r of grid.slice(grid.indexOf(row) + 1)) {
+      if (r.number !== until + 1 || r.scouts[p].length) break;
+      until = r.number;
+    }
+    let chosen = null;
+    const msg = formMessage();
+    const to = formField('To match', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', value: String(until) },
+      until > row.number ? `Open in a row until Q${until}.` : null);
+    const people = sortMembers(members).map((m) => {
+      const b = h('button', { type: 'button', class: 'pick-person', 'aria-pressed': 'false' }, m.display_name, m.user_id === me?.id ? ' (you)' : '');
+      b.addEventListener('click', () => {
+        chosen = m;
+        people.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        msg.show(null);
+      });
+      return b;
+    });
+    const add = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
+    const dialog = h('dialog', { 'aria-labelledby': 'fill-title' },
+      h('form', { class: 'form', novalidate: true, method: 'dialog' },
+        h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)} from Q${row.number}?`),
+        h('div', { class: 'pick-people', role: 'group', 'aria-label': 'Members' }, people),
+        to.el, msg.el,
+        h('div', { class: 'actions' }, add,
+          h('button', { class: 'pill secondary block', type: 'button', onclick: () => close() }, 'Cancel'))));
+    const close = () => { dialog.close(); dialog.remove(); };
+    dialog.addEventListener('cancel', close);
+    dialog.querySelector('form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const b = Number(to.input.value);
+      if (!chosen) return msg.show('Choose who watches it.', 'error');
+      if (!Number.isInteger(b) || b < row.number) return to.setError(`Enter Q${row.number} or later.`);
+      const shift = { scout_id: chosen.user_id, position: p, from_match: row.number, to_match: b };
+      const mine = { shifts: plan.shifts.filter((s) => s.scout_id === chosen.user_id).concat(shift),
+        watches: plan.watches.filter((w) => w.scout_id === chosen.user_id) };
+      const clash = byMatch(assignmentsFor({ scoutId: chosen.user_id, ...mine, matches })).find((g) => g.items.length > (twoTeams ? 2 : 1));
+      if (clash) return msg.show(`That gives ${chosen.display_name} too many teams in Q${clash.number}.`, 'error');
+      busy(add, 'Adding…', async () => {
+        try {
+          await addAndNote(chosen.user_id, 'shift', shift, `Added ${positionLabel(p)} for Q${row.number}–Q${b}.`);
+          close();
+        } catch (err) { msg.show(friendlyError(err), 'error'); }
+      });
+    });
+    document.body.append(dialog);
+    dialog.showModal();
+    people[0]?.focus();
   }
 
   // Names show from the phone's copy straight away, then refresh with signal.
