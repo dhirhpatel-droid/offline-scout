@@ -72,18 +72,60 @@ export function byMatch(assignments) {
   return groups;
 }
 
+// Every Scout's Assignments from the plan, each tagged with its scoutId.
+function everyonesAssignments(plan, matches) {
+  const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
+  return [...scouts].flatMap((scoutId) =>
+    assignmentsFor({ scoutId, ...plan, matches }).map((a) => ({ ...a, scoutId })));
+}
+
 // Coverage of the plan per qualification match: how many positions someone
 // is assigned to watch. [{ number, covered, total, played }]
-// (Used by the Assignments screen and Home.)
+// (Used by Home's Lead row.)
 export function coverage(plan, matches) {
-  const scouts = new Set([...plan.shifts, ...plan.watches].map((x) => x.scout_id));
-  const all = [...scouts].flatMap((scoutId) => assignmentsFor({ scoutId, ...plan, matches }));
+  const all = everyonesAssignments(plan, matches);
   return matches.filter((m) => m.level === 'qual').map((m) => ({
     number: m.number,
     played: Boolean(m.played),
     total: m.red.length + m.blue.length,
     covered: new Set(all.filter((a) => a.level === 'qual' && a.number === m.number).map((a) => a.position)).size,
   }));
+}
+
+// The Coverage grid on the Assignments screen: for each qualification match
+// still to play, who watches each station.
+// → [{ number, scheduled_at, scouts: { red1: ['u-maya'], red2: [], ... } }]
+// An empty list means that station is open. The Lead decides what to do
+// about it; the app never fills it in.
+export function coverageGrid(plan, matches, positions) {
+  const all = everyonesAssignments(plan, matches);
+  return matches
+    .filter((m) => m.level === 'qual' && !m.played)
+    .sort((a, b) => a.number - b.number)
+    .map((m) => ({
+      number: m.number,
+      scheduled_at: m.scheduled_at ?? null,
+      scouts: Object.fromEntries(positions.map((p) => [p, [...new Set(all
+        .filter((a) => a.level === 'qual' && a.number === m.number && a.position === p)
+        .map((a) => a.scoutId))]])),
+    }));
+}
+
+// Short labels for the grid's cells: each member's first letter, or more
+// letters when two names start the same ("Maya" and "Max" → "May", "Max").
+// members: [{ user_id, display_name }] → Map(user_id → label)
+export function shortNames(members) {
+  const names = members.map((m) => (m.display_name ?? '').trim() || '?');
+  const labels = new Map();
+  members.forEach((m, i) => {
+    const name = names[i];
+    let n = 1;
+    // Grow until no other member's name starts with the same letters.
+    while (n < name.length && names.some((other, j) => j !== i
+      && other.slice(0, n).toLowerCase() === name.slice(0, n).toLowerCase())) n++;
+    labels.set(m.user_id, name[0].toUpperCase() + name.slice(1, n));
+  });
+  return labels;
 }
 
 // Used by Home for the Lead's row: "3 of 4 positions covered in Q18".

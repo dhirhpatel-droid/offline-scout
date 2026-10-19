@@ -155,6 +155,9 @@ try {
     // A match in progress
     await go('#match', 1200);
     await shot(t('09-match-pre-empty'));
+    // One tap on the line-up picks the team and its station.
+    await run(`document.querySelectorAll('.lineup-team.pick')[1].click(); return 1`);
+    await shot(t('09b-match-picked'));
     await run(`
       const type = (label, value) => { const i = [...document.querySelectorAll('input')].find((x) => x.labels[0]?.textContent === label); i.value = value; i.dispatchEvent(new Event('input')); };
       type('Match number', '18');
@@ -167,7 +170,7 @@ try {
     await run(`document.querySelector('#tab-teleop').click(); const a = [...document.querySelectorAll('.round.add')]; a[1].click(); a[1].click(); a[1].click(); a[3].click(); return 1`);
     await sleep(600);
     await shot(t('12-match-teleop'));
-    await run(`window.scrollTo(0, document.body.scrollHeight); [...document.querySelectorAll('.field.tile')].at(-1).click(); return 1`);
+    await run(`document.querySelector('#tab-end').click(); [...document.querySelectorAll('.field.tile')].at(-1).click(); return 1`);
     await shot(t('13-match-endgame'));
     await run(`document.querySelector('#tab-post').click(); [...document.querySelectorAll('.segmented button')].find((b) => b.textContent === 'Good').click(); return 1`);
     await shot(t('14-match-after'));

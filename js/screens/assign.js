@@ -9,9 +9,9 @@ import { currentGroup, cachedMembers, listMembers, currentUser } from '../accoun
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
 import { renderField } from '../fields.js';
-import { positionLabel, matchCode } from '../submissions.js';
+import { positionLabel, matchCode, alliancePositions } from '../submissions.js';
 import { cachedEvent, cachedPlan, addShift, addWatch, removeAssignment } from '../events.js';
-import { assignmentsFor, byMatch, coverage } from '../assignments.js';
+import { assignmentsFor, byMatch, coverageGrid, shortNames } from '../assignments.js';
 import { isAtEvent, timeOf } from '../schedule.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
@@ -57,6 +57,7 @@ export async function renderAssign() {
     // Don't redraw under an open Add form unless the members really changed.
     const ids = members.map((m) => `${m.user_id}:${m.display_name}`).sort().join();
     if (ids === shownIds) return;
+    drawCoverage(members); // names changed: the grid's letters may too
     if (shownIds && membersEl.querySelector('form')) return;
     shownIds = ids;
     membersEl.replaceChildren(...sortMembers(members).map(memberSection));
@@ -209,6 +210,67 @@ export async function renderAssign() {
     return form;
   }
 
+  // ---------- Coverage grid ----------
+  // Laid out like the Event's printed schedule: one row per match still to
+  // play, one column per station. A covered station shows the Scout's
+  // letter(s); an open one is a dashed plate that says "Open". Shown so the
+  // Lead can decide; the app never fills gaps itself.
+  const positions = alliancePositions(config);
+  const grid = coverageGrid(plan, matches, positions);
+  const FIRST_ROWS = 8; // the rest behind "Show all", so members stay close
+  let showAll = false;
+  const coverageEl = h('section', { class: 'coverage' });
+  const showGrid = grid.length && (plan.shifts.length || plan.watches.length);
+
+  function drawCoverage(members) {
+    if (!showGrid) return;
+    const labels = shortNames(members);
+    const nameOf = (id) => members.find((m) => m.user_id === id)?.display_name ?? 'someone not in the group';
+    const open = grid.filter((r) => positions.some((p) => !r.scouts[p].length)).length;
+    const rows = showAll ? grid : grid.slice(0, FIRST_ROWS);
+    const more = grid.length - rows.length;
+
+    const cell = (row, p) => {
+      const ids = row.scouts[p];
+      const color = p.replace(/\d/, '');
+      if (!ids.length) return h('td', {}, h('span', { class: 'bumper open' }, 'Open'));
+      return h('td', {}, h('span', { class: `bumper ${color}` },
+        h('span', { 'aria-hidden': 'true' }, ids.map((id) => labels.get(id) ?? '?').join(' ')),
+        h('span', { class: 'visually-hidden' }, ids.map(nameOf).join(' and '))));
+    };
+    const showAllBtn = more ? h('button', { class: 'pill secondary block', type: 'button', onclick: () => {
+      showAll = true;
+      drawCoverage(members);
+      // Keep focus in the grid: on the first newly shown match.
+      coverageEl.querySelectorAll('tbody th')[rows.length]?.focus();
+    } }, `Show all ${grid.length} matches`) : null;
+
+    coverageEl.replaceChildren(...[
+      h('h2', { class: 'section-title sub' }, 'Coverage'),
+      h('p', { class: 'assign-gaps' }, open
+        ? `${open} of ${grid.length} matches still to play ${open === 1 ? 'has' : 'have'} an open station.`
+        : 'Every station is covered in every match still to play.'),
+      h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
+        h('caption', { class: 'visually-hidden' }, 'Who watches each station, in the matches still to play.'),
+        h('thead', {}, h('tr', {},
+          h('th', { scope: 'col' }, 'Match'),
+          // FRC has 6 stations: short headings (R1), full name for screen readers.
+          positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` },
+            positions.length > 4 ? h('abbr', { title: positionLabel(p) }, positionLabel(p).replace(/[a-z ]/g, '')) : positionLabel(p))))),
+        h('tbody', {}, rows.map((r, i) => h('tr', { class: i === 0 ? 'next-up' : '' },
+          h('th', { scope: 'row', tabindex: '-1' },
+            h('span', { class: 'schedule-code num' }, `Q${r.number}`),
+            h('span', { class: `schedule-time${i === 0 ? ' next' : ''}` }, i === 0 ? 'Next' : timeOf(r) ?? ''),
+            i === 0 && timeOf(r) ? h('span', { class: 'schedule-time' }, timeOf(r)) : null),
+          positions.map((p) => cell(r, p)))))),
+      showAllBtn,
+      // The key: which letters are whose (only the members in the grid).
+      h('p', { class: 'coverage-key' }, members
+        .filter((m) => grid.some((r) => positions.some((p) => r.scouts[p].includes(m.user_id))))
+        .map((m) => `${labels.get(m.user_id)} ${m.display_name}`).join(' · ')),
+    ].filter(Boolean));
+  }
+
   // Names show from the phone's copy straight away, then refresh with signal.
   drawMembers(await cachedMembers(group.id));
   if (online) listMembers(group.id).then(drawMembers, (err) => message.show(friendlyError(err), 'error'));
@@ -216,15 +278,6 @@ export async function renderAssign() {
   const lede = !quals.length
     ? 'The schedule isn’t out yet. You can still plan Position shifts; teams fill in when it arrives.'
     : `${ev.name} · Q${quals[0].number}–Q${quals.at(-1).number}${twoTeams ? '' : ' · one team per match'}`;
-
-  // Coverage of the plan: which matches still to play have positions no one
-  // watches. Shown so the Lead can decide; the app never fills gaps itself.
-  const gaps = coverage(plan, matches).filter((c) => !c.played && c.covered < c.total);
-  const gapsEl = quals.length && (plan.shifts.length || plan.watches.length)
-    ? h('p', { class: 'assign-gaps' }, gaps.length
-      ? `Not fully covered: ${gaps.slice(0, 6).map((c) => `Q${c.number} (${c.covered} of ${c.total})`).join(', ')}${gaps.length > 6 ? ` and ${gaps.length - 6} more` : ''}.`
-      : 'Every position is covered in every match still to play.')
-    : null;
 
   // After an Add or Remove, go back to the member it changed.
   if (note?.memberId) {
@@ -239,7 +292,7 @@ export async function renderAssign() {
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
-      gapsEl,
+      showGrid ? coverageEl : null,
       online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
       message.el,
       membersEl),
