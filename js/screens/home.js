@@ -2,8 +2,8 @@
 // next one) in your alliance colour, the way a music app shows what's playing.
 // Below it: your matches, your Scouting group, and the event.
 
-import { h, icon, formField, setThemeColor, confirmDialog } from '../ui.js';
-import { getSetting, setSetting, listSubmissions, clearDraft } from '../db.js';
+import { h, icon, setThemeColor, confirmDialog } from '../ui.js';
+import { getSetting, listSubmissions, clearDraft } from '../db.js';
 import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
@@ -12,8 +12,8 @@ import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
 
 export async function renderHome() {
-  const [eventName, all, group, next, me, lastSyncAt] = await Promise.all([
-    getSetting('eventName'), listSubmissions(), currentGroup(), whatsNext(), currentUser(), getSetting('lastSyncAt'),
+  const [all, group, next, me, lastSyncAt] = await Promise.all([
+    listSubmissions(), currentGroup(), whatsNext(), currentUser(), getSetting('lastSyncAt'),
   ]);
   // My matches in this group (matches from before accounts existed count as mine).
   const submissions = all.filter((s) => (!s.scoutId || s.scoutId === me?.id) && (!s.groupId || s.groupId === group.id));
@@ -37,7 +37,7 @@ export async function renderHome() {
             h('div', { class: 'title' }, group.name),
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
-        h('li', {}, eventRow(eventName, lead)),
+        h('li', {}, eventRow(group, lead)),
       ),
 
       submissions.length ? h('section', {},
@@ -74,9 +74,11 @@ function nowBlock(next) {
   if (next.kind === 'next') {
     return h('section', { class: 'now', 'data-alliance': next.alliance ?? 'none' },
       top,
-      h('h1', { class: 'now-hero num', tabindex: '-1' }, next.code),
-      h('p', { class: 'now-sub' }, [next.position && positionLabel(next.position), 'you’ll enter the team on the next screen']
-        .filter(Boolean).join(' · ').replace(/^y/, 'Y')),
+      h('h1', { class: 'now-hero num', tabindex: '-1' }, next.team ?? next.code),
+      h('p', { class: 'now-sub' }, next.team
+        ? [next.code, next.position && positionLabel(next.position), next.time].filter(Boolean).join(' · ')
+        : [next.position && positionLabel(next.position), 'you’ll enter the team on the next screen']
+          .filter(Boolean).join(' · ').replace(/^y/, 'Y')),
       h('a', { class: 'pill big block now-go', href: '#match' }, `Scout ${next.code}`, icon('next', 22)));
   }
   return h('section', { class: 'now', 'data-alliance': 'none' },
@@ -100,30 +102,14 @@ function discardLink() {
   return btn;
 }
 
-// The event: Leads can change it; Scouts just see it.
-// (In Milestone 4 the Current event comes from FIRST's schedule instead.)
-function eventRow(eventName, lead) {
-  const view = h('div', { class: 'row' },
+// The group's Current event; tapping it opens the Event screen.
+function eventRow(group, lead) {
+  const ev = group.currentEvent;
+  return h('a', { class: 'row', href: '#event' },
     h('div', {},
-      h('div', { class: 'title' }, eventName || 'No event set'),
-      h('div', { class: 'sub' }, lead ? 'Event' : 'Event · set by your Lead')),
-    lead ? h('button', { class: 'small-btn', type: 'button' }, eventName ? 'Change' : 'Set event') : null);
-  if (!lead) return view;
-
-  view.querySelector('button').addEventListener('click', () => {
-    const f = formField('Event name', { type: 'text', autocapitalize: 'words', maxlength: 80, placeholder: 'e.g. Northern Ontario Qualifier' });
-    f.input.value = eventName ?? '';
-    const saveBtn = h('button', { class: 'pill', type: 'submit' }, 'Save event');
-    const form = h('form', { class: 'form event-form' }, f.el, h('div', { class: 'actions' }, saveBtn));
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await setSetting('eventName', f.input.value.trim());
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    view.replaceWith(form);
-    f.input.focus();
-  });
-  return view;
+      h('div', { class: 'title' }, ev ? ev.name : 'No event yet'),
+      h('div', { class: 'sub' }, ev ? `Event · ${ev.code}` : lead ? 'Pick your event to load its schedule' : 'Your Lead picks the event')),
+    icon('next', 20));
 }
 
 // The footer says where your matches are (sending is the one thing it reports).

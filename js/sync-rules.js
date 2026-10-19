@@ -15,6 +15,7 @@ export function toServer(sub) {
     group_id: sub.groupId,
     scout_name: s.scout ?? 'Scout',
     event: sub.event ?? '',
+    event_id: sub.eventId ?? null,
     config_id: sub.configId,
     config_version: sub.configVersion,
     match_level: s.level ?? null,
@@ -39,6 +40,7 @@ export function fromServer(row) {
     configId: row.config_id,
     configVersion: row.config_version,
     event: row.event ?? '',
+    eventId: row.event_id ?? null,
     values: row.values ?? {},
     summary: {
       scout: row.scout_name,

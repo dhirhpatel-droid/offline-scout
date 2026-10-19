@@ -21,6 +21,9 @@ import { currentGroup, cachedProfile, currentUser } from '../account.js';
 import { syncNow } from '../sync.js';
 import { listenFor } from '../ui.js';
 import { isLead } from '../group-rules.js';
+import { findRole } from '../config.js';
+import { cachedEvent } from '../events.js';
+import { findMatch, teamAt, timeOf, isAtEvent } from '../schedule.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -45,6 +48,17 @@ export async function renderMatch({ param }) {
   const group = await currentGroup();
   const othersMatch = editing && submission.scoutId && me && submission.scoutId !== me.id;
   const readOnly = othersMatch && !(isLead(group) && (group.settings?.leadsCanEdit ?? true));
+
+  // The Event's schedule (saved on this phone), so the team can fill itself in.
+  const eventData = await cachedEvent(submission.eventId ?? (!editing ? group?.currentEvent?.id : null));
+  const teamKey = findRole(config, 'teamNumber')?.key;
+  const scheduled = () => findMatch(eventData?.matches, submission.summary.level, submission.summary.match);
+  // The team the schedule filled in (replaced if the match or position changes).
+  let autoTeam = null;
+  {
+    const fromSchedule = teamAt(scheduled(), submission.summary.position);
+    if (fromSchedule && fromSchedule === submission.values[teamKey]) autoTeam = fromSchedule;
+  }
 
   // Tabs: sections that aren't shown inside another one.
   const tabSections = config.sections.filter((s) => !s.showWith);
@@ -89,7 +103,11 @@ export async function renderMatch({ param }) {
     screen.dataset.alliance = alliance ?? 'none';
     teamEl.textContent = team ?? 'Which team?';
     teamEl.classList.toggle('empty', !team);
-    metaEl.textContent = `${match ? matchCode(submission.summary) : 'Q?'} · ${position ? positionLabel(position) : 'pick a position'}`;
+    metaEl.textContent = [
+      match ? matchCode(submission.summary) : 'Q?',
+      position ? positionLabel(position) : 'pick a position',
+      timeOf(scheduled()),
+    ].filter(Boolean).join(' · ');
     // When the estimate goes up, the header number jumps too.
     // (Not on first draw, when the number is still empty.)
     if (pointsEl.textContent !== '' && Number(pointsEl.textContent) < submission.estimatedPoints) {
@@ -110,6 +128,8 @@ export async function renderMatch({ param }) {
 
   function onFieldChange(section, field, value) {
     submission.values[`${section.id}.${field.id}`] = value;
+    if (['matchLevel', 'matchNumber', 'alliancePosition'].includes(field.role)) fillTeamFromSchedule();
+    if (field.role === 'teamNumber') queueMicrotask(updateTeamNote);
     // Clear the "needed" message once the field is filled in.
     const row = panel.querySelector(`[data-field-id="${field.id}"]`);
     touched = true;
@@ -120,6 +140,38 @@ export async function renderMatch({ param }) {
     }
     updateHeaderSoon();
     save();
+  }
+
+  // Match + position known and in the schedule → the team fills itself in,
+  // unless the scout typed a different team themselves.
+  function fillTeamFromSchedule() {
+    if (!teamKey || !eventData) return;
+    refresh(config, submission);
+    const team = teamAt(scheduled(), submission.summary.position);
+    const current = submission.values[teamKey];
+    if (team && (current == null || current === '' || current === autoTeam)) {
+      submission.values[teamKey] = team;
+      autoTeam = team;
+      const input = panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"] input`);
+      if (input) input.value = team;
+    }
+    queueMicrotask(updateTeamNote);
+  }
+
+  // A line under the team number: where it came from, or a warning.
+  function updateTeamNote() {
+    const row = teamKey && panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"]`);
+    if (!row) return;
+    row.querySelector('.team-note')?.remove();
+    const team = submission.values[teamKey];
+    let text = null;
+    let warn = false;
+    if (team && autoTeam === team) text = `From the ${eventData.event.code} schedule`;
+    else if (team && !isAtEvent(eventData?.teams, team)) { text = `${team} isn’t on this event’s team list. Check the number.`; warn = true; }
+    else if (team && eventData && teamAt(scheduled(), submission.summary.position) && teamAt(scheduled(), submission.summary.position) !== Number(team)) {
+      text = `The schedule has ${teamAt(scheduled(), submission.summary.position)} in this position.`; warn = true;
+    }
+    if (text) row.append(h('p', { class: `team-note${warn ? ' warn' : ''}`, role: warn ? 'alert' : null }, text));
   }
 
   // Header + points update on the next frame (keeps fast tapping smooth).
@@ -193,6 +245,7 @@ export async function renderMatch({ param }) {
     }
     if (!editing && i === 0) panel.append(discardButton());
     screen.dataset.firstTab = String(i === 0); // points are hidden on Setup
+    if (i === 0) queueMicrotask(updateTeamNote);
     watchGuests(section);
     renderBottombar();
     window.scrollTo({ top: 0 });
@@ -405,9 +458,21 @@ export async function startNewMatch() {
   const config = await loadConfig(group?.game_config_id ?? configId);
   const scout = profile?.display_name || carry?.scout;
   const submission = newSubmission(config, { ...carry, scout, event: event ?? carry?.event });
-  // Whose match this is and which group it's for (used when it syncs).
+  // Whose match this is, which group and Event it's for (used when it syncs).
   submission.groupId = group?.id;
   submission.scoutId = profile?.id;
+  if (group?.currentEvent) {
+    submission.eventId = group.currentEvent.id;
+    submission.event = group.currentEvent.name;
+    // Next match carried over with a position: the schedule knows the team.
+    const data = await cachedEvent(group.currentEvent.id);
+    const team = teamAt(findMatch(data?.matches, submission.summary.level, submission.summary.match), submission.summary.position);
+    const key = findRole(config, 'teamNumber')?.key;
+    if (team && key) {
+      submission.values[key] = team;
+      refresh(config, submission);
+    }
+  }
   await db.putDraft(submission);
   return submission;
 }

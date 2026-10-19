@@ -15,6 +15,7 @@ import {
   listAllSubmissions, getSubmission, putSubmission, removeSubmission, getSetting, setSetting,
 } from './db.js';
 import { toServer, decide, fromServer, hasUnsentChanges, claim } from './sync-rules.js';
+import { refreshCurrentEvent } from './events.js';
 
 let running = null;
 // The last sync's result, so screens drawn later can show it too.
@@ -83,6 +84,9 @@ async function doSync() {
         if (rows.length < 500) break;
       }
     }
+
+    // 3. Keep the Current event's schedule and scores fresh on this phone.
+    await refreshCurrentEvent().catch((err) => console.warn('Event refresh failed:', err));
 
     result.ok = true;
     result.waiting = await unsentCount();

@@ -9,6 +9,8 @@
 import { h, icon } from './ui.js';
 import { getDraft, getSetting, listSubmissions } from './db.js';
 import { matchCode, positionLabel, allianceOf } from './submissions.js';
+import { currentEventData } from './events.js';
+import { findMatch, teamAt, timeOf } from './schedule.js';
 
 export async function whatsNext() {
   const draft = await getDraft();
@@ -25,24 +27,29 @@ export async function whatsNext() {
       started: new Date(draft.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     };
   }
-  const carry = await getSetting('nextCarry');
+  const [carry, eventData] = await Promise.all([getSetting('nextCarry'), currentEventData()]);
+  // The schedule (if any) says which team is in that match and position, and when.
+  const withSchedule = (next, level, match) => {
+    const m = findMatch(eventData?.matches, level, match);
+    return { ...next, team: teamAt(m, next.position), time: timeOf(m) };
+  };
   if (carry?.match) {
-    return {
+    return withSchedule({
       kind: 'next',
       code: matchCode({ level: carry.level, match: carry.match }),
       position: carry.position,
       alliance: allianceOf(carry.position),
-    };
+    }, carry.level, carry.match);
   }
   // No carry-over (e.g. a new phone): continue from the last saved match.
   const [last] = await listSubmissions();
   if (last?.summary?.match) {
-    return {
+    return withSchedule({
       kind: 'next',
       code: matchCode({ level: last.summary.level, match: last.summary.match + 1 }),
       position: last.summary.position,
       alliance: allianceOf(last.summary.position),
-    };
+    }, last.summary.level, last.summary.match + 1);
   }
   return { kind: 'none' };
 }

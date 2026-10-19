@@ -76,6 +76,13 @@ export async function refreshAccount() {
       .eq('user_id', user.id));
     const groups = rows.map((r) => ({ ...r.groups, role: r.role }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    // Each group's Current event (Milestone 4).
+    if (groups.length) {
+      const current = must(await sb.from('group_events')
+        .select('group_id, events (id, program, season, code, name, starts_on, ends_on, city)')
+        .eq('is_current', true).in('group_id', groups.map((g) => g.id)));
+      for (const g of groups) g.currentEvent = current.find((c) => c.group_id === g.id)?.events ?? null;
+    }
     await setSetting('profile', { ...profile, email: user.email });
     await setSetting('groups', groups);
     // Scout name on new Submissions = your display name.

@@ -97,7 +97,15 @@ try {
         summary: { scout: 'Dhir', level: 'qual', match, team, position, alliance: position.replace(/\\d/, '') }, estimatedPoints: pts,
         createdAt: new Date(Date.now() - mins * 60000).toISOString(), updatedAt: new Date().toISOString(), submittedAt: new Date().toISOString(), syncedAt: null });
       await new Promise((ok) => { const tx = db.transaction(['settings', 'submissions'], 'readwrite'); const s = tx.objectStore('settings');
-        s.put([{ id: 'g1', program: 'FRC', team_number: 4069, name: 'Lo-Ellen Robotics', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {} }], 'groups');
+        // A pretend Current event with a small schedule (Q14–Q20).
+        const ev = { id: 'ev1', program: 'FTC', season: 2026, code: 'CAONSUQ', name: 'Sudbury Qualifier', starts_on: '2026-11-21', ends_on: '2026-11-21', city: 'Sudbury, ON' };
+        const teams = [23810, 16012, 19455, 21229, 16415, 14515, 22309, 24436, 30420, 25049].map((n) => ({ team_number: n, team_name: 'Team ' + n }));
+        const at = (q) => new Date(Date.UTC(2026, 10, 21, 14, 0 + q * 7)).toISOString();
+        const matches = [14, 15, 16, 17, 18, 19, 20].map((q, i) => ({ level: 'qual', number: q, game: 1, scheduled_at: at(q),
+          red: [teams[i % 10].team_number, teams[(i + 1) % 10].team_number], blue: [teams[(i + 2) % 10].team_number, teams[(i + 3) % 10].team_number], played: q < 18 }));
+        matches[4].red = [16415, 23810]; // Q18 Red 2 = 23810
+        s.put({ event: ev, teams, matches, savedAt: new Date(Date.now() - 4 * 60000).toISOString() }, 'event:ev1');
+        s.put([{ id: 'g1', program: 'FTC', team_number: 16415, name: 'Lo-Ellen EDIT', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {}, currentEvent: ev }], 'groups');
         s.put('g1', 'currentGroupId'); s.put('Northern Ontario Qualifier', 'eventName');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));
@@ -120,13 +128,15 @@ try {
     await shot(t('06-group-offline'));
     await go('#settings');
     await shot(t('07-settings'));
+    await go('#event');
+    await shot(t('07b-event'));
 
     // A match in progress
     await go('#match', 1200);
     await shot(t('09-match-pre-empty'));
     await run(`
       const type = (label, value) => { const i = [...document.querySelectorAll('input')].find((x) => x.labels[0]?.textContent === label); i.value = value; i.dispatchEvent(new Event('input')); };
-      type('Match number', '18'); type('Team number', '23810');
+      type('Match number', '18');
       [...document.querySelectorAll('.position-grid button')].find((b) => b.textContent === 'Red 2').click();
       return 1`);
     await shot(t('10-match-pre'));
