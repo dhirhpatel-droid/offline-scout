@@ -47,7 +47,7 @@ function notice(title, text, link) {
 
 const COLUMNS = (config) => [
   { key: 'team', label: 'Team' },
-  { key: 'scouted', label: 'Scouted' },
+  { key: 'scouted', label: 'Matches' }, // how many matches scouted (Coverage)
   { key: 'avg', label: 'Avg' },
   // A config can give a period a short heading ("End" for Endgame).
   ...scoringSections(config).map((s) => ({ key: s.id, label: s.shortLabel ?? s.label })),
@@ -68,6 +68,8 @@ export async function renderTeams() {
   const saved = (await getSetting('teamsSort')) ?? {};
   const fresh = saved.groupDefault === groupDefault;
   let sort = { key: fresh ? saved.key : groupDefault, dir: fresh ? saved.dir : null };
+  // A saved column that no longer exists (the game changed): start over.
+  if (!columns.some((c) => c.key === sort.key)) sort = { key: groupDefault, dir: null };
   const scouted = rows.filter((r) => r.scouted).length;
 
   const table = h('table', { class: 'teams-table', style: `--cols: ${columns.length}` });
@@ -87,9 +89,10 @@ export async function renderTeams() {
             table.querySelector('th button.on')?.focus();
           } }, c.label, active ? icon(dir === 'asc' ? 'sortUp' : 'sortDown', 14) : null));
       }))),
-      // The whole row opens the Team page (the link stretches over it).
-      // An average from a single match is grey: it's thin evidence.
-      h('tbody', {}, sorted.map((r) => h('tr', { class: [r.scouted ? '' : 'unscouted', r.matches === 1 ? 'thin' : ''].join(' ').trim() },
+      // The whole row opens the Team page: the link in the team cell is for
+      // keyboards and screen readers; a tap anywhere on the row does the same.
+      h('tbody', {}, sorted.map((r) => h('tr', { class: r.scouted ? 'team-row' : 'team-row unscouted',
+        onclick: (e) => { if (!e.target.closest('a')) location.hash = `#team/${r.team}`; } },
         h('th', { scope: 'row' }, h('a', { href: `#team/${r.team}`, class: 'team-link' },
           bumper(r.team), r.name && r.name !== `Team ${r.team}` ? h('span', { class: 'team-link-name' }, r.name) : null)),
         h('td', { class: 'num' }, r.scouted ? String(r.scouted) : h('span', { class: 'not-yet' }, 'None')),
@@ -103,8 +106,8 @@ export async function renderTeams() {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, `${ev.name} · ${scouted} of ${rows.length} teams scouted`),
       h('p', { class: 'plain teams-note' }, [
-        'Average estimated points per match, from your scouts’ taps, without no-shows. Grey: from one match only. Tap a team for its page.',
-        lastSyncAt ? ` Your group’s matches as of ${timeAgo(lastSyncAt)}.` : ' Only matches saved on this phone so far: the rest arrive when it has signal.',
+        'Avg = estimated points per match, no-shows left out.',
+        lastSyncAt ? ` As of ${timeAgo(lastSyncAt)}.` : ' Only this phone’s matches so far.',
       ].join('')),
       noEvent ? h('p', { class: 'plain teams-note' }, `${noEvent} saved ${noEvent === 1 ? 'match isn’t' : 'matches aren’t'} counted here: ${noEvent === 1 ? 'it was' : 'they were'} scouted before your event was picked.`) : null,
       h('div', { class: 'teams-wrap' }, table)),
@@ -117,7 +120,7 @@ export async function renderTeams() {
 
 export async function renderTeam({ param }) {
   const team = Number(param);
-  const { ev, config, data, subs, canSeeAll } = await load();
+  const { group, ev, config, data, subs, canSeeAll } = await load();
   if (!canSeeAll) return notice(`Team ${team}`, 'Team pages are for Leads, unless a Lead turns on “Scouts see everyone’s matches”.');
   const mine = subs.filter((s) => s.summary?.team === team);
   const [row] = teamRows(config, mine, (data?.teams ?? []).filter((t) => t.team_number === team));
@@ -126,6 +129,11 @@ export async function renderTeam({ param }) {
 
   // Its matches at this event, from the schedule, each with how often it was scouted.
   const matches = (data?.matches ?? []).filter((m) => positionOf(m, team));
+  // Estimated points in one match (averaged if two Scouts watched it), or null.
+  const perMatchPoints = (m) => {
+    const here = mine.filter((s) => (s.summary?.level ?? 'qual') === m.level && s.summary?.match === m.number);
+    return here.length ? teamRows(config, here)[0]?.avg ?? null : null;
+  };
   const scoutedIn = (m) => mine.filter((s) => (s.summary?.level ?? 'qual') === m.level && s.summary?.match === m.number).length;
 
   const cover = h('section', { class: 'now team-cover', 'data-alliance': 'none' },
@@ -136,7 +144,8 @@ export async function renderTeam({ param }) {
     name && name !== `Team ${team}` ? h('p', { class: 'team-cover-name' }, name)
       : !name && data ? h('p', { class: 'team-cover-name' }, 'Not on this event’s team list') : null,
     h('p', { class: 'now-sub' }, !row?.scouted ? 'Not scouted yet'
-      : [`Scouted ${row.scouted} ${row.scouted === 1 ? 'time' : 'times'}`,
+      : [`Scouted in ${row.scouted} ${row.scouted === 1 ? 'match' : 'matches'}`,
+        row.submissions > row.scouted ? `${row.submissions} Submissions` : null,
         row.noShows ? `${row.noShows} no-show${row.noShows > 1 ? 's' : ''}` : null].filter(Boolean).join(' · ')));
 
   // Averages, laid out like the results screen.
@@ -167,12 +176,14 @@ export async function renderTeam({ param }) {
     h('ul', { class: 'team-matches' }, matches.map((m) => {
       const pos = positionOf(m, team);
       const n = scoutedIn(m);
+      const pts = perMatchPoints(m);
       const code = matchCode({ level: m.level, match: m.number });
       return h('li', {},
         h('span', { class: 'num team-match-code' }, code),
         station(positionLabel(pos), pos.replace(/\d/, '')),
         h('span', { class: 'team-match-when' }, m.played ? result(m, pos) : timeOf(m) ?? ''),
-        h('span', { class: `team-match-scouted${n ? '' : ' none'}` }, n ? `Scouted${n > 1 ? ` ×${n}` : ''}` : m.played ? 'Not scouted' : ''));
+        h('span', { class: `team-match-scouted${n ? '' : ' none'}` },
+          pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : n ? 'No-show' : m.played ? 'Not scouted' : ''));
     }))) : null;
 
   const list = mine.length ? h('section', {},
@@ -183,7 +194,8 @@ export async function renderTeam({ param }) {
     cover,
     h('main', { class: 'content' },
       !ev ? h('p', { class: 'plain' }, 'Pick your event to see this team’s matches.') : null,
-      averages, details, schedule, list,
+      averages, schedule, details, list,
+      isLead(group) ? h('a', { class: 'pill secondary block team-plan', href: '#assign' }, `Plan who watches ${team}`, icon('next', 20)) : null,
       !mine.length && ev ? h('p', { class: 'plain teams-empty' }, 'No one in your group has scouted this team here yet.') : null),
     await nowScoutingBar(),
   );

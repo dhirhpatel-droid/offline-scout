@@ -1013,7 +1013,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
   font-weight: 700;
   text-align: left;
 }
-.pick-person[aria-pressed='true'] { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
 
 /* ---------- Teams (Lead views) ---------- */
 .teams-note { font-size: var(--fs-sm); margin-bottom: var(--s3); }
@@ -1071,20 +1070,28 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .team-match-scouted { font-size: var(--fs-sm); font-weight: 700; }
 .team-match-scouted.none { color: var(--text-2); font-weight: 600; }
 /* Teams table: the team column stays put when the table scrolls sideways,
-   the whole row opens the Team page, thin averages are grey. */
+   the whole row opens the Team page (a click handler on the row). */
 .teams-table thead th:first-child, .teams-table tbody th { position: sticky; left: 0; z-index: 1; background: var(--bg); }
-.teams-table tbody tr { position: relative; }
 .teams-table .team-link { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
-.teams-table .team-link::after { content: ''; position: absolute; inset: 0; z-index: 2; }
 .teams-table .team-link-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
 .teams-table th:first-child .sort { width: 100%; }
 .teams-table td.num { padding-inline: var(--s1) 2px; }
-.teams-table tr.thin td.num { color: var(--text-2); font-weight: 600; }
 .teams-table tr.unscouted .bumper { box-shadow: inset 0 0 0 2px var(--control-line); }
 .teams-table tbody tr:active { background: var(--surface); }
 .pick-person { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
 .pick-person[aria-checked='true'] { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
-.pick-person:disabled { border-style: dashed; color: var(--text-2); cursor: not-allowed; }
 .pick-why { font-size: var(--fs-xs); font-weight: 600; }
 .bumper.open.can-fill { gap: 2px; border-style: solid; color: var(--text); }
 .assign-note:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Teams: rows are tappable; the sticky team column keeps an edge when scrolled */
+.teams-table .team-row { cursor: pointer; }
+.teams-table tbody th, .teams-table thead th:first-child { box-shadow: 1px 0 0 var(--line); }
+.teams-table .team-link-name { max-width: 5.5rem; }
+.team-match-pts { font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
+.team-plan { margin-top: var(--s5); }
+.pick-people { border: 0; padding: 0; }
+.pick-person { cursor: pointer; }
+.pick-person:has(input:checked) { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
+.pick-person:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pick-person.full { border-style: dashed; color: var(--text-2); cursor: not-allowed; }
+.undo-later { font-size: var(--fs-sm); color: var(--text-2); }

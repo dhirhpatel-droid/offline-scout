@@ -63,7 +63,8 @@ export async function renderAssign() {
 
   // The Undo button in a note.
   function undoButton(n) {
-    if (!n?.undo || !online) return null;
+    if (!n?.undo) return null;
+    if (!online) return h('span', { class: 'undo-later' }, 'Undo needs signal');
     const btn = h('button', { class: 'small-btn', type: 'button' }, 'Undo');
     btn.addEventListener('click', () => busy(btn, '…', async () => {
       try {
@@ -169,9 +170,13 @@ export async function renderAssign() {
     let position = null;
     const lastTo = Math.max(0, ...current.shifts.map((s) => s.to_match));
     const lastQual = quals.at(-1)?.number;
-    const from = formField('From match', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', value: String(lastTo + 1) });
+    // Suggest the first match still to play after their last shift (never
+    // past the end of qualifications).
+    const firstOpen = quals.find((m) => !m.played && m.number > lastTo)?.number
+      ?? quals.find((m) => !m.played)?.number ?? (lastQual ? Math.min(lastTo + 1, lastQual) : lastTo + 1);
+    const from = formField('From match', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', value: String(firstOpen) });
     const to = formField('To match', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input',
-      value: lastQual && lastQual > lastTo ? String(lastQual) : '' });
+      value: lastQual && lastQual >= firstOpen ? String(lastQual) : '' });
     const posField = renderField({ id: 'position', type: 'position', label: 'Position' }, null, (v) => { position = v; posError.hidden = true; }, config);
     const posError = h('p', { class: 'error-text', role: 'alert', hidden: true }, 'Pick a position.');
     const listId = `teams-${m.user_id}`;
@@ -300,8 +305,8 @@ export async function renderAssign() {
     coverageEl.replaceChildren(...[
       h('h2', { class: 'section-title sub' }, 'Coverage'),
       h('p', { class: 'assign-gaps' }, first
-        ? `${openCells.length} open ${openCells.length === 1 ? 'station' : 'stations'} in ${range}. First: Q${first.r.number} ${positionLabel(first.p)}.`
-        : `Every station is covered in ${range}.`),
+        ? `${openCells.length} open ${openCells.length === 1 ? 'position' : 'positions'} in ${range}. First: Q${first.r.number} ${positionLabel(first.p)}.`
+        : `Every position is covered in ${range}.`),
       note?.where === 'grid' ? noteEl(note) : null,
       doubled.length ? h('p', { class: 'assign-gaps' }, doubled.map((d) =>
         `${d.m.display_name} watches two teams in ${listMatches(d.in)}.`).join(' ')) : null,
@@ -311,7 +316,7 @@ export async function renderAssign() {
         strangers ? '? not in the group' : null,
       ].filter(Boolean).join(' · ')),
       h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
-        h('caption', { class: 'visually-hidden' }, 'Who watches each station, in the matches still to play.'),
+        h('caption', { class: 'visually-hidden' }, 'Who watches each Alliance position, in the matches still to play.'),
         h('thead', {}, h('tr', {},
           h('th', { scope: 'col' }, 'Match'),
           // FRC has 6 stations: short headings (R1), with the full name in
@@ -351,25 +356,35 @@ export async function renderAssign() {
         watches: plan.watches.filter((w) => w.scout_id === m.user_id) };
       return byMatch(assignmentsFor({ scoutId: m.user_id, ...mine, matches })).find((g) => g.items.length > (twoTeams ? 2 : 1));
     };
-    // One choice from a list: a radio group (screen readers say "1 of 3").
-    const people = sortMembers(members).map((m) => {
-      const clash = clashFor(m);
-      const b = h('button', { type: 'button', class: 'pick-person', role: 'radio', 'aria-checked': 'false', disabled: Boolean(clash) },
-        h('span', {}, m.display_name, m.user_id === me?.id ? ' (you)' : ''),
-        clash ? h('span', { class: 'pick-why' }, `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}`) : null);
-      b.addEventListener('click', () => {
-        chosen = m;
-        people.forEach((x) => x.setAttribute('aria-checked', String(x === b)));
-        msg.show(null);
-      });
-      return b;
+    // One choice from a list: real radio buttons (arrow keys and "1 of 3"
+    // come free), each in a big tappable label. Someone who'd have too many
+    // Teams is greyed out with the reason, re-checked when "To" changes.
+    const sorted = sortMembers(members);
+    const people = sorted.map((m) => {
+      const input = h('input', { type: 'radio', name: 'fill-who', value: m.user_id, class: 'visually-hidden' });
+      const why = h('span', { class: 'pick-why' });
+      const label = h('label', { class: 'pick-person' }, input,
+        h('span', {}, m.display_name, m.user_id === me?.id ? ' (you)' : ''), why);
+      input.addEventListener('change', () => { chosen = m; msg.show(null); });
+      return { m, input, why, label };
     });
+    const recheck = () => {
+      for (const x of people) {
+        const clash = clashFor(x.m);
+        x.input.disabled = Boolean(clash);
+        x.label.classList.toggle('full', Boolean(clash));
+        x.why.textContent = clash ? `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}` : '';
+        if (clash && chosen === x.m) { chosen = null; x.input.checked = false; }
+      }
+    };
+    recheck();
+    to.input.addEventListener('input', recheck);
     const stationTeam = teamAtStation(row, p);
     const add = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
     const dialog = h('dialog', { 'aria-labelledby': 'fill-title' },
       h('form', { class: 'form', novalidate: true, method: 'dialog' },
         h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)}${stationTeam ? ` (${stationTeam})` : ''} from Q${row.number}?`),
-        h('div', { class: 'pick-people', role: 'radiogroup', 'aria-labelledby': 'fill-title' }, people),
+        h('fieldset', { class: 'pick-people' }, h('legend', { class: 'visually-hidden' }, 'Who watches it'), people.map((x) => x.label)),
         to.el, msg.el,
         h('div', { class: 'actions' }, add,
           h('button', { class: 'pill secondary block', type: 'button', onclick: () => close() }, 'Cancel'))));
@@ -386,17 +401,19 @@ export async function renderAssign() {
         watches: plan.watches.filter((w) => w.scout_id === chosen.user_id) };
       const clash = byMatch(assignmentsFor({ scoutId: chosen.user_id, ...mine, matches })).find((g) => g.items.length > (twoTeams ? 2 : 1));
       if (clash) return msg.show(`That gives ${chosen.display_name} too many teams in Q${clash.number}.`, 'error');
+      // The sheet stays open until it worked, so a failure (weak signal)
+      // shows its message here instead of vanishing.
       busy(add, 'Adding…', async () => {
         try {
+          await addAndNote(chosen.user_id, 'shift', shift, `${chosen.display_name} now watches ${positionLabel(p)} for Q${row.number}–Q${b}.`, 'grid');
           dialog.close();
           dialog.remove();
-          await addAndNote(chosen.user_id, 'shift', shift, `${chosen.display_name} now watches ${positionLabel(p)} for Q${row.number}–Q${b}.`, 'grid');
         } catch (err) { msg.show(friendlyError(err), 'error'); }
       });
     });
     document.body.append(dialog);
     dialog.showModal();
-    people.find((b) => !b.disabled)?.focus();
+    people.find((x) => !x.input.disabled)?.input.focus();
   }
 
   // The Team at a station in a match, from the schedule ("24436"), if known.
@@ -430,7 +447,7 @@ export async function renderAssign() {
       h('p', { class: 'group-lede' }, lede),
       online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
       showGrid ? coverageEl : null,
-      grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every station is open.') : null,
+      grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,
       message.el,
       membersEl),
   );
