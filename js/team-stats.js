@@ -26,7 +26,8 @@ const average = (nums) => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.
 
 // One row per Team: every Team at the Event (so unscouted ones show up too)
 // plus any other Team someone scouted.
-//   scouted  – how many Submissions (this is Coverage, GLOSSARY.md)
+//   scouted  – how many different matches someone scouted it in (Coverage, GLOSSARY.md)
+//   submissions – how many Submissions (two Scouts on one match = 2)
 //   matches  – how many different matches it played in those (not a no-show)
 //   avg      – average Estimated points per match
 //   bySection – the same average per scoring period
@@ -52,7 +53,8 @@ export function teamRows(config, subs, teams = []) {
     return {
       team,
       name: names.get(team) ?? null,
-      scouted: mine.length,
+      scouted: byMatchKey(mine).length,
+      submissions: mine.length,
       matches: perMatch.length,
       noShows: mine.length - played.length,
       avg: average(perMatch.map((m) => m.total)),
@@ -65,7 +67,8 @@ export function teamRows(config, subs, teams = []) {
 function byMatchKey(subs) {
   const groups = new Map();
   for (const s of subs) {
-    const key = `${s.summary?.level ?? 'qual'}:${s.summary?.match}`;
+    // No match number: it can't be matched with another, so it stands alone.
+    const key = s.summary?.match ? `${s.summary?.level ?? 'qual'}:${s.summary.match}` : s.id;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(s);
   }
@@ -122,7 +125,9 @@ export function fieldSummary(config, all) {
       const answered = subs.filter((s) => s.values?.[key] !== undefined && s.values?.[key] !== null && s.values?.[key] !== '');
       const base = { section: section.label, label: field.label, answered: answered.length, of: subs.length };
       if (field.type === 'counter') {
-        out.push({ ...base, kind: 'average', value: average(answered.map((s) => Number(s.values[key]) || 0)) });
+        // Per match, like the averages: two Scouts on one match count once.
+        out.push({ ...base, kind: 'average',
+          value: average(byMatchKey(answered).map((g) => average(g.map((s) => Number(s.values[key]) || 0)))) });
       } else if (field.type === 'toggle') {
         // A Yes/No left untouched means No, so it counts out of every Submission.
         out.push({ ...base, kind: 'yes', answered: subs.length, yes: answered.filter((s) => s.values[key] === true).length });

@@ -95,7 +95,7 @@ _Avoid_: extra, bonus scouting
 ## Checking data
 
 **Coverage**:
-How many Submissions a Scouting group has for each Team at the Current event. Shown to Leads to help them decide who to watch; never acted on by the app.
+How many matches of each Team at the Current event a Scouting group has scouted (two Scouts on one match count once). Shown to Leads to help them decide who to watch; never acted on by the app.
 _Avoid_: completion, progress
 
 **Data check**:

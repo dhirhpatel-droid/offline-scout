@@ -31,7 +31,8 @@ test('teamRows: averages skip no-shows, unscouted Teams are listed', () => {
   ];
   const rows = teamRows(config, subs, [{ team_number: 23810, team_name: 'A' }, { team_number: 16012 }]);
   const a = rows.find((r) => r.team === 23810);
-  assert.equal(a.scouted, 3);
+  assert.equal(a.scouted, 1); // one match (match 1)
+  assert.equal(a.submissions, 3);
   assert.equal(a.matches, 1); // both played Submissions are for match 1
   assert.equal(a.noShows, 1);
   assert.equal(a.avg, 16);
@@ -79,7 +80,8 @@ test('two Scouts on one match count that match once', () => {
   const m = (match, pts) => sub(1, { 'auto.hiveTips': pts / 20 }, { summary: { team: 1, match, level: 'qual' } });
   // Match 1 seen by two Scouts (20 and 40), match 2 by one (60).
   const [row] = teamRows(config, [m(1, 20), m(1, 40), m(2, 60)]);
-  assert.equal(row.scouted, 3);
+  assert.equal(row.submissions, 3);
+  assert.equal(row.scouted, 2);
   assert.equal(row.matches, 2);
   assert.equal(row.avg, 45); // (30 + 60) / 2, not (20 + 40 + 60) / 3
 });
