@@ -25,6 +25,8 @@ import { findRole } from '../config.js';
 import { cachedEvent } from '../events.js';
 import { findMatch, teamAt, timeOf, isAtEvent } from '../schedule.js';
 import { myPlan } from '../now-scouting.js';
+import { withCustom } from '../custom-rules.js';
+import { cachedQuestions } from '../custom.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -36,7 +38,10 @@ export async function renderMatch({ param }) {
   // Remember whether this Draft is brand new (nothing typed yet), before
   // anything below updates it.
   const freshDraft = !editing && submission.createdAt === submission.updatedAt;
-  const config = await loadConfig(submission.configId);
+  // The Game config plus this group's Custom questions (which never score).
+  const group = await currentGroup();
+  const config = withCustom(await loadConfig(submission.configId),
+    await cachedQuestions(submission.groupId ?? group?.id), submission.values);
   // Fill in the scout from the account if a hidden field still needs it.
   const profile = await cachedProfile();
   if (profile?.display_name && !submission.values['pre.scout']) {
@@ -46,7 +51,6 @@ export async function renderMatch({ param }) {
 
   // Someone else's match: Leads may edit it if the group allows; Scouts only view it.
   const me = await currentUser();
-  const group = await currentGroup();
   const othersMatch = editing && submission.scoutId && me && submission.scoutId !== me.id;
   const readOnly = othersMatch && !(isLead(group) && (group.settings?.leadsCanEdit ?? true));
 
