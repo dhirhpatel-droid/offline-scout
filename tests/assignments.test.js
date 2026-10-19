@@ -83,6 +83,16 @@ test('the Coverage grid lists matches still to play, with who watches each stati
   assert.deepEqual(grid.map((r) => r.number), [2, 3]);
   assert.deepEqual(grid[0].scouts, { red1: [maya], red2: [], blue1: ['u-dhir'], blue2: [] });
   assert.deepEqual(grid[1].scouts, { red1: [maya], red2: ['u-dhir'], blue1: [], blue2: [] });
+  assert.deepEqual(grid[0].doubled, []);
+});
+
+test('a Scout on two stations in one match is listed as doubled', () => {
+  const plan = {
+    shifts: [{ scout_id: maya, position: 'red1', from_match: 3, to_match: 3 }],
+    watches: [{ scout_id: maya, team_number: 23810 }], // red2 in Q3
+  };
+  const q3 = coverageGrid(plan, matches, ['red1', 'red2', 'blue1', 'blue2']).find((r) => r.number === 3);
+  assert.deepEqual(q3.doubled, [maya]);
 });
 
 test('two Scouts on the same station both show in its cell, once each', () => {
@@ -107,4 +117,9 @@ test('short names use the first letter, more when two names start the same', () 
     { user_id: 'd', display_name: '' },
   ]);
   assert.deepEqual([...labels.values()], ['D', 'May', 'Max', '?']);
+});
+
+test('members with the very same name get numbered labels', () => {
+  const labels = shortNames([{ user_id: 'a', display_name: 'Sam' }, { user_id: 'b', display_name: 'Sam' }]);
+  assert.deepEqual([...labels.values()], ['Sam', 'Sam 2']);
 });

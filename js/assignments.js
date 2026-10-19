@@ -94,21 +94,23 @@ export function coverage(plan, matches) {
 
 // The Coverage grid on the Assignments screen: for each qualification match
 // still to play, who watches each station.
-// → [{ number, scheduled_at, scouts: { red1: ['u-maya'], red2: [], ... } }]
-// An empty list means that station is open. The Lead decides what to do
-// about it; the app never fills it in.
+// → [{ number, scheduled_at, scouts: { red1: ['u-maya'], red2: [], ... }, doubled: ['u-dhir'] }]
+// An empty list means that station is open. doubled = Scouts on two stations
+// in that match (allowed, but worth seeing). The Lead decides what to do
+// about either; the app never fills anything in.
 export function coverageGrid(plan, matches, positions) {
   const all = everyonesAssignments(plan, matches);
   return matches
     .filter((m) => m.level === 'qual' && !m.played)
     .sort((a, b) => a.number - b.number)
-    .map((m) => ({
-      number: m.number,
-      scheduled_at: m.scheduled_at ?? null,
-      scouts: Object.fromEntries(positions.map((p) => [p, [...new Set(all
+    .map((m) => {
+      const scouts = Object.fromEntries(positions.map((p) => [p, [...new Set(all
         .filter((a) => a.level === 'qual' && a.number === m.number && a.position === p)
-        .map((a) => a.scoutId))]])),
-    }));
+        .map((a) => a.scoutId))]]));
+      const ids = Object.values(scouts).flat();
+      const doubled = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+      return { number: m.number, scheduled_at: m.scheduled_at ?? null, scouts, doubled };
+    });
 }
 
 // Short labels for the grid's cells: each member's first letter, or more
@@ -125,6 +127,13 @@ export function shortNames(members) {
       && other.slice(0, n).toLowerCase() === name.slice(0, n).toLowerCase())) n++;
     labels.set(m.user_id, name[0].toUpperCase() + name.slice(1, n));
   });
+  // Two members with the very same name: number them ("Sam", "Sam 2").
+  const seen = new Map();
+  for (const [id, label] of labels) {
+    const count = (seen.get(label) ?? 0) + 1;
+    seen.set(label, count);
+    if (count > 1) labels.set(id, `${label} ${count}`);
+  }
   return labels;
 }
 

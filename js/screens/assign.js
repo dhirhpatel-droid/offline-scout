@@ -144,7 +144,9 @@ export async function renderAssign() {
     const team = formField('Team number', { inputmode: 'numeric', pattern: '[0-9]*', class: 'input num-input', list: listId, autocomplete: 'off' },
       'Every match they play here, playoffs included.');
     const teamList = h('datalist', { id: listId }, (data?.teams ?? []).map((t) => h('option', { value: t.team_number }, t.team_name ?? '')));
-    const shiftPart = h('div', { class: 'assign-shift' }, posField, posError, h('div', { class: 'two' }, from.el, to.el));
+    const shiftPart = h('div', { class: 'assign-shift' }, posField, posError, h('div', { class: 'two' }, from.el, to.el),
+      // Under both fields (a hint over one would push the boxes out of line).
+      lastQual ? h('p', { class: 'field-hint' }, `Qualifications run Q${quals[0].number}–Q${lastQual}.`) : null);
     const watchPart = h('div', { class: 'assign-watch', hidden: true }, team.el, teamList);
 
     const kindBtns = [['shift', 'Position shift'], ['watch', 'Team watch']].map(([k, label]) =>
@@ -173,6 +175,8 @@ export async function renderAssign() {
         const b = Number(to.input.value);
         if (!position) { posError.hidden = false; return; }
         if (!Number.isInteger(a) || a < 1) return from.setError('Enter the first match number.');
+        if (lastQual && a > lastQual) return from.setError(`Qualifications end at Q${lastQual}. Enter Q${lastQual} or lower.`);
+        if (!to.input.value.trim()) return to.setError('Enter the last match of this shift.');
         if (!Number.isInteger(b) || b < a) return to.setError(`Enter a match number from ${a} up.`);
         added = { shifts: [...current.shifts, { scout_id: m.user_id, position, from_match: a, to_match: b }], watches: current.watches };
       } else {
@@ -226,7 +230,15 @@ export async function renderAssign() {
     if (!showGrid) return;
     const labels = shortNames(members);
     const nameOf = (id) => members.find((m) => m.user_id === id)?.display_name ?? 'someone not in the group';
-    const open = grid.filter((r) => positions.some((p) => !r.scouts[p].length)).length;
+    // Open stations, counted as station × match (what the Lead acts on).
+    const openCells = grid.flatMap((r) => positions.filter((p) => !r.scouts[p].length).map((p) => ({ r, p })));
+    const first = openCells[0];
+    const range = `Q${grid[0].number}–Q${grid.at(-1).number}`;
+    // Scouts watching two Teams in one match: allowed, but said in words.
+    const doubled = members.map((m) => ({ m, in: grid.filter((r) => r.doubled.includes(m.user_id)) }))
+      .filter((d) => d.in.length);
+    const inGrid = (id) => grid.some((r) => positions.some((p) => r.scouts[p].includes(id)));
+    const strangers = grid.some((r) => positions.some((p) => r.scouts[p].some((id) => !labels.has(id))));
     const rows = showAll ? grid : grid.slice(0, FIRST_ROWS);
     const more = grid.length - rows.length;
 
@@ -247,16 +259,26 @@ export async function renderAssign() {
 
     coverageEl.replaceChildren(...[
       h('h2', { class: 'section-title sub' }, 'Coverage'),
-      h('p', { class: 'assign-gaps' }, open
-        ? `${open} of ${grid.length} matches still to play ${open === 1 ? 'has' : 'have'} an open station.`
-        : 'Every station is covered in every match still to play.'),
+      h('p', { class: 'assign-gaps' }, first
+        ? `${openCells.length} open ${openCells.length === 1 ? 'station' : 'stations'} in ${range}. First: Q${first.r.number} ${positionLabel(first.p)}.`
+        : `Every station is covered in ${range}.`),
+      doubled.length ? h('p', { class: 'assign-gaps' }, doubled.map((d) =>
+        `${d.m.display_name} watches two teams in ${listMatches(d.in)}.`).join(' ')) : null,
+      // The key first, so the letters can be read as you go.
+      h('p', { class: 'coverage-key' }, [
+        ...members.filter((m) => inGrid(m.user_id)).map((m) => `${labels.get(m.user_id)} ${m.display_name}`),
+        strangers ? '? not in the group' : null,
+      ].filter(Boolean).join(' · ')),
       h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
         h('caption', { class: 'visually-hidden' }, 'Who watches each station, in the matches still to play.'),
         h('thead', {}, h('tr', {},
           h('th', { scope: 'col' }, 'Match'),
-          // FRC has 6 stations: short headings (R1), full name for screen readers.
+          // FRC has 6 stations: short headings (R1), with the full name in
+          // hidden text (screen readers don't reliably read an abbr's title).
           positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` },
-            positions.length > 4 ? h('abbr', { title: positionLabel(p) }, positionLabel(p).replace(/[a-z ]/g, '')) : positionLabel(p))))),
+            positions.length > 4
+              ? [h('span', { 'aria-hidden': 'true' }, positionLabel(p).replace(/[a-z ]/g, '')), h('span', { class: 'visually-hidden' }, positionLabel(p))]
+              : positionLabel(p))))),
         h('tbody', {}, rows.map((r, i) => h('tr', { class: i === 0 ? 'next-up' : '' },
           h('th', { scope: 'row', tabindex: '-1' },
             h('span', { class: 'schedule-code num' }, `Q${r.number}`),
@@ -264,10 +286,6 @@ export async function renderAssign() {
             i === 0 && timeOf(r) ? h('span', { class: 'schedule-time' }, timeOf(r)) : null),
           positions.map((p) => cell(r, p)))))),
       showAllBtn,
-      // The key: which letters are whose (only the members in the grid).
-      h('p', { class: 'coverage-key' }, members
-        .filter((m) => grid.some((r) => positions.some((p) => r.scouts[p].includes(m.user_id))))
-        .map((m) => `${labels.get(m.user_id)} ${m.display_name}`).join(' · ')),
     ].filter(Boolean));
   }
 
@@ -292,8 +310,9 @@ export async function renderAssign() {
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
-      showGrid ? coverageEl : null,
       online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
+      showGrid ? coverageEl : null,
+      grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every station is open.') : null,
       message.el,
       membersEl),
   );
@@ -301,3 +320,9 @@ export async function renderAssign() {
 }
 
 const countLabel = (n) => `${n} ${n === 1 ? 'match' : 'matches'}`;
+
+// "Q18", "Q18 and Q19", "Q18, Q19 and Q20"
+function listMatches(rows) {
+  const codes = rows.map((r) => `Q${r.number}`);
+  return codes.length < 2 ? codes.join('') : `${codes.slice(0, -1).join(', ')} and ${codes.at(-1)}`;
+}
