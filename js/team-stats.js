@@ -27,9 +27,12 @@ const average = (nums) => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.
 // One row per Team: every Team at the Event (so unscouted ones show up too)
 // plus any other Team someone scouted.
 //   scouted  – how many Submissions (this is Coverage, GLOSSARY.md)
-//   played   – of those, how many the robot actually played (not a no-show)
-//   avg      – average Estimated points over the matches it played
+//   matches  – how many different matches it played in those (not a no-show)
+//   avg      – average Estimated points per match
 //   bySection – the same average per scoring period
+// Two Scouts can watch the same Team in the same match (a Team watch and a
+// Position shift). Each match must count once, so the Submissions for one
+// match are averaged together first, then the matches are averaged.
 // No-shows are left out of the averages (a robot that didn't come out tells
 // you nothing about how it scores) and counted on their own instead.
 export function teamRows(config, subs, teams = []) {
@@ -39,17 +42,42 @@ export function teamRows(config, subs, teams = []) {
   return [...numbers].map((team) => {
     const mine = subs.filter((s) => s.summary?.team === team);
     const played = mine.filter((s) => !isNoShow(config, s));
-    const parts = played.map((s) => pointsBySection(config, s.values ?? {}));
+    const perMatch = byMatchKey(played).map((group) => {
+      const parts = group.map((s) => pointsBySection(config, s.values ?? {}));
+      return {
+        total: average(group.map((s) => estimatePoints(config, s.values ?? {}))),
+        bySection: Object.fromEntries(sections.map((sec) => [sec.id, average(parts.map((p) => p[sec.id]))])),
+      };
+    });
     return {
       team,
       name: names.get(team) ?? null,
       scouted: mine.length,
-      played: played.length,
+      matches: perMatch.length,
       noShows: mine.length - played.length,
-      avg: average(played.map((s) => estimatePoints(config, s.values ?? {}))),
-      bySection: Object.fromEntries(sections.map((sec) => [sec.id, average(parts.map((p) => p[sec.id]))])),
+      avg: average(perMatch.map((m) => m.total)),
+      bySection: Object.fromEntries(sections.map((sec) => [sec.id, average(perMatch.map((m) => m.bySection[sec.id]))])),
     };
   });
+}
+
+// Submissions grouped by the match they're for ("qual:18").
+function byMatchKey(subs) {
+  const groups = new Map();
+  for (const s of subs) {
+    const key = `${s.summary?.level ?? 'qual'}:${s.summary?.match}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+  return [...groups.values()];
+}
+
+// Saved Submissions for this group that aren't linked to an Event (scouted
+// before the Lead picked one). They can't count in the Teams table, so the
+// screen says how many there are instead of hiding them.
+export function unlinked(subs, { groupId }) {
+  return subs.filter((s) => s.submittedAt && !s.deletedAt && !s.eventId
+    && (!s.groupId || s.groupId === groupId)).length;
 }
 
 // Sorting the All Teams table. key: 'avg' | 'team' | 'scouted' | a section id.
@@ -81,11 +109,15 @@ export function formatAvg(n) {
 //   texts   – written notes, each with its match
 // Fields that only describe the Submission (scout, match, team, position)
 // are skipped: they're shown elsewhere on the Team page.
-export function fieldSummary(config, subs) {
+export function fieldSummary(config, all) {
   const out = [];
+  // Like the averages, everything but "didn't show up" counts only the
+  // matches the robot played.
+  const played = all.filter((s) => !isNoShow(config, s));
   for (const section of config.sections) {
     for (const field of section.fields) {
       if (field.role && field.role !== 'noShow') continue;
+      const subs = field.role === 'noShow' ? all : played;
       const key = fieldKey(section.id, field.id);
       const answered = subs.filter((s) => s.values?.[key] !== undefined && s.values?.[key] !== null && s.values?.[key] !== '');
       const base = { section: section.label, label: field.label, answered: answered.length, of: subs.length };

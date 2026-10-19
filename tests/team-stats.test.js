@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections } from '../js/team-stats.js';
+import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections, unlinked } from '../js/team-stats.js';
 
 const config = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
 
@@ -32,7 +32,7 @@ test('teamRows: averages skip no-shows, unscouted Teams are listed', () => {
   const rows = teamRows(config, subs, [{ team_number: 23810, team_name: 'A' }, { team_number: 16012 }]);
   const a = rows.find((r) => r.team === 23810);
   assert.equal(a.scouted, 3);
-  assert.equal(a.played, 2);
+  assert.equal(a.matches, 1); // both played Submissions are for match 1
   assert.equal(a.noShows, 1);
   assert.equal(a.avg, 16);
   assert.deepEqual(a.bySection, { auto: 11.5, teleop: 2, end: 2.5 });
@@ -73,4 +73,25 @@ test('fieldSummary sums each field by its type', () => {
   assert.equal(s.find((x) => x.kind === 'texts').texts.length, 1);
   // Fields that only describe the Submission are not summed.
   assert.ok(!s.some((x) => x.label === 'Match number'));
+});
+
+test('two Scouts on one match count that match once', () => {
+  const m = (match, pts) => sub(1, { 'auto.hiveTips': pts / 20 }, { summary: { team: 1, match, level: 'qual' } });
+  // Match 1 seen by two Scouts (20 and 40), match 2 by one (60).
+  const [row] = teamRows(config, [m(1, 20), m(1, 40), m(2, 60)]);
+  assert.equal(row.scouted, 3);
+  assert.equal(row.matches, 2);
+  assert.equal(row.avg, 45); // (30 + 60) / 2, not (20 + 40 + 60) / 3
+});
+
+test('fieldSummary leaves no-shows out, except for the no-show field', () => {
+  const subs = [sub(1, { 'auto.leave': true }), sub(1, { 'pre.noShow': true })];
+  const s = fieldSummary(config, subs);
+  assert.equal(s.find((x) => x.label === 'LEAVE').answered, 1);
+  assert.equal(s.find((x) => x.kind === 'yes' && x.section === 'Setup').yes, 1);
+  assert.equal(s.find((x) => x.kind === 'yes' && x.section === 'Setup').answered, 2);
+});
+
+test('unlinked counts saved Submissions with no Event', () => {
+  assert.equal(unlinked([sub(1, {}, { eventId: null }), sub(2), sub(3, {}, { eventId: null, deletedAt: 'x' })], { groupId: 'g1' }), 1);
 });

@@ -24,7 +24,7 @@ Two kinds of JSON: **Game configs** (what to scout) and **Submissions** (one Sco
 }
 ```
 
-- **sections** are the tabs (match periods). `label` is the short tab name, `title` the heading.
+- **sections** are the tabs (match periods). `label` is the short tab name, `title` the heading. Optional: `durationSec` (shown as the field clock on the tab, e.g. 0:30), `shortLabel` (a shorter column heading in the Teams table, e.g. "End"), `showWith` (show this section inside another section's tab instead of its own).
 - **fields** have an `id` (unique within the section), a `type`, and a `label`.
 
 | type | looks like | stored value | `points` means |
