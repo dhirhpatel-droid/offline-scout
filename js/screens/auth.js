@@ -9,7 +9,7 @@
 // You only need signal here once. After that the phone keeps you signed in.
 
 import { h, formField, passwordField, formMessage, busy } from '../ui.js';
-import { signIn, signUp, sendPasswordReset, setPasswordAndName, cachedProfile } from '../account.js';
+import { signIn, signUp, sendPasswordReset, setPasswordAndName, cachedProfile, refreshAccount } from '../account.js';
 import { checkSignUp, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
@@ -119,6 +119,13 @@ const FORMS = {
           // check who has an account); an existing account comes back with no identities.
           if (data?.user && data.user.identities?.length === 0) {
             message.show('There’s already an account with that email. Sign in instead, or reset your password.', 'error');
+            return;
+          }
+          // If the project doesn't ask for email confirmation, sign-up signs
+          // you straight in: no email to wait for.
+          if (data?.session) {
+            await refreshAccount();
+            go('#home');
             return;
           }
           await setSetting('authNote', {
