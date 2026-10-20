@@ -118,7 +118,12 @@ form would not even open, so we lost scouting data when we needed it most.
   `js/custom-rules.js` + `js/custom.js`, editor at #questions). Data checks
   (`js/data-checks.js`: scouts disagree, alliance total far from official score, values that
   don't fit the schedule; Group setting `checkSensitivity`; #checks, Home row, Team pages).
-- **Next:** test Milestones 4–7 on real phones at an event; later items in docs/roadmap.md. Re-run the impeccable
+- **Tested by Dhir on two phones with real accounts (Oct 20, 2026):** Milestones 4–7 all work
+  (event pick, Assignments, Teams, Custom questions, Data checks, offline scouting).
+  For that test "Confirm email" was turned OFF in Supabase Auth (built-in email only reaches
+  the project team). Turn it back ON once custom SMTP is set up (Resend needs a verified
+  domain; Gmail app password is the no-domain option). Not decided yet.
+- **Next:** email sending (above), then a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands
