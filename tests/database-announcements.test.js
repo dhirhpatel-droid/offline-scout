@@ -48,3 +48,11 @@ test('messages must have words and stay short', async () => {
 });
 
 // (Signed-out access is checked against the real database with curl: no grant to anon.)
+
+test('the database sets who posted, their name and the time (no faking)', async () => {
+  const [{ id }] = await as(lead, `insert into public.announcements (group_id, body, created_by, author_name, created_at)
+    values ($1, 'Faked', $2, 'Someone Else', '2030-01-01') returning id`, [groupId, lead.id]);
+  const [row] = await as(lead, 'select author_name, created_at from public.announcements where id = $1', [id]);
+  assert.equal(row.author_name, 'Dhir');
+  assert.ok(new Date(row.created_at).getFullYear() < 2030);
+});
