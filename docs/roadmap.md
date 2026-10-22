@@ -19,7 +19,8 @@ Each one is useful on its own, and each builds on the one before.
 | 6 | **Lead views** (built Oct 19) | All Teams table (sortable, default sort is a Group setting), one page per Team, and Coverage. |
 | 7 | **Data checks and Custom questions** (built Oct 19) | Flags for disagreeing Submissions, totals far from official scores, and impossible values (sensitivity is a Group setting). Leads add Custom questions to any period. |
 | 8 | **Announcements** (built Oct 22) | Leads post short messages to the group; they show on everyone's Home screen and offline. |
-| later | Not scheduled yet | QR backup, running-late estimate, clash flags, pit scouting, FRC 2027 config (after kickoff in January). |
+| 9 | **QR backup** (built Oct 22) | Group setting: Scouts show unsent matches as QR codes, a Lead scans them with no signal at all. |
+| later | Not scheduled yet | Running-late estimate, clash flags, pit scouting, FRC 2027 config (after kickoff in January). |
 
 **Why this order?** Nothing can be shared until there are accounts and groups (2). Leads
 can't see anyone's data until it syncs (3). Assignments need a schedule (4 before 5).

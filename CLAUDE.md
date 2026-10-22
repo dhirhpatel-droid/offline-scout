@@ -54,7 +54,6 @@ form would not even open, so we lost scouting data when we needed it most.
   unless a Group setting turns it on).
 
 ## Not decided yet
-- QR payload format (QR backup is a later, optional Group setting)
 - Pit scouting layout (later)
 - Which FRC data source to use for FRC 2027 (official FRC Events API or The Blue Alliance).
   FTC uses FTCScout (no key) through `supabase/functions/event-data`.
@@ -127,6 +126,12 @@ form would not even open, so we lost scouting data when we needed it most.
   group (`announcements` table, migration applied); phones download them with sync
   (`js/announcements.js`, screen `js/screens/announce.js`, rules in `js/announcement-rules.js`); the newest unread shows
   under Home's cover; full list + compose at #announcements.
+- **QR backup (built Oct 22, 2026):** Group setting `qrBackup` (off by default). Scouts show
+  unsent matches as QR codes (#qr, from My matches); Leads scan them (#scan, Home row).
+  Payload `OS1:` + answers in config order (docs/adr/0004, `js/qr-rules.js`); libraries
+  vendored (`vendor/qrcode-generator-2.0.4.mjs`, `vendor/jsqr-1.4.0.js`). A Lead may upload a
+  member's Submission (migration `*_qr_backup.sql`, `added_by` column). Camera not tested
+  on a real phone yet.
 - **Next:** email sending (above), then a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

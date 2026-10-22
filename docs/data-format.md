@@ -114,3 +114,9 @@ the phone (`withCustom` in `js/custom-rules.js`). An answer is stored in the Sub
 `values` like any other, under `<section>.custom-<question id>`. Custom fields never have
 `points`, so they never change Estimated points. A config field may also give `min`/`max`;
 Data checks flag numbers outside them.
+
+## QR backup
+
+One Submission per QR code: `OS1:` + a JSON array with the answers in the Game config's
+order (no field names, to keep codes small). Both phones must have the same config
+`version`. Details and reasons: docs/adr/0004-qr-backup.md, code: `js/qr-rules.js`.

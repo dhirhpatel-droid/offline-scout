@@ -38,7 +38,8 @@ A scouting system for FIRST teams (FTC and FRC): a Lead plans who watches which 
 - The app shows only scheduled match times (a running-late estimate exists only as an optional Group setting, off by default).
 - The app never makes decisions for the Lead: no automatic assignments, no recommended picks.
 - Announcements (Leads post short messages to the group) were added Oct 22, 2026.
-- Not now: pit scouting, join codes, sharing between groups, QR backup (a later, optional Group setting).
+- QR backup (an optional Group setting) was added Oct 22, 2026.
+- Not now: pit scouting, join codes, sharing between groups.
 - Data is private to each Scouting group and belongs to the group, not the Scout.
 
 ## Brand Commitments
