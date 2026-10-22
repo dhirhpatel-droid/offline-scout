@@ -60,3 +60,22 @@ test('without scout_id it\'s the uploader\'s, as before', async () => {
   assert.equal(row.scout_id, scout2.id);
   assert.equal(row.added_by, scout2.id);
 });
+
+test('added_by can\'t be faked', async () => {
+  const id = crypto.randomUUID();
+  await as(lead, `insert into public.submissions (id, group_id, scout_id, scout_name, config_id, config_version, "values",
+    created_at, updated_at, added_by) values ($1, $2, $3, 'Maya', 'ftc-2026-biobuzz', 3, '{}', now(), now(), $3)`, [id, groupId, scout.id]);
+  const [row] = await as(lead, 'select added_by from public.submissions where id = $1', [id]);
+  assert.equal(row.added_by, lead.id);
+});
+
+test('a scanned edit the Lead may not make says denied (the phone stops retrying)', async () => {
+  // The group doesn't let Leads edit Scouts' matches.
+  await as(lead, `update public.groups set settings = '{"leadsCanEdit": false}' where id = $1`, [groupId]);
+  const s = sub();
+  assert.equal(await save(scout, s), 'saved');
+  assert.equal(await save(lead, { ...s, scout_id: scout.id, updated_at: '2026-10-19T12:00:00Z' }), 'denied');
+  // An older copy is still 'older'.
+  assert.equal(await save(lead, { ...s, scout_id: scout.id, updated_at: '2026-10-19T09:00:00Z' }), 'older');
+  await as(lead, `update public.groups set settings = '{}' where id = $1`, [groupId]);
+});
