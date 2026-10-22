@@ -1120,3 +1120,31 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .checks-about { font-size: var(--fs-sm); margin: calc(-1 * var(--s1)) 0 var(--s3); }
 .team-checks { margin-bottom: var(--s4); }
 .questions-offline { margin-top: var(--s4); }
+
+/* ---------- Announcements ---------- */
+/* Home: the newest unread one, right under the cover. A plain band in the
+   Surface colour (not a card), the message in big bold words. */
+.news-strip {
+  display: grid;
+  gap: var(--s1);
+  margin: 0 var(--s4);
+  padding: var(--s3) var(--s4);
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+}
+.news-strip-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
+.news-strip-body { font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; }
+.news-more { font-weight: 600; }
+/* The list */
+.news-list { list-style: none; padding: 0; }
+.news-item { padding: var(--s4) 0; border-bottom: 1px solid var(--line); }
+.news-meta { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
+.news-new { padding: 0 var(--s2); border-radius: var(--plate-radius); background: var(--text); color: var(--bg); font-weight: 800; font-size: var(--fs-xs); line-height: 1.6; }
+.news-body { margin-top: var(--s1); font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.news-item .small-btn { margin-top: var(--s2); padding-left: 0; }
+.news-form { margin: var(--s4) 0 var(--s2); }
+.news-input { min-height: 96px; padding: var(--s3) var(--s4); font-size: var(--fs-lg); resize: vertical; }
+.news-count { text-align: right; margin-top: var(--s1); }
+.news-count.over { color: var(--danger); font-weight: 700; }
+.news-offline { margin-top: var(--s4); }

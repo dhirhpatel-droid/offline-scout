@@ -80,6 +80,10 @@ _Avoid_: follow, team assignment
 The official list of what to scout for one season's game in one Program (e.g. FTC 2026–27 BIOBUZZ), with point values. Published by the app's maintainer and the same for every Scouting group.
 _Avoid_: form, template, settings
 
+**Announcement**:
+A short message (up to 280 characters) a Lead posts to their Scouting group, e.g. "Switch to Red 2 after lunch". It shows on everyone's Home screen until they've seen it, and stays readable offline.
+_Avoid_: notification, post, news
+
 **Custom question**:
 An extra question a Lead adds for their own Scouting group, on top of the Game config. Only that group sees it; it stays until a Lead changes it and never adds to Estimated points.
 _Avoid_: custom field, extra field

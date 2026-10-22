@@ -36,6 +36,7 @@ const PATHS = {
   trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>',
   sortUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   sortDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  announce: '<path d="M4 10v4h3l6 4V6l-6 4H4z"/><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5"/>',
   account: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.2-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/>',
 };
 

@@ -12,6 +12,8 @@ import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
 import { planSummary } from '../assignments.js';
 import { forEvent, teamRows } from '../team-stats.js';
+import { cachedAnnouncements, lastSeen } from '../announcements.js';
+import { unread, whenLabel } from '../announcement-rules.js';
 import { dataChecks, openChecks } from '../data-checks.js';
 import { loadConfig } from '../config.js';
 import { timeOf } from '../schedule.js';
@@ -50,8 +52,23 @@ export async function renderHome() {
       icon('next', 20));
   }
 
+  // Announcements: the newest unread one sits right under the cover, so it's
+  // seen before scouting; otherwise a quiet row (Leads always get one, to post).
+  const [news, seenAt] = await Promise.all([cachedAnnouncements(group.id), lastSeen(group.id)]);
+  const newNews = unread(news, seenAt, me?.id);
+  const newsBlock = newNews.length ? h('a', { class: 'news-strip', href: '#news' },
+    h('span', { class: 'news-strip-head' }, icon('announce', 20),
+      `${newNews[0].author_name || 'Your Lead'} · ${whenLabel(newNews[0].created_at)}`,
+      newNews.length > 1 ? h('span', { class: 'news-more' }, ` · ${newNews.length - 1} more`) : null),
+    h('span', { class: 'news-strip-body' }, newNews[0].body)) : null;
+  const newsRow = !newNews.length && (news.length || lead) ? h('a', { class: 'row', href: '#news' },
+    h('div', {}, h('div', { class: 'title' }, 'Announcements'),
+      h('div', { class: 'sub' }, news.length ? `Latest: ${news[0].body}` : 'Post a message to everyone in your group')),
+    icon('next', 20)) : null;
+
   const el = h('div', { class: 'screen home-screen' },
     nowBlock(next),
+    newsBlock,
     h('main', { class: 'content' },
       h('ul', { class: 'rows home-rows' },
         h('li', {}, h('a', { class: 'row', href: '#saved' },
@@ -67,6 +84,7 @@ export async function renderHome() {
             h('div', { class: 'sub' }, `${groupLabel(group)} · ${lead ? 'Lead' : 'Scout'}`)),
           icon('next', 20))),
         h('li', {}, eventRow(group, lead, eventData)),
+        newsRow ? h('li', {}, newsRow) : null,
         checksRow ? h('li', {}, checksRow) : null,
         teamsRow ? h('li', {}, teamsRow) : null,
         plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },

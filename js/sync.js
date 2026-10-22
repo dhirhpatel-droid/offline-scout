@@ -17,6 +17,7 @@ import {
 import { toServer, decide, fromServer, hasUnsentChanges, claim } from './sync-rules.js';
 import { refreshCurrentEvent } from './events.js';
 import { downloadQuestions } from './custom.js';
+import { downloadAnnouncements } from './announcements.js';
 
 let running = null;
 // The last sync's result, so screens drawn later can show it too.
@@ -90,6 +91,8 @@ async function doSync() {
     await refreshCurrentEvent().catch((err) => console.warn('Event refresh failed:', err));
     // 4. The group's Custom questions, so new matches show them offline.
     if (current) await downloadQuestions(current.id).catch((err) => console.warn('Questions download failed:', err));
+    // 5. Announcements from the group's Leads.
+    if (current) await downloadAnnouncements(current.id).catch((err) => console.warn('Announcements download failed:', err));
 
     result.ok = true;
     result.waiting = await unsentCount();
