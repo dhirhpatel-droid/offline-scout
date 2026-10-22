@@ -55,7 +55,14 @@ test('unpack refuses what it can\'t trust, in words', () => {
   assert.match(unpack(`${PREFIX}[2]`, configs).error, /newer version/);
   const text = pack(config, scoutsSub());
   assert.match(unpack(text, {}).error, /game this phone doesn’t have/);
-  assert.match(unpack(text, { [config.id]: { ...config, version: config.version + 1 } }).error, /different versions/);
+  assert.match(unpack(pack(config, { ...scoutsSub(), scoutId: null }), configs).error, /which Scout/);
+  assert.match(unpack(text, { [config.id]: { ...config, version: config.version + 1 } }).error, /version \d+ of the game.*stays on the Scout’s phone/);
+});
+
+test('a code can say which of the Scout\'s codes it is ("2 of 4")', () => {
+  const { part } = unpack(pack(config, scoutsSub(), [2, 4]), configs);
+  assert.deepEqual(part, { i: 2, n: 4 });
+  assert.equal(unpack(pack(config, scoutsSub()), configs).part, null);
 });
 
 test('mergeAction: add new, replace with a newer edit, keep what\'s newer', () => {

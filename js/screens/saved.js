@@ -53,9 +53,12 @@ export async function renderSaved({ param }) {
     icon(st.state === 'sent' ? 'check' : 'device', 18), h('span', {}, st.text));
   // Offline there's nothing to send with: the status line says they'll send
   // later, and with QR backup on, the Scout can show them as QR codes instead.
-  const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now')
-    : unsent && group?.settings?.qrBackup ? h('a', { class: 'pill', href: '#qr' }, 'Show as QR') : null;
-  if (sendBtn?.tagName === 'BUTTON') sendBtn.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
+  // Phones often *think* they have signal in a gym (venue wifi, one bar) when
+  // sending fails, so with QR backup on, Show as QR is always there too.
+  const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now') : null;
+  const qrBtn = unsent && group?.settings?.qrBackup
+    ? h('a', { class: `pill${sendBtn ? ' secondary' : ''}`, href: '#qr' }, 'Show as QR') : null;
+  sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
   }));
@@ -68,6 +71,7 @@ export async function renderSaved({ param }) {
     bar,
     h('footer', { class: 'bottombar' },
       statusEl,
+      qrBtn,
       sendBtn),
   );
   return { el };

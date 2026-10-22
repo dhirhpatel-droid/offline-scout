@@ -88,7 +88,7 @@ export async function renderHome() {
         h('li', {}, eventRow(group, lead, eventData)),
         newsRow ? h('li', {}, newsRow) : null,
         lead && group.settings?.qrBackup ? h('li', {}, h('a', { class: 'row', href: '#scan' },
-          h('div', {}, h('div', { class: 'title' }, 'Scan scouts’ matches'),
+          h('div', {}, h('div', { class: 'title' }, 'Scan Scouts’ matches'),
             h('div', { class: 'sub' }, 'QR backup: copy matches from phones with no signal')),
           icon('next', 20))) : null,
         checksRow ? h('li', {}, checksRow) : null,

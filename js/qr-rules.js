@@ -9,7 +9,8 @@
 //
 //   [format, id, groupId, eventId, scoutId, scoutName, event, configId,
 //    configVersion, createdAt, updatedAt, submittedAt, deletedAt,
-//    [answers in config order], { answers not in the config, e.g. Custom questions }]
+//    [answers in config order], { answers not in the config, e.g. Custom questions },
+//    [which code this is, how many the Scout is showing] (optional)]
 
 import { fieldKey } from './scoring.js';
 import { refresh } from './submissions.js';
@@ -21,8 +22,9 @@ const toTime = (iso) => (iso ? Date.parse(iso).toString(36) : 0);
 const fromTime = (t) => (t ? new Date(parseInt(t, 36)).toISOString() : null);
 const configKeys = (config) => config.sections.flatMap((s) => s.fields.map((f) => fieldKey(s.id, f.id)));
 
-// One Submission → the text for one QR code.
-export function pack(config, sub) {
+// One Submission → the text for one QR code. part = [i, n] when the Scout is
+// showing n codes, so the Lead's screen can say "Maya: 3 of 4".
+export function pack(config, sub, part = null) {
   const keys = configKeys(config);
   const answers = keys.map((k) => sub.values?.[k] ?? null);
   while (answers.length && answers.at(-1) === null) answers.pop(); // trailing blanks cost bytes
@@ -33,7 +35,7 @@ export function pack(config, sub) {
     FORMAT, sub.id, sub.groupId ?? null, sub.eventId ?? null, sub.scoutId ?? null, sub.summary?.scout ?? '',
     sub.event ?? '', sub.configId, sub.configVersion,
     toTime(sub.createdAt), toTime(sub.updatedAt), toTime(sub.submittedAt), toTime(sub.deletedAt),
-    answers, extra,
+    answers, extra, ...(part ? [part] : []),
   ]).replace(/[\u007f-\uffff]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
 }
 
@@ -46,12 +48,15 @@ export function unpack(text, configs) {
   let a;
   try { a = JSON.parse(text.slice(PREFIX.length)); } catch { return { error: 'That code didn’t read fully. Hold steady and try again.' }; }
   if (!Array.isArray(a) || a[0] !== FORMAT) return { error: 'That code comes from a newer version of Offline Scout. Update this phone.' };
-  const [, id, groupId, eventId, scoutId, scoutName, event, configId, configVersion, created, updated, submitted, deleted, answers, extra] = a;
+  const [, id, groupId, eventId, scoutId, scoutName, event, configId, configVersion, created, updated, submitted, deleted, answers, extra, part] = a;
   if (!UUID.test(id ?? '')) return { error: 'That code didn’t read fully. Hold steady and try again.' };
+  // Whose match it is must be in the code, or it would become the Lead's.
+  if (!scoutId) return { error: 'That match doesn’t say which Scout made it. It stays on their phone and sends when it has signal.' };
   const config = configs[configId];
   if (!config) return { error: 'That match is for a game this phone doesn’t have.' };
   if (config.version !== configVersion) {
-    return { error: 'The two phones have different versions of the game. Open Offline Scout on both with signal once, then try again.' };
+    // Can't be fixed with no signal: say so, and that nothing is lost.
+    return { error: `The Scout’s phone has version ${configVersion} of the game and this one has ${config.version}, so this match can’t be copied. It stays on the Scout’s phone and sends when it has signal.` };
   }
   const values = {};
   configKeys(config).forEach((k, i) => { if (answers?.[i] != null) values[k] = answers[i]; });
@@ -65,7 +70,7 @@ export function unpack(text, configs) {
   refresh(config, sub, new Date(sub.updatedAt));
   sub.updatedAt = fromTime(updated); // refresh() stamps the time; keep the Scout's
   if (scoutName && !sub.summary.scout) sub.summary.scout = scoutName;
-  return { sub };
+  return { sub, part: Array.isArray(part) ? { i: part[0], n: part[1] } : null };
 }
 
 // What to do with a scanned Submission, given this phone's copy (if any):

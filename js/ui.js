@@ -40,6 +40,7 @@ const PATHS = {
   pause: '<path d="M9 6v12M15 6v12"/>',
   play: '<path d="M8 5.5v13l10-6.5z"/>',
   camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
   account: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.2-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/>',
 };
 
@@ -102,8 +103,22 @@ export function savedStatus(text = 'Saved on this phone') {
 }
 
 // A short buzz on Android phones when a button is tapped. iPhones ignore it.
-export function buzz() {
-  navigator.vibrate?.(8);
+export function buzz(pattern = 8) {
+  navigator.vibrate?.(pattern);
+}
+
+// Keep the screen on (Scouts waiting in line to be scanned, a Lead scanning).
+// Returns release(). Phones without it just follow their own sleep setting.
+export function keepScreenOn() {
+  let lock = null;
+  const ask = () => navigator.wakeLock?.request('screen').then((l) => { lock = l; }).catch(() => {});
+  const again = () => { if (document.visibilityState === 'visible') ask(); }; // locks drop when the app is hidden
+  ask();
+  document.addEventListener('visibilitychange', again);
+  return () => {
+    document.removeEventListener('visibilitychange', again);
+    lock?.release().catch(() => {});
+  };
 }
 
 // Asks a yes/no question in a native <dialog>. Resolves true if confirmed.

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "monotonous-spacing",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-22T16:32:45.690Z",
+        "reason": "Claude: index.html is a 43-line app shell with no inline styles; spacing is in css/app.css on a 4/8/12/16/24/32 scale, used unevenly (s2 97×, s6 4×)"
+      }
+    ]
+  }
+}

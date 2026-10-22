@@ -31,7 +31,8 @@ export function syncNow() {
 }
 
 export async function unsentCount() {
-  return (await listAllSubmissions()).filter(hasUnsentChanges).length;
+  // Your own waiting matches (scanned QR copies of other Scouts' don't count).
+  return (await listAllSubmissions()).filter((s) => hasUnsentChanges(s) && !s.viaQr).length;
 }
 
 async function doSync() {
@@ -57,6 +58,10 @@ async function doSync() {
       if (data === 'saved') {
         await putSubmission({ ...sub, syncedAt: sub.updatedAt });
         result.sent += 1;
+      } else if (data === 'denied') {
+        // Not ours to change (a scanned QR copy when the group doesn't let
+        // Leads edit): stop retrying. The Scout's own phone still sends it.
+        await putSubmission({ ...sub, syncedAt: sub.updatedAt });
       }
       // 'older': someone made a newer edit; the download below brings it in.
     }

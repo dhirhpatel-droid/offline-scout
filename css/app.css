@@ -1176,7 +1176,13 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .qr-video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 .qr-aim { position: absolute; inset: 18%; border: 3px solid var(--on-alliance); border-radius: var(--radius); box-shadow: 0 0 0 999px var(--aim-dim); }
 .qr-status { font-weight: 700; min-height: 1.4em; }
-.qr-got { list-style: none; padding: 0; margin: var(--s3) 0; display: grid; gap: var(--s1); }
-.qr-got li { display: flex; align-items: center; gap: var(--s2); }
-.qr-got .num { font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
-.qr-got-by { color: var(--text-2); }
+/* Before the camera starts: the square it will fill, with the button centred */
+.qr-camera.waiting { display: grid; place-items: center; aspect-ratio: 1; border: 2px dashed var(--control-line); background: transparent; }
+/* A code that can't be used: its own line, with a warning icon, kept a few seconds */
+.qr-problem { display: flex; align-items: flex-start; gap: var(--s2); margin-top: var(--s2); padding: var(--s3); border-radius: var(--radius); background: var(--surface); color: var(--text); font-weight: 700; }
+.qr-problem svg { flex: none; color: var(--danger); margin-top: 2px; }
+/* Per Scout: "Maya · 3 of 4", then "all 4" with a check */
+.qr-tally { list-style: none; padding: 0; margin: var(--s3) 0; display: grid; gap: var(--s1); }
+.qr-tally li { display: flex; align-items: center; gap: var(--s2); min-height: 44px; border-bottom: 1px solid var(--line); }
+.qr-tally-name { font-weight: 700; }
+.qr-tally-count { margin-left: auto; font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
