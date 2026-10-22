@@ -110,7 +110,7 @@ try {
           red_score: q < 18 ? 60 + q * 3 : null, blue_score: q < 18 ? 140 - q * 4 : null }));
         matches[4].red = [16415, 23810]; // Q18 Red 2 = 23810
         s.put({ event: ev, teams, matches, savedAt: new Date(Date.now() - 4 * 60000).toISOString() }, 'event:ev1');
-        s.put([{ id: 'g1', program: 'FTC', team_number: 16415, name: 'Lo-Ellen EDIT', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: {}, currentEvent: ev }], 'groups');
+        s.put([{ id: 'g1', program: 'FTC', team_number: 16415, name: 'Lo-Ellen EDIT', role: 'lead', game_config_id: 'ftc-2026-biobuzz', settings: { qrBackup: true }, currentEvent: ev }], 'groups');
         s.put('g1', 'currentGroupId'); s.put('Northern Ontario Qualifier', 'eventName');
         // A pretend plan: Dhir watches Red 1 for Q18–Q20 and follows 23810; Maya has Blue 1.
         const dhir = '00000000-0000-4000-8000-0000000000aa', maya = '00000000-0000-4000-8000-0000000000bb';
@@ -135,6 +135,11 @@ try {
     await shot(t('05-home'));
     await go('#saved');
     await shot(t('08-saved'));
+    await go('#qr');
+    await run(`document.querySelector('.qr-controls .pill:nth-child(2)')?.click(); return 1`); // pause on the first code
+    await shot(t('24-show-qr'));
+    await go('#scan');
+    await shot(t('25-scan'));
     await go('#announcements');
     await shot(t('23-news'));
     await go('#checks');

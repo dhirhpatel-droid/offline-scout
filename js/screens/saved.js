@@ -51,9 +51,11 @@ export async function renderSaved({ param }) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   const statusEl = h('p', { class: `status ${st.state}`, role: 'status' },
     icon(st.state === 'sent' ? 'check' : 'device', 18), h('span', {}, st.text));
-  // Offline there's nothing to press: the status line says they'll send.
-  const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now') : null;
-  sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
+  // Offline there's nothing to send with: the status line says they'll send
+  // later, and with QR backup on, the Scout can show them as QR codes instead.
+  const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now')
+    : unsent && group?.settings?.qrBackup ? h('a', { class: 'pill', href: '#qr' }, 'Show as QR') : null;
+  if (sendBtn?.tagName === 'BUTTON') sendBtn.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
   }));

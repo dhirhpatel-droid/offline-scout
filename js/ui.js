@@ -37,6 +37,9 @@ const PATHS = {
   sortUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   sortDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
   announce: '<path d="M4 10v4h3l6 4V6l-6 4H4z"/><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5"/>',
+  pause: '<path d="M9 6v12M15 6v12"/>',
+  play: '<path d="M8 5.5v13l10-6.5z"/>',
+  camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   account: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.2-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/>',
 };
 

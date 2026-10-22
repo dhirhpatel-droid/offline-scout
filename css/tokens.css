@@ -40,6 +40,8 @@
   --on-alliance: #ffffff;
   --tab-track: rgb(0 0 0 / 0.22); /* darkens the alliance colour behind the period tabs */
   --scrim: rgb(0 0 0 / 0.6);      /* dims the screen behind the confirm sheet */
+  --qr-light: #ffffff;            /* behind a QR code, in both themes: scanners need dark on light */
+  --aim-dim: rgb(0 0 0 / 0.35);   /* darkens the camera picture around the scan square */
   --alliance: var(--neutral-alliance);
 
   /* Type: one family. Condensed heavy for numbers, normal width for words. */
