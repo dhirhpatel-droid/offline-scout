@@ -92,7 +92,10 @@ async function doSync() {
     // 4. The group's Custom questions, so new matches show them offline.
     if (current) await downloadQuestions(current.id).catch((err) => console.warn('Questions download failed:', err));
     // 5. Announcements from the group's Leads.
-    if (current) await downloadAnnouncements(current.id).catch((err) => console.warn('Announcements download failed:', err));
+    if (current) {
+      const news = await downloadAnnouncements(current.id).catch((err) => console.warn('Announcements download failed:', err));
+      result.announcements = Boolean(news?.changed);
+    }
 
     result.ok = true;
     result.waiting = await unsentCount();

@@ -56,12 +56,14 @@ export async function renderHome() {
   // seen before scouting; otherwise a quiet row (Leads always get one, to post).
   const [news, seenAt] = await Promise.all([cachedAnnouncements(group.id), lastSeen(group.id)]);
   const newNews = unread(news, seenAt, me?.id);
-  const newsBlock = newNews.length ? h('a', { class: 'news-strip', href: '#news' },
-    h('span', { class: 'news-strip-head' }, icon('announce', 20),
-      `${newNews[0].author_name || 'Your Lead'} · ${whenLabel(newNews[0].created_at)}`,
-      newNews.length > 1 ? h('span', { class: 'news-more' }, ` · ${newNews.length - 1} more`) : null),
-    h('span', { class: 'news-strip-body' }, newNews[0].body)) : null;
-  const newsRow = !newNews.length && (news.length || lead) ? h('a', { class: 'row', href: '#news' },
+  const newsBlock = newNews.length ? h('a', { class: 'announce-strip', href: '#announcements' },
+    h('span', { class: 'announce-strip-head' }, icon('announce', 20),
+      h('span', {}, h('span', { class: 'visually-hidden' }, 'Announcement from '),
+        `${newNews[0].author_name || 'A Lead'} · ${whenLabel(newNews[0].created_at)}`,
+        newNews.length > 1 ? ` · ${newNews.length - 1} more` : ''),
+      icon('next', 18)),
+    h('span', { class: 'announce-strip-body' }, newNews[0].body)) : null;
+  const newsRow = !newNews.length && (news.length || lead) ? h('a', { class: 'row', href: '#announcements' },
     h('div', {}, h('div', { class: 'title' }, 'Announcements'),
       h('div', { class: 'sub' }, news.length ? `Latest: ${news[0].body}` : 'Post a message to everyone in your group')),
     icon('next', 20)) : null;

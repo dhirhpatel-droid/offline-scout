@@ -22,7 +22,7 @@ import { renderAssign } from './screens/assign.js';
 import { renderTeams, renderTeam } from './screens/teams.js';
 import { renderQuestions } from './screens/questions.js';
 import { renderChecks } from './screens/checks.js';
-import { renderNews } from './screens/news.js';
+import { renderAnnouncements } from './screens/announce.js';
 
 const root = document.getElementById('app');
 
@@ -40,7 +40,7 @@ const routes = {
   team: renderTeam,
   questions: renderQuestions,
   checks: renderChecks,
-  news: renderNews,
+  announcements: renderAnnouncements,
 };
 
 // Screens you can use without a Scouting group.
@@ -126,12 +126,14 @@ startAutoSync(); // send and receive Submissions whenever there's signal
 
 // When a sync brings in or sends something, redraw lists that show it.
 window.addEventListener('scout-sync', (e) => {
-  const { sent, received } = e.detail;
+  const { sent, received, announcements } = e.detail;
   const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
   const realFailure = e.detail.error && !['offline', 'signed-out'].includes(e.detail.error);
   if ((sent || received || realFailure) && ['home', 'saved'].includes(name)) route();
+  // New announcements: Home's strip and the list show them straight away.
+  else if (announcements && ['home', 'announcements'].includes(name)) route();
 });
 window.addEventListener('online', () => {
   const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
-  if (['home', 'saved', 'group'].includes(name)) route();
+  if (['home', 'saved', 'group', 'announcements'].includes(name)) route();
 });

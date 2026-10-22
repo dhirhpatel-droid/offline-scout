@@ -16,7 +16,9 @@ export async function downloadAnnouncements(groupId) {
   const rows = must(await sb.from('announcements')
     .select('id, body, created_by, author_name, created_at')
     .eq('group_id', groupId).order('created_at', { ascending: false }).limit(50));
+  const before = await getSetting(`announcements:${groupId}`);
   await setSetting(`announcements:${groupId}`, rows);
+  rows.changed = JSON.stringify(before ?? []) !== JSON.stringify(rows); // so screens know to redraw
   return rows;
 }
 

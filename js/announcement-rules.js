@@ -12,9 +12,13 @@ export function checkBody(text) {
 }
 
 // The ones this person hasn't seen yet: newer than when they last looked,
-// and not written by them. list is newest first.
-export function unread(list, lastSeenAt, myId) {
-  return list.filter((a) => a.created_by !== myId && (!lastSeenAt || a.created_at > lastSeenAt));
+// and not written by them. A phone that has never opened the list (someone
+// who just joined) only counts the last day, not the whole history.
+// Times are compared as dates, not text. list is newest first.
+export const NEW_FOR_NEWCOMERS_MS = 24 * 60 * 60 * 1000;
+export function unread(list, lastSeenAt, myId, now = Date.now()) {
+  const since = lastSeenAt ? Date.parse(lastSeenAt) : now - NEW_FOR_NEWCOMERS_MS;
+  return list.filter((a) => a.created_by !== myId && Date.parse(a.created_at) > since);
 }
 
 // When it was posted, as short as it can be: "10:42 AM" today,

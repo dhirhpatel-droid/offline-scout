@@ -14,7 +14,12 @@ test('unread: newer than last seen, not my own', () => {
     { id: 'b', created_by: 'me', created_at: '2026-11-21T14:00:00Z' },
     { id: 'a', created_by: 'lead', created_at: '2026-11-21T13:00:00Z' },
   ];
-  assert.deepEqual(unread(list, null, 'me').map((x) => x.id), ['c', 'a']);
+  const now = Date.parse('2026-11-21T16:00:00Z');
+  assert.deepEqual(unread(list, null, 'me', now).map((x) => x.id), ['c', 'a']);
+  // Never opened the list: only the last day counts as new.
+  assert.deepEqual(unread(list, null, 'me', Date.parse('2026-11-22T14:30:00Z')).map((x) => x.id), ['c']);
+  // Different text, same moment: compared as dates.
+  assert.deepEqual(unread(list, '2026-11-21T15:00:00.000+00:00', 'me'), []);
   assert.deepEqual(unread(list, '2026-11-21T13:30:00Z', 'me').map((x) => x.id), ['c']);
   assert.deepEqual(unread(list, '2026-11-21T15:00:00Z', 'me'), []);
 });

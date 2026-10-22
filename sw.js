@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v27';
+const VERSION = 'v28';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -59,7 +59,7 @@ const APP_FILES = [
   'js/screens/teams.js',
   'js/screens/questions.js',
   'js/screens/checks.js',
-  'js/screens/news.js',
+  'js/screens/announce.js',
   'configs/index.json',
   'configs/ftc-2026-biobuzz.json',
   'icons/icon-192.png',

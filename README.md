@@ -58,7 +58,7 @@ js/scoring.js            estimated points from a config + values (pure function)
 js/submissions.js        Submissions: creating, summaries, next match, Alliance positions
 js/fields.js             turns a config field into a widget (counter, Yes/No…)
 js/ui.js                 small helpers: h() element builder, icons, dialog
-js/screens/*.js          home, match, saved, settings, auth, groups, group, event, assign, teams, questions, checks, news
+js/screens/*.js          home, match, saved, settings, auth, groups, group, event, assign, teams, questions, checks, announce
 vendor/                  supabase-js, kept in the repo so it works offline
 supabase/migrations/     database tables and security rules (SQL)
 supabase/functions/      server code that needs secret keys (sending invites)

@@ -1124,7 +1124,7 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* ---------- Announcements ---------- */
 /* Home: the newest unread one, right under the cover. A plain band in the
    Surface colour (not a card), the message in big bold words. */
-.news-strip {
+.announce-strip {
   display: grid;
   gap: var(--s1);
   margin: 0 var(--s4);
@@ -1133,18 +1133,22 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
   background: var(--surface);
   text-decoration: none;
 }
-.news-strip-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
-.news-strip-body { font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; }
-.news-more { font-weight: 600; }
+.announce-strip-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
+.announce-strip-body { font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; }
 /* The list */
-.news-list { list-style: none; padding: 0; }
-.news-item { padding: var(--s4) 0; border-bottom: 1px solid var(--line); }
-.news-meta { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
-.news-new { padding: 0 var(--s2); border-radius: var(--plate-radius); background: var(--text); color: var(--bg); font-weight: 800; font-size: var(--fs-xs); line-height: 1.6; }
-.news-body { margin-top: var(--s1); font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-.news-item .small-btn { margin-top: var(--s2); padding-left: 0; }
-.news-form { margin: var(--s4) 0 var(--s2); }
-.news-input { min-height: 96px; padding: var(--s3) var(--s4); font-size: var(--fs-lg); resize: vertical; }
-.news-count { text-align: right; margin-top: var(--s1); }
-.news-count.over { color: var(--danger); font-weight: 700; }
-.news-offline { margin-top: var(--s4); }
+.announce-list { list-style: none; padding: 0; }
+.announce-item { padding: var(--s4) 0; border-bottom: 1px solid var(--line); }
+.announce-meta { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
+.announce-new { padding: 0 var(--s2); border-radius: var(--plate-radius); background: var(--text); color: var(--bg); font-weight: 800; font-size: var(--fs-xs); line-height: 1.6; }
+.announce-body { margin-top: var(--s1); font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.announce-item .small-btn { margin-top: var(--s2); padding-left: 0; }
+.announce-form { margin: var(--s4) 0 var(--s2); }
+.announce-input { min-height: 96px; padding: var(--s3) var(--s4); font-size: var(--fs-lg); resize: vertical; }
+.announce-count { text-align: right; margin-top: var(--s1); }
+.announce-count.over { color: var(--danger); font-weight: 700; }
+.announce-offline { margin-top: var(--s4); }
+/* Announcements: long messages stay short on Home (the whole thing is a tap away) */
+.announce-strip-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.announce-strip-head > svg:last-child { margin-left: auto; }
+.announce-removed { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap-lg); border-bottom: 1px solid var(--line); color: var(--text-2); font-weight: 600; }
+.announce-item:focus { outline: 3px solid var(--focus); outline-offset: 2px; }

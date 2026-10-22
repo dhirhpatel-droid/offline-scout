@@ -135,7 +135,7 @@ try {
     await shot(t('05-home'));
     await go('#saved');
     await shot(t('08-saved'));
-    await go('#news');
+    await go('#announcements');
     await shot(t('23-news'));
     await go('#checks');
     await shot(t('21-checks'));
