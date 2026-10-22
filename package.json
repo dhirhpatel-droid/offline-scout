@@ -10,6 +10,8 @@
     "start": "python3 scripts/serve.py"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8"
+    "@electric-sql/pglite": "^0.5.8",
+    "jsqr": "1.4.0",
+    "qrcode-generator": "2.0.4"
   }
 }

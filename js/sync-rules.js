@@ -13,6 +13,9 @@ export function toServer(sub) {
   return {
     id: sub.id,
     group_id: sub.groupId,
+    // Whose match it is. Usually this phone's own user; a Lead's phone sends
+    // a scanned QR copy with the Scout's id (the server checks it may).
+    scout_id: sub.scoutId ?? null,
     scout_name: s.scout ?? 'Scout',
     event: sub.event ?? '',
     event_id: sub.eventId ?? null,
