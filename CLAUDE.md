@@ -123,6 +123,10 @@ form would not even open, so we lost scouting data when we needed it most.
   For that test "Confirm email" was turned OFF in Supabase Auth (built-in email only reaches
   the project team). Turn it back ON once custom SMTP is set up (Resend needs a verified
   domain; Gmail app password is the no-domain option). Not decided yet.
+- **Announcements (built Oct 22, 2026):** Leads post short messages (≤280 chars) to the
+  group (`announcements` table, migration applied); phones download them with sync
+  (`js/announcements.js`, rules in `js/announcement-rules.js`); the newest unread shows
+  under Home's cover; full list + compose at #news.
 - **Next:** email sending (above), then a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

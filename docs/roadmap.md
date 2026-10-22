@@ -18,7 +18,8 @@ Each one is useful on its own, and each builds on the one before.
 | 5 | **Assignments** (built Oct 19) | Leads make Position shifts and Team watches. Each Scout's home screen shows "your next matches" with scheduled times. Two Teams in one Match (Group setting) with a switch at the top. Playoff Teams fill in when there's signal. |
 | 6 | **Lead views** (built Oct 19) | All Teams table (sortable, default sort is a Group setting), one page per Team, and Coverage. |
 | 7 | **Data checks and Custom questions** (built Oct 19) | Flags for disagreeing Submissions, totals far from official scores, and impossible values (sensitivity is a Group setting). Leads add Custom questions to any period. |
-| later | Not scheduled yet | QR backup, running-late estimate, clash flags, pit scouting, announcements, FRC 2027 config (after kickoff in January). |
+| 8 | **Announcements** (built Oct 22) | Leads post short messages to the group; they show on everyone's Home screen and offline. |
+| later | Not scheduled yet | QR backup, running-late estimate, clash flags, pit scouting, FRC 2027 config (after kickoff in January). |
 
 **Why this order?** Nothing can be shared until there are accounts and groups (2). Leads
 can't see anyone's data until it syncs (3). Assignments need a schedule (4 before 5).
