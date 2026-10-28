@@ -192,7 +192,7 @@ function comingUp(next) {
         h('span', { class: 'coming-time' }, g.time ?? '')),
       h('span', { class: 'coming-what' }, g.items.map((a) => h('span', { class: 'coming-item' },
         station(positionLabel(a.position), a.position.replace(/\d/, '')),
-        a.team ? bumper(a.team, a.position.replace(/\d/, '')) : h('span', { class: 'coming-tbd' }, 'team not out yet'))))))),
+        a.team ? bumper(a.team, a.position.replace(/\d/, ''), { mine: true }) : h('span', { class: 'coming-tbd' }, 'team not out yet'))))))),
     next.later.length > shown.length ? h('p', { class: 'plain' }, `And ${next.later.length - shown.length} more after that.`) : null);
 }
 
@@ -229,5 +229,5 @@ function eventRow(group, lead, data) {
 function footerStatus(unsent, lastSyncAt) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   return h('p', { class: `status ${st.state}` }, icon(st.state === 'sent' ? 'check' : 'device', 18),
-    h('span', {}, st.state === 'waiting' ? `Saved on this phone · ${unsent} to send` : st.text));
+    h('span', {}, st.text));
 }

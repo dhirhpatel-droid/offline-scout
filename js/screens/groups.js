@@ -3,7 +3,7 @@
 //   #groups/new  – create a group
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, bumper } from '../ui.js';
+import { h, icon, formField, formMessage, busy, bumper, topbar } from '../ui.js';
 import {
   cachedGroups, currentGroup, setCurrentGroup, myPendingInvites, acceptInvite, createGroup, cachedProfile,
   refreshAccount, signOut,
@@ -160,9 +160,7 @@ function renderNewGroup() {
   });
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#groups'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'New group')),
+    topbar('New group', backHref('#groups')),
     h('main', { class: 'content' }, form));
   return { el };
 }

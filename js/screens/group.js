@@ -138,7 +138,7 @@ export async function renderGroup() {
     ['qrBackup', false, 'QR backup', 'For gyms where nobody has signal: scouts show their matches as QR codes, and a Lead scans them.'],
   ];
   const settingsSection = lead ? h('section', {},
-    h('h2', { class: 'section-title sub' }, 'Group settings'),
+    h('h2', { class: 'section-h' }, 'Group settings'),
     ...SETTINGS.map(([key, fallback, label, hint]) => {
       let on = group.settings?.[key] ?? fallback;
       // Offline: show each setting as it is, with nothing to tap.
@@ -237,13 +237,13 @@ export async function renderGroup() {
         h('span', { class: 'now-top-title', 'aria-hidden': 'true' }, 'Group'), null),
       h('p', { class: 'now-hero num', 'aria-hidden': 'true' }, group.team_number),
       h('h1', { class: 'group-name', tabindex: '-1' }, group.name),
-      h('p', { class: 'now-sub' }, `${group.program} team ${group.team_number} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
+      h('p', { class: 'now-sub' }, `${group.program} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
     h('main', { class: 'content' },
-      lead && !isOnline() ? offlineNote('Saved on this phone. Invite people and change settings when it has signal.') : null,
+      lead && !isOnline() ? offlineNote('Your group is saved on this phone; scouting works as usual. Invites and settings change with signal.') : null,
       message.el,
       inviteForm,
       invitesSection,
-      h('h2', { class: 'section-title sub' }, 'Members'),
+      h('h2', { class: 'section-h' }, 'Members'),
       membersNote,
       membersList,
       settingsSection,

@@ -5,7 +5,7 @@
 // Changes need signal; the plan saved on the phone still shows without it.
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, bumper, station, offlineNote } from '../ui.js';
+import { h, icon, formField, formMessage, busy, bumper, station, offlineNote, topbar } from '../ui.js';
 import { currentGroup, cachedMembers, listMembers, currentUser } from '../account.js';
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -83,9 +83,7 @@ export async function renderAssign({ param } = {}) {
     return btn;
   }
 
-  const header = h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
-    h('h1', { tabindex: '-1' }, 'Assignments'));
+  const header = topbar('Assignments', backHref('#home'));
 
   if (!ev) {
     return { el: h('div', { class: 'screen' }, header, h('main', { class: 'content' },
@@ -326,7 +324,7 @@ export async function renderAssign({ param } = {}) {
     } }, `Show all ${grid.length} matches`) : null;
 
     coverageEl.replaceChildren(...[
-      h('h2', { class: 'section-title sub' }, 'Coverage'),
+      h('h2', { class: 'section-h' }, 'Coverage'),
       h('p', { class: 'assign-gaps' }, first
         ? `${openCells.length} open ${openCells.length === 1 ? 'position' : 'positions'} in ${range}. First: Q${first.r.number} ${positionLabel(first.p)}.`
         : `Every position is covered in ${range}.`),
@@ -484,7 +482,7 @@ export async function renderAssign({ param } = {}) {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
       watchTeam && online ? h('p', { class: 'notice' }, `Choose who follows ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
-      online ? null : offlineNote('The plan saved on this phone. Add or remove when it has signal.'),
+      online ? null : offlineNote('Your plan is saved on this phone and still shows here. Adding and removing happen with signal.'),
       showGrid ? coverageEl : null,
       grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,
       message.el,

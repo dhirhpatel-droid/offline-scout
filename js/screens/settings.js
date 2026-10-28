@@ -1,7 +1,7 @@
 // Settings: your account, the game your group scouts, light/dark theme, and storage info.
 
 import { backHref } from '../nav.js';
-import { h, icon, applyTheme, formField, formMessage, busy, confirmDialog } from '../ui.js';
+import { h, icon, applyTheme, formField, formMessage, busy, confirmDialog, topbar } from '../ui.js';
 import { cachedProfile, updateDisplayName, signOut, currentGroup, setGroupGame } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { nowScoutingBar } from '../now-scouting.js';
@@ -84,9 +84,7 @@ export async function renderSettings() {
   themeGroup.append(...themeButtons);
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'Settings')),
+    topbar('Settings', backHref('#home')),
     h('main', { class: 'content' },
       h('section', { class: 'group' }, h('h2', {}, 'Account'), nameForm),
       h('section', { class: 'group' },

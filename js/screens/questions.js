@@ -4,7 +4,7 @@
 // wording. Changes need signal; the list itself shows offline.
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, offlineNote } from '../ui.js';
+import { h, icon, formField, formMessage, busy, offlineNote, topbar } from '../ui.js';
 import { currentGroup } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -77,7 +77,7 @@ export async function renderQuestions() {
   optionsField.el.hidden = true;
   const save = h('button', { class: 'pill block', type: 'submit' }, 'Add question');
   const form = h('form', { class: 'form question-form', novalidate: true },
-    h('h2', { class: 'section-title sub' }, 'Add a question'),
+    h('h2', { class: 'section-h' }, 'Add a question'),
     segmented('When in the match', config.sections.map((s) => [s.id, s.label]), section, (v) => { section = v; }),
     segmented('Answer', QUESTION_TYPES, type, (v) => { type = v; optionsField.el.hidden = type !== 'choice'; }),
     labelField.el, optionsField.el,
@@ -99,9 +99,7 @@ export async function renderQuestions() {
   });
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#group'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'Custom questions')),
+    topbar('Custom questions', backHref('#group')),
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, 'Your own questions, shown in the match. They never add to points.'),
       message.el,
@@ -109,7 +107,7 @@ export async function renderQuestions() {
       hidden.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Hidden (${hidden.length})`, icon('next', 18)),
         h('ul', { class: 'rows' }, hidden.map(row))) : null,
-      online ? form : offlineNote('Saved on this phone. Add or hide questions when it has signal.')),
+      online ? form : offlineNote('Your questions are saved on this phone and still show in matches. Adding and hiding happen with signal.')),
   );
   return { el };
 }

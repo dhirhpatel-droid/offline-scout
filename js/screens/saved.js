@@ -4,7 +4,7 @@
 // Tap one to view or edit it (delete is inside).
 
 import { backHref } from '../nav.js';
-import { h, icon, busy, bumper } from '../ui.js';
+import { h, icon, busy, bumper, topbar } from '../ui.js';
 import { listSubmissions, getSetting } from '../db.js';
 import { positionLabel, matchCode, syncStatus, needsSync } from '../submissions.js';
 import { nowScoutingBar } from '../now-scouting.js';
@@ -65,9 +65,7 @@ export async function renderSaved({ param }) {
   }));
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, everyone ? 'Everyone’s matches' : 'My matches')),
+    topbar(everyone ? 'Everyone’s matches' : 'My matches', backHref('#home')),
     h('main', { class: 'content' }, switcher, body),
     bar,
     h('footer', { class: 'bottombar' },

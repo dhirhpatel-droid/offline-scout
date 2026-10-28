@@ -7,7 +7,7 @@
 // group's), so it works offline. It shows data; it never ranks for a pick.
 
 import { backHref } from '../nav.js';
-import { h, icon, bumper, station, topbar } from '../ui.js';
+import { h, icon, bumper, station, topbar, fill } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -82,7 +82,7 @@ export async function renderTeams() {
   function draw() {
     const sorted = sortRows(rows, sort.key, sort.dir ?? undefined);
     const dir = sort.dir ?? (sort.key === 'team' ? 'asc' : 'desc');
-    table.replaceChildren(
+    fill(table, 
       h('caption', { class: 'visually-hidden' }, `Teams at ${ev.name}. Matches: how many matches your group scouted. Tap a column heading to sort.`),
       h('thead', {}, h('tr', {}, columns.map((c) => {
         const active = c.key === sort.key;
@@ -115,10 +115,17 @@ export async function renderTeams() {
       h('p', { class: 'group-lede' }, `${ev.name} · ${scouted} of ${rows.length} teams scouted`),
       h('p', { class: 'plain teams-note' }, [
         'Avg = estimated points per match, no-shows left out.',
-        lastSyncAt ? ` As of ${timeAgo(lastSyncAt)}.` : ' Only this phone’s matches so far.',
+        lastSyncAt ? ` As of ${timeAgo(lastSyncAt)}.` : ' Not synced yet: only what’s on this phone.',
       ].join('')),
       noEvent ? h('p', { class: 'plain teams-note' }, `${noEvent} saved ${noEvent === 1 ? 'match isn’t' : 'matches aren’t'} counted here: ${noEvent === 1 ? 'it was' : 'they were'} scouted before your event was picked.`) : null,
-      wrap),
+      wrap,
+      h('details', { class: 'help-item teams-help' },
+        h('summary', {}, h('span', {}, 'What the columns mean'), icon('next', 18)),
+        h('dl', {},
+          h('dt', {}, 'Matches'), h('dd', {}, 'How many matches your group scouted this team in (two scouts on one match count once).'),
+          h('dt', {}, 'Avg'), h('dd', {}, 'Estimated points per match, from your scouts’ taps. Not the official score; no-shows left out.'),
+          scoringSections(config).map((s) => [h('dt', {}, s.shortLabel ?? s.label), h('dd', {}, `The same average for ${s.label} only.`)]),
+          h('dt', {}, '—'), h('dd', {}, 'Not scouted yet.')))),
     await nowScoutingBar(),
   );
   return { el };

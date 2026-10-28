@@ -10,7 +10,7 @@
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
 import { backHref } from '../nav.js';
-import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station, topbar, fill } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -157,18 +157,20 @@ export async function renderMatch({ param }) {
       picker.setAttribute('aria-describedby', 'lineup-hint');
       // Picked from the schedule: the Team number and position fields below
       // would only repeat it, so they fold away; this brings them back.
-      const typeInstead = team && !typedByHand ? h('button', { class: 'link-btn on-alliance', type: 'button', onclick: () => {
+      const typeInstead = !typedByHand ? h('button', { class: 'link-btn on-alliance', type: 'button', onclick: () => {
         typedByHand = true;
         updateHeader();
         panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"] input`)?.focus();
       } }, 'Type the team instead') : null;
-      lineupEl.replaceChildren(
+      fill(lineupEl, 
         h('p', { class: 'lineup-hint', id: 'lineup-hint' }, team ? 'Tap another team to change' : 'Tap the team you’re scouting'),
         picker, typeInstead);
     } else {
-      lineupEl.replaceChildren(lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
+      fill(lineupEl, lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
     }
-    foldScheduledFields(canPick && team && team === autoTeam && position && !typedByHand);
+    // The line-up asks "which team?", so the two fields fold away whenever the
+    // schedule knows the match (unless the Scout chose to type it).
+    foldScheduledFields(canPick && !typedByHand && (!team || (team === autoTeam && position)));
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       // With two Teams, each pill already says its position.
@@ -327,7 +329,7 @@ export async function renderMatch({ param }) {
     // On Setup the tab already says "Setup", so its heading is for screen readers only.
     const sameAsTab = !isGuest && !section.durationSec && (section.title ?? section.label) === section.label;
     const title = isGuest
-      ? h('h3', { class: 'section-title sub', id: `guest-${section.id}` }, section.title ?? section.label)
+      ? h('h3', { class: 'section-h', id: `guest-${section.id}` }, section.title ?? section.label)
       : h('h2', { class: `section-title${sameAsTab ? ' visually-hidden' : ''}` }, section.title ?? section.label);
     return [
       title,
@@ -355,7 +357,7 @@ export async function renderMatch({ param }) {
       } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
       host.splice(section.note ? 2 : 1, 0, pointer);
     }
-    panel.replaceChildren(...host, ...guests.flatMap((g) => sectionBlock(g, true)));
+    fill(panel, ...host, ...guests.flatMap((g) => sectionBlock(g, true)));
     if (i === 0 && submission.summary.scout) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }
@@ -425,9 +427,9 @@ export async function renderMatch({ param }) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
         `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     }
-    bottombar.replaceChildren(
+    fill(bottombar, 
       readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`))
-        : savedStatus(handover?.note ?? 'Saved'),
+        : savedStatus(handover?.note ?? 'Saved on this phone'),
       action);
   }
 
@@ -513,7 +515,7 @@ export async function renderMatch({ param }) {
     screen.classList.add('finished');
     panel.removeAttribute('role');
     panel.removeAttribute('aria-labelledby');
-    panel.replaceChildren(
+    fill(panel, 
       h('section', { class: 'finish' },
         h('div', { class: 'finish-head' },
           h('h2', { class: 'finish-title', tabindex: '-1' }, `${code} saved`),
@@ -648,9 +650,7 @@ function clock(sec) {
 
 function notFound() {
   return h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#saved'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'Match not found')),
+    topbar('Match not found', backHref('#saved')),
     h('main', { class: 'content' },
       h('p', { class: 'plain' }, 'This match is no longer on this phone. It may have been deleted.')));
 }

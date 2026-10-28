@@ -16,6 +16,14 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+// Replace an element's children, skipping null/false like h() does (the
+// browser's own replaceChildren() would print the word "null").
+export function fill(el, ...children) {
+  el.replaceChildren();
+  append(el, children);
+  return el;
+}
+
 function append(el, children) {
   for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;

@@ -3,7 +3,7 @@
 // ones at the top and can remove any. Opening this screen marks them read.
 
 import { backHref } from '../nav.js';
-import { h, icon, formMessage, busy, offlineNote } from '../ui.js';
+import { h, icon, formMessage, busy, offlineNote, topbar } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { checkBody, unread, whenLabel, MAX_LENGTH } from '../announcement-rules.js';
@@ -117,9 +117,7 @@ export async function renderAnnouncements() {
   };
 
   const el = h('div', { class: 'screen' },
-    h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
-      h('h1', { tabindex: '-1' }, 'Announcements')),
+    topbar('Announcements', backHref('#home')),
     h('main', { class: 'content' },
       message.el,
       compose,

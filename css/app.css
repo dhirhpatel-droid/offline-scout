@@ -551,8 +551,6 @@ a.row { color: inherit; }
 [data-alliance='none'] .field.tile[aria-pressed='true'] .tile-check { color: var(--primary-bg); background: var(--primary-text); border-color: var(--primary-text); }
 .field.tile:active { transform: scale(0.99); }
 
-/* every section heading looks the same (.section-h, .section-title.sub, .group h2) */
-.section-title.sub { font-size: var(--fs-xl); padding: var(--s6) 0 var(--s2); }
 .scouting-as { margin-top: var(--s4); }
 .danger-zone { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
@@ -1232,3 +1230,27 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .auth-band { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; height: 6px; }
 .auth-band .red { background: var(--red); }
 .auth-band .blue { background: var(--blue); }
+
+/* ---------- Round 2 polish ---------- */
+/* Mine / Everyone is one switch: a track with the chosen side raised (like the period tabs) */
+.list-switch { gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
+.list-switch .seg-link { border-color: transparent; background: transparent; }
+.list-switch .seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+/* Station signs in Coming up are labels, not buttons: outlined, quieter than the bumper */
+.coming-item .station.red, .coming-item .station.blue { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px var(--red); }
+.coming-item .station.blue { box-shadow: inset 0 0 0 2px var(--blue); }
+/* Disabled is solid and quiet (dashed means "Open" in the Coverage grid) */
+.pill:disabled, .pill[aria-disabled='true'] { border-style: solid; border-color: var(--surface-2); }
+/* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
+.schedule-score { white-space: nowrap; }
+.schedule-score .red, .schedule-score .blue { font-weight: 600; }
+.schedule-score .won { font-weight: 800; color: var(--text); }
+/* Check cards: the Open buttons together, "Looks right" a quieter text button */
+.check-actions { display: grid; gap: var(--s1); }
+.check-open { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.check-ok { justify-self: start; min-height: 44px; padding-left: 0; color: var(--text-2); font-weight: 700; }
+/* Teams: the column help */
+.teams-help { margin-top: var(--s3); }
+.teams-help dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); padding-bottom: var(--s3); font-size: var(--fs-sm); }
+.teams-help dt { font-weight: 800; }
+.teams-help dd { margin: 0; color: var(--text-2); }

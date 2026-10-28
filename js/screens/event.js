@@ -77,7 +77,7 @@ export async function renderEvent() {
   const nextMatch = all.find((x) => !x.played);
   const schedule = data && all.length
     ? h('section', {},
-        h('h2', { class: 'section-title sub' }, 'Schedule'),
+        h('h2', { class: 'section-h' }, 'Schedule'),
         nextMatch ? h('p', { class: 'plain schedule-hint' }, 'Tap a team in a match still to play to scout it.') : null,
         // The key explains every look a team can have here.
         mine.size ? h('p', { class: 'schedule-key', 'aria-hidden': 'true' },
@@ -111,7 +111,7 @@ export async function renderEvent() {
         `FTC ${season}–${String((season + 1) % 100).padStart(2, '0')} season`);
       const go = h('button', { class: 'pill block', type: 'submit' }, 'Search');
       picker = h('form', { class: 'form', novalidate: true, role: 'search' },
-        h('h2', { class: 'section-title sub' }, ev ? 'Change event' : 'Find your event'),
+        h('h2', { class: 'section-h' }, ev ? 'Change event' : 'Find your event'),
         search.el, h('div', { class: 'actions' }, go), results);
       search.el.querySelector('label').classList.add('visually-hidden');
 
@@ -181,8 +181,13 @@ export async function renderEvent() {
 // then a bumper per station.
 function matchRow(m, isNext, positions, mine) {
   const code = m.level === 'qual' ? `Q${m.number}` : `P${m.number}${m.game > 1 ? `-${m.game}` : ''}`;
-  const score = m.played && m.red_score != null ? `${m.red_score}–${m.blue_score}` : null;
-  // Words, not just shade: "Played 82–141", "Next 11:06 AM", or the time.
+  // Played: each side's score with its letter and colour (R 102 · B 84),
+  // the winner in bold. Otherwise the time ("Next" on the next match).
+  const score = m.played && m.red_score != null && m.blue_score != null
+    ? h('span', { class: 'schedule-score', 'aria-label': `Red ${m.red_score}, Blue ${m.blue_score}` },
+      h('span', { class: `red${m.red_score > m.blue_score ? ' won' : ''}` }, `R ${m.red_score}`), ' · ',
+      h('span', { class: `blue${m.blue_score > m.red_score ? ' won' : ''}` }, `B ${m.blue_score}`))
+    : null;
   const when = m.played ? (score ?? 'Played') : isNext ? `Next ${timeOf(m) ?? ''}` : timeOf(m) ?? '';
   return h('tr', { class: `${m.played ? 'played' : ''}${isNext ? ' next-up' : ''}` },
     h('th', { scope: 'row' }, h('span', { class: 'schedule-code num' }, code),

@@ -3,7 +3,7 @@
 // Submissions involved. Nothing here changes data; the Lead looks and decides.
 
 import { backHref } from '../nav.js';
-import { h, icon } from '../ui.js';
+import { h, icon, topbar } from '../ui.js';
 import { matchCode } from '../submissions.js';
 import { load } from './teams.js';
 import { dataChecks, openChecks, checkKey } from '../data-checks.js';
@@ -23,11 +23,13 @@ export const SENSITIVITY_WORDS = [['relaxed', 'Relaxed'], ['normal', 'Normal'], 
 export function checkButtons(check, byId, extra = null) {
   const subs = check.subs.map((id) => byId.get(id)).filter(Boolean);
   const scouts = new Set(subs.map((s) => s.summary?.scout));
-  return h('div', { class: 'check-actions' }, subs.map((s) => {
-    const full = `Open ${s.summary?.scout ? `${s.summary.scout}’s` : 'the'} ${matchCode(s.summary)}, team ${s.summary?.team ?? 'not set'}`;
-    const shown = scouts.size === subs.length && s.summary?.scout ? `${s.summary.scout}’s` : `${matchCode(s.summary)} · ${s.summary?.team ?? '?'}`;
-    return h('a', { class: 'small-btn', href: `#match/${s.id}`, 'aria-label': full }, `Open ${shown}`);
-  }), extra);
+  return h('div', { class: 'check-actions' },
+    h('div', { class: 'check-open' }, subs.map((s) => {
+      const full = `Open ${s.summary?.scout ? `${s.summary.scout}’s` : 'the'} ${matchCode(s.summary)}, team ${s.summary?.team ?? 'not set'}`;
+      const shown = scouts.size === subs.length && s.summary?.scout ? `${s.summary.scout}’s` : `${matchCode(s.summary)} · ${s.summary?.team ?? '?'}`;
+      return h('a', { class: 'small-btn', href: `#match/${s.id}`, 'aria-label': full }, `Open ${shown}`);
+    })),
+    extra);
 }
 
 // Keys of the checks this phone marked "Looks right", per group.
@@ -35,7 +37,7 @@ export const okKeys = async (groupId) => (await getSetting(`checksOk:${groupId}`
 
 // "Looks right" / "Look again": remembered on this phone, then redraws.
 export function okButton(check, byId, groupId, ok, on = true) {
-  return h('button', { class: 'small-btn quiet', type: 'button', 'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${check.title}`,
+  return h('button', { class: 'text-btn check-ok', type: 'button', 'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${check.title}`,
     onclick: async () => {
       const key = checkKey(check, byId);
       await setSetting(`checksOk:${groupId}`, on ? [...ok, key] : ok.filter((k) => k !== key));
@@ -45,9 +47,7 @@ export function okButton(check, byId, groupId, ok, on = true) {
 
 export async function renderChecks() {
   const { group, ev, config, data, subs, canSeeAll } = await load();
-  const header = h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
-    h('h1', { tabindex: '-1' }, 'Data checks'));
+  const header = topbar('Data checks', backHref('#home'));
   if (!canSeeAll || !ev) {
     return { el: h('div', { class: 'screen' }, header, h('main', { class: 'content' },
       h('p', { class: 'plain teams-empty' }, !ev ? 'Data checks follow your event. Pick it first.' : 'Data checks are for Leads.'))) };

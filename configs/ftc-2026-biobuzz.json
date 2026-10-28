@@ -169,7 +169,7 @@
       ],
       "durationSec": 30,
       "shortLabel": "End",
-      "note": "The last 30 seconds of Teleop."
+      "note": "The last 30 seconds of Teleop (part of its 2:00)."
     },
     {
       "id": "post",

@@ -139,7 +139,7 @@ export function sendStatus({ unsent, lastSyncAt, result }) {
   if (unsent && result?.error && result.error !== 'offline' && result.error !== 'signed-out') {
     return { state: 'failed', text: 'Couldn’t reach your group. Your matches are safe on this phone.' };
   }
-  if (unsent) return { state: 'waiting', text: `${unsent} waiting · sends when you have signal` };
+  if (unsent) return { state: 'waiting', text: `Saved on this phone · ${unsent} to send` };
   if (lastSyncAt) return { state: 'sent', text: `All sent · ${timeAgo(lastSyncAt)}` };
   return { state: 'none', text: 'Works with no signal' };
 }
