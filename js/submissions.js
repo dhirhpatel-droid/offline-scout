@@ -51,6 +51,8 @@ export function refresh(config, submission, now = new Date()) {
     team: get('teamNumber'),
     position,
     alliance: allianceOf(position),
+    // Only when the robot didn't show, so lists can say why it has 0 points.
+    ...(get('noShow') === true ? { noShow: true } : {}),
   };
   submission.estimatedPoints = estimatePoints(config, submission.values);
   submission.updatedAt = now.toISOString();

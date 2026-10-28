@@ -7,7 +7,7 @@ import { getSetting, listSubmissions, finishDraft } from '../db.js';
 import { currentGroup, currentUser } from '../account.js';
 import { groupLabel, isLead } from '../group-rules.js';
 import { positionLabel, needsSync } from '../submissions.js';
-import { whatsNext, sharedAlliance } from '../now-scouting.js';
+import { whatsNext, sharedAlliance, myPlan } from '../now-scouting.js';
 import { startPlannedMatch } from './match.js';
 import { currentEventData, cachedPlan } from '../events.js';
 import { planSummary } from '../assignments.js';
@@ -76,7 +76,7 @@ export async function renderHome() {
     h('main', { class: 'content' },
       // What's next for you comes first (your Assignments), then, for Leads,
       // the tools they use most; the group and the event come after.
-      comingUp(next),
+      comingUp(next.kind === 'draft' ? { kind: 'assigned', later: (await myPlan()).todo } : next),
       lead ? h('ul', { class: 'rows home-rows', 'aria-label': 'Lead tools' },
         checksRow ? h('li', {}, checksRow) : null,
         teamsRow ? h('li', {}, teamsRow) : null,

@@ -66,7 +66,7 @@ async function route(opts = {}) {
   // Scouting needs a group to scout for.
   if (user && !NO_GROUP_NEEDED.includes(name) && !(await currentGroup())) return redirect('#groups');
 
-  const render = routes[name] ?? routes.home;
+  const render = !name ? routes.home : routes[name] ?? notFound;
   cleanup?.();
   cleanup = null;
   setThemeColor(null);
@@ -97,6 +97,15 @@ async function route(opts = {}) {
           h('button', { class: 'pill secondary block', type: 'button', onclick: () => location.reload() }, 'Reload')))));
     root.querySelector('h1')?.focus();
   }
+}
+
+// A link to a screen that doesn't exist (an old or mistyped address).
+async function notFound() {
+  return { el: h('div', { class: 'screen' },
+    h('header', { class: 'topbar' }, h('h1', { tabindex: '-1' }, 'Page not found')),
+    h('main', { class: 'content' },
+      h('p', { class: 'plain' }, 'That link doesn’t go anywhere in Offline Scout. Your matches are safe on this phone.'),
+      h('div', { class: 'actions crash-actions' }, h('a', { class: 'pill block', href: '#home' }, 'Back to home')))) };
 }
 
 function redirect(hash) {

@@ -37,12 +37,12 @@ export const okKeys = async (groupId) => (await getSetting(`checksOk:${groupId}`
 
 // "Looks right" / "Look again": remembered on this phone, then redraws.
 export function okButton(check, byId, groupId, ok, on = true) {
-  return h('button', { class: 'text-btn check-ok', type: 'button', 'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${check.title}`,
+  return h('button', { class: 'check-ok', type: 'button', 'aria-label': `${on ? 'Looks right' : 'Look again'}: ${check.title}`,
     onclick: async () => {
       const key = checkKey(check, byId);
       await setSetting(`checksOk:${groupId}`, on ? [...ok, key] : ok.filter((k) => k !== key));
       window.dispatchEvent(new HashChangeEvent('hashchange'));
-    } }, on ? 'Looks right' : 'Look again');
+    } }, icon(on ? 'check' : 'back', 18), on ? 'Looks right' : 'Look again');
 }
 
 export async function renderChecks() {
@@ -83,7 +83,7 @@ export async function renderChecks() {
       h('p', { class: 'plain teams-note' }, 'Sensitivity: ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change in Group settings')),
       checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'When two scouts disagree, a total is far from the official score, or a team doesn’t fit the schedule, it shows up here.'),
       marked.length ? h('details', { class: 'team-list' },
-        h('summary', {}, `Marked right (${marked.length})`, icon('next', 18)),
+        h('summary', {}, `Marked right on this phone (${marked.length})`, icon('next', 18)),
         h('ul', { class: 'checks' }, marked.map((c) => item(c, false, false)))) : null),
     await nowScoutingBar(),
   );

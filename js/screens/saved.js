@@ -95,7 +95,7 @@ export function submissionRow(sub, all = [sub], showScout = false) {
     h('span', { class: 'submission-team', 'aria-hidden': 'true' }, bumper(team, alliance)),
     h('span', { class: 'submission-main' },
       h('span', { class: 'submission-title num' }, code),
-      h('span', { class: 'sub' }, [where, showScout && scout, `saved ${time}`].filter(Boolean).join(' · '))),
+      h('span', { class: 'sub' }, [where, sub.summary?.noShow ? 'no-show' : null, showScout && scout, `saved ${time}`].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),
       h('span', { class: 'pts-unit', 'aria-hidden': 'true' }, 'est. pts'),

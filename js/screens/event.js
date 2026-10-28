@@ -81,8 +81,8 @@ export async function renderEvent() {
         nextMatch ? h('p', { class: 'plain schedule-hint' }, 'Tap a team in a match still to play to scout it.') : null,
         // The key explains every look a team can have here.
         mine.size ? h('p', { class: 'schedule-key', 'aria-hidden': 'true' },
-          bumper('1234', 'red', { mine: true }), 'yours, still to play',
-          h('span', { class: 'schedule-key-played' }, bumper('1234', 'red', { mine: true })), 'yours, played') : null,
+          bumper('1234', 'red', { mine: true }), 'your assignment',
+          h('span', { class: 'schedule-key-played' }, bumper('1234', 'red', { mine: true })), 'your assignment, played') : null,
         h('table', { class: 'schedule', style: `--stations: ${positions.length}` },
           h('caption', { class: 'visually-hidden' }, 'Match schedule. Your matches are marked “you scout”.'),
           h('thead', {}, h('tr', {},

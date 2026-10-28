@@ -143,7 +143,8 @@ export async function renderGroup() {
       let on = group.settings?.[key] ?? fallback;
       // Offline: show each setting as it is, with nothing to tap.
       if (!isOnline()) {
-        return h('div', { class: 'setting-row' },
+        // The same tile, greyed (it says why in its hint), showing On/Off.
+        return h('div', { class: 'field tile', role: 'switch', 'aria-checked': String(on), 'aria-disabled': 'true' },
           h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
           h('span', { class: 'setting-state' }, on ? 'On' : 'Off'));
       }

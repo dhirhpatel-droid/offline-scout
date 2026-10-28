@@ -10,7 +10,7 @@
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
 import { backHref } from '../nav.js';
-import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station, topbar, fill } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -357,7 +357,11 @@ export async function renderMatch({ param }) {
       } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
       host.splice(section.note ? 2 : 1, 0, pointer);
     }
-    fill(panel, ...host, ...guests.flatMap((g) => sectionBlock(g, true)));
+    // Two Teams in this match: the counters below are for this one.
+    const scoringFor = pair && i > 0 ? h('p', { class: 'scoring-for' },
+      bumper(submission.summary.team, submission.summary.alliance),
+      `Scoring ${submission.summary.team ?? 'this team'} · ${positionLabel(submission.summary.position)}`) : null;
+    fill(panel, scoringFor, ...host, ...guests.flatMap((g) => sectionBlock(g, true)));
     if (i === 0 && submission.summary.scout) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }

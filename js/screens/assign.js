@@ -221,7 +221,8 @@ export async function renderAssign({ param } = {}) {
     const cancel = h('button', { class: 'pill secondary block', type: 'button', onclick: close }, 'Cancel');
     const formMsg = formMessage(); // problems show here, next to the Add button
 
-    const form = h('form', { class: 'form assign-form', novalidate: true, 'aria-label': `Add an assignment for ${m.display_name}` },
+    const form = h('form', { class: 'form assign-form', novalidate: true, 'aria-labelledby': `add-for-${m.user_id}` },
+      h('h3', { class: 'assign-form-h', id: `add-for-${m.user_id}` }, `New assignment for ${m.display_name}`),
       h('div', { class: 'segmented', role: 'group', 'aria-label': 'Kind of assignment' }, kindBtns),
       shiftPart, watchPart,
       formMsg.el,

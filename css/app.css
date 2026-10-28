@@ -1041,9 +1041,9 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .teams-table .sort.on { color: var(--text); font-weight: 800; }
 .teams-table td.num { font-size: var(--fs-md); font-weight: 700; font-stretch: 75%; padding-inline: var(--s2) 0; }
 .teams-table td.strong { font-size: var(--fs-xl); font-weight: 800; }
-.teams-table .team-link { display: flex; align-items: center; min-height: 52px; }
+.teams-table .team-link { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 52px; }
 .teams-table .team-link .bumper { font-size: var(--fs-lg); }
-.teams-table tr.unscouted .bumper { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
+.teams-table tr.unscouted .bumper { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--control-line); }
 .not-yet { font-size: var(--fs-sm); font-stretch: 100%; font-weight: 600; color: var(--text-2); }
 
 /* One Team: number as the cover, averages like the results screen */
@@ -1077,10 +1077,8 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* Teams table: the team column stays put when the table scrolls sideways,
    the whole row opens the Team page (a click handler on the row). */
 .teams-table thead th:first-child, .teams-table tbody th { position: sticky; left: 0; z-index: 1; background: var(--bg); }
-.teams-table .team-link { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
 .teams-table .team-link-name { max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
 .teams-table th:first-child .sort { width: 100%; }
-.teams-table tr.unscouted .bumper { box-shadow: inset 0 0 0 2px var(--control-line); }
 .teams-table tbody tr:active, .teams-table tbody tr:active th { background: var(--surface); }
 .pick-why { font-size: var(--fs-xs); font-weight: 600; }
 .bumper.open.can-fill { gap: 2px; border-style: solid; color: var(--text); }
@@ -1233,12 +1231,7 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 
 /* ---------- Round 2 polish ---------- */
 /* Mine / Everyone is one switch: a track with the chosen side raised (like the period tabs) */
-.list-switch { gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
-.list-switch .seg-link { border-color: transparent; background: transparent; }
-.list-switch .seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
 /* Station signs in Coming up are labels, not buttons: outlined, quieter than the bumper */
-.coming-item .station.red, .coming-item .station.blue { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px var(--red); }
-.coming-item .station.blue { box-shadow: inset 0 0 0 2px var(--blue); }
 /* Disabled is solid and quiet (dashed means "Open" in the Coverage grid) */
 .pill:disabled, .pill[aria-disabled='true'] { border-style: solid; border-color: var(--surface-2); }
 /* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
@@ -1254,3 +1247,50 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .teams-help dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); padding-bottom: var(--s3); font-size: var(--fs-sm); }
 .teams-help dt { font-weight: 800; }
 .teams-help dd { margin: 0; color: var(--text-2); }
+
+/* ---------- Round 3 polish ---------- */
+/* Every pick-one choice is ONE control: an outlined track with the chosen
+   part filled (like the period tabs and Mine/Everyone). Each part stays
+   ≥ 56px. Position buttons stay separate: each is its own alliance colour. */
+.segmented { gap: 2px; padding: 2px; border: 2px solid var(--control-line); border-radius: var(--radius); }
+.segmented button, .segmented .seg-link { border-color: transparent; border-radius: calc(var(--radius) - 4px); }
+.position-grid .segmented { gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
+.position-grid .segmented button { border-color: var(--control-line); border-radius: var(--radius-md); }
+.position-grid .segmented button[data-color='red'] { border-color: var(--red); }
+.position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
+.segmented.wrap { gap: 2px; }
+/* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
+.field.counter { padding: var(--s1) 0; }
+/* When a period is taller than the screen, a fade above the bottom bar says "more below" */
+.bottombar { position: sticky; }
+.bottombar::before { content: ''; position: absolute; left: 0; right: 0; top: -24px; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
+/* Phones show scrollbars only while scrolling; never a stray bar over the header */
+@media (pointer: coarse) { html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; } }
+/* The match footer's status stays on one line */
+/* Setup: halves sit in one row without their own short dividers; space before the next card */
+.period > .field.half { border-bottom: 0; }
+.period > .field.half + .field.half + * { border-top: 1px solid var(--line); }
+.period > .field.tile { margin: var(--s2) 0; }
+/* Cover screens (Event, Group, Team): the crumb is the same voice as other top-bar titles */
+.now-top-title { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+/* In-match text buttons meet the 56px rule */
+.link-btn.on-alliance { min-height: var(--tap); }
+/* "Discard this match" is red everywhere */
+.now .now-discard { color: var(--on-alliance); text-decoration: underline; text-underline-offset: 3px; }
+/* Focus rings only from the keyboard, not after a tap */
+.announce-item:focus, .assign-note:focus { outline: none; }
+.announce-item:focus-visible, .assign-note:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Outlines on raised grey cards use the stronger line (≥ 3:1 there) */
+:is(.check, .assign-form, .qr-problem, .help-item, .announce-strip) :is(.pill.secondary, .small-btn, .input, .segmented) { border-color: var(--control-line-strong); }
+/* "Looks right": a real (secondary) button with a check, not grey text */
+.check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
+/* Two Teams: say which one you're scoring, right above the counters */
+.scoring-for { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); font-weight: 700; color: var(--text-2); }
+.team-switch button[aria-current='true'] .switch-pos::after { content: ' · now'; }
+/* Offline Group settings: the tile, greyed, with its state and why */
+.field.tile[aria-disabled='true'] { opacity: 1; cursor: not-allowed; border-style: solid; border-color: var(--line); }
+.field.tile[aria-disabled='true'] .field-hint::after { content: ' Change with signal.'; }
+.assign-form-h { font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--s3); }
+.status-two { display: grid; line-height: 1.2; }
+.status-two strong { color: var(--text); font-weight: 800; }
+.status-two > span { font-size: var(--fs-xs); white-space: nowrap; }
