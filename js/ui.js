@@ -90,6 +90,19 @@ export function lineup(match, watched, onPick = null) {
     : h('p', { class: 'lineup' }, side('red'), h('span', { class: 'lineup-vs' }, 'vs'), side('blue'));
 }
 
+// One note for "this phone has no signal right now", the same on every
+// screen: what's still there, and what waits. Never says scouting needs it.
+export function offlineNote(text) {
+  return h('p', { class: 'offline-note', role: 'note' }, icon('device', 18), h('span', {}, text));
+}
+
+// The standard top bar: Back (to where you came from) and the screen's name.
+export function topbar(title, backTo) {
+  return h('header', { class: 'topbar' },
+    h('a', { class: 'icon-btn', href: backTo, 'aria-label': 'Back' }, icon('back')),
+    h('h1', { tabindex: '-1' }, title));
+}
+
 // An alliance station sign: "Red 1" on the alliance colour, square-cornered
 // like the plates over the driver stations.
 export function station(label, alliance) {

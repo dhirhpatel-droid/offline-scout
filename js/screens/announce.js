@@ -2,7 +2,8 @@
 // Everyone reads them (offline too: the phone keeps a copy). Leads write new
 // ones at the top and can remove any. Opening this screen marks them read.
 
-import { h, icon, formMessage, busy } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, formMessage, busy, offlineNote } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { checkBody, unread, whenLabel, MAX_LENGTH } from '../announcement-rules.js';
@@ -111,18 +112,18 @@ export async function renderAnnouncements() {
           : fresh.has(a.id) ? h('span', { class: 'announce-new' }, 'New') : null,
         `${a.author_name || 'A Lead'} · ${whenLabel(a.created_at)}`),
       h('p', { class: 'announce-body' }, a.body),
-      remove);
+      ...(remove ? [remove] : [])); // (the browser's append() would print "null")
     return li;
   };
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Announcements')),
     h('main', { class: 'content' },
       message.el,
       compose,
-      lead && !online ? h('p', { class: 'plain announce-offline' }, 'You can post the next time this phone has signal.') : null,
+      lead && !online ? offlineNote('You can post when this phone has signal.') : null,
       list.length
         ? h('ul', { class: 'announce-list', 'aria-label': 'Announcements, newest first' }, list.map((a, i) => item(a, i)))
         : h('p', { class: 'plain teams-empty' }, lead

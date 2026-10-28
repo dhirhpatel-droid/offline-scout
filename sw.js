@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v30';
+const VERSION = 'v31';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -46,6 +46,7 @@ const APP_FILES = [
   'vendor/qrcode-generator-2.0.4.mjs',
   'vendor/jsqr-1.4.0.js',
   'js/ui.js',
+  'js/nav.js',
   'js/db.js',
   'js/config.js',
   'js/scoring.js',

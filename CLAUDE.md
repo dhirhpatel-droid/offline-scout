@@ -149,7 +149,7 @@ form would not even open, so we lost scouting data when we needed it most.
 - Game rules live in `configs/*.json`. Never hard-code a game's fields in JS or HTML.
 - Every new file must be added to `APP_FILES` in `sw.js`, and `VERSION` bumped when
   shipping, or phones won't get it offline.
-- Never show text that implies internet is needed. The status line says "Saved on this device".
+- Never show text that implies internet is needed. The status line says "Saved on this phone".
 - Colours and sizes only from `css/tokens.css`. Text contrast ≥ 4.5:1, control outlines
   ≥ 3:1, in-match targets ≥ 56px.
 - **Every UI change goes through the impeccable skill** (`PRODUCT.md`, `DESIGN.md`,

@@ -6,7 +6,7 @@
 // Hash routing needs no server setup, so it works on GitHub Pages and offline.
 
 import { getSetting, setSetting, requestPersistentStorage } from './db.js';
-import { setThemeColor, applyTheme } from './ui.js';
+import { setThemeColor, applyTheme, h } from './ui.js';
 import { sb } from './supabase.js';
 import { currentUser, currentGroup, refreshAccount } from './account.js';
 import { startAutoSync } from './sync.js';
@@ -24,6 +24,7 @@ import { renderQuestions } from './screens/questions.js';
 import { renderChecks } from './screens/checks.js';
 import { renderAnnouncements } from './screens/announce.js';
 import { renderShowQr, renderScan } from './screens/qr.js';
+import { noteVisit } from './nav.js';
 
 const root = document.getElementById('app');
 
@@ -51,7 +52,10 @@ const NO_GROUP_NEEDED = ['auth', 'groups', 'group', 'settings'];
 
 let cleanup = null;
 
-async function route() {
+// quiet: a redraw of the same screen (new data from sync): keep the scroll
+// position and focus where they are.
+async function route(opts = {}) {
+  const quiet = opts.quiet === true;
   const [name, param] = location.hash.replace(/^#\/?/, '').split('/');
 
   // You must be signed in to use the app (docs/adr/0002). Signing in needs
@@ -67,16 +71,31 @@ async function route() {
   cleanup = null;
   setThemeColor(null);
 
+  noteVisit(location.hash || '#home');
+  const scrollY = window.scrollY;
   try {
     const view = await render({ param });
     root.replaceChildren(view.el);
     cleanup = view.cleanup ?? null;
-    window.scrollTo(0, 0);
-    // Move focus to the new screen's heading for screen-reader users.
-    root.querySelector('h1')?.focus({ preventScroll: true });
+    if (quiet) {
+      window.scrollTo(0, scrollY);
+    } else {
+      window.scrollTo(0, 0);
+      // Move focus to the new screen's heading for screen-reader users.
+      root.querySelector('h1')?.focus({ preventScroll: true });
+    }
   } catch (err) {
     console.error(err);
-    root.textContent = `Something went wrong: ${err.message}`;
+    // Never a dead end: say what happened and offer a way out.
+    root.replaceChildren(h('div', { class: 'screen' },
+      h('header', { class: 'topbar' }, h('h1', { tabindex: '-1' }, 'Something went wrong')),
+      h('main', { class: 'content' },
+        h('p', { class: 'plain' }, 'Your saved matches are safe on this phone. Go back home, or reload the app.'),
+        h('p', { class: 'plain crash-detail' }, err.message),
+        h('div', { class: 'actions crash-actions' },
+          h('a', { class: 'pill block', href: '#home' }, 'Back to home'),
+          h('button', { class: 'pill secondary block', type: 'button', onclick: () => location.reload() }, 'Reload')))));
+    root.querySelector('h1')?.focus();
   }
 }
 
@@ -132,11 +151,11 @@ window.addEventListener('scout-sync', (e) => {
   const { sent, received, announcements } = e.detail;
   const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
   const realFailure = e.detail.error && !['offline', 'signed-out'].includes(e.detail.error);
-  if ((sent || received || realFailure) && ['home', 'saved'].includes(name)) route();
+  if ((sent || received || realFailure) && ['home', 'saved'].includes(name)) route({ quiet: true });
   // New announcements: Home's strip and the list show them straight away.
-  else if (announcements && ['home', 'announcements'].includes(name)) route();
+  else if (announcements && ['home', 'announcements'].includes(name)) route({ quiet: true });
 });
 window.addEventListener('online', () => {
   const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
-  if (['home', 'saved', 'group', 'announcements'].includes(name)) route();
+  if (['home', 'saved', 'group', 'announcements'].includes(name)) route({ quiet: true });
 });

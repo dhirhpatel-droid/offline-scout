@@ -6,7 +6,8 @@
 // Built from the Submissions on this phone (Leads' phones download the
 // group's), so it works offline. It shows data; it never ranks for a pick.
 
-import { h, icon, bumper, station } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, bumper, station, topbar } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -21,7 +22,7 @@ import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
 import { dataChecks, checksFor, openChecks } from '../data-checks.js';
-import { checkButtons, okKeys } from './checks.js';
+import { checkButtons, okKeys, okButton } from './checks.js';
 
 // Everything the Lead views need (also used by the Checks screen).
 export async function load() {
@@ -38,15 +39,12 @@ export async function load() {
   return { group, ev, config, data, subs, canSeeAll, lastSyncAt, noEvent: unlinked(all, { groupId: group.id }) };
 }
 
-function topbar(title, back = '#home') {
-  return h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: back, 'aria-label': 'Back' }, icon('back')),
-    h('h1', { tabindex: '-1' }, title));
-}
+// The shared top bar, with Back to where you came from.
+const bar = (title, fallback = '#home') => topbar(title, backHref(fallback));
 
 // Why there's nothing to show, as a screen.
 function notice(title, text, link) {
-  return { el: h('div', { class: 'screen' }, topbar(title),
+  return { el: h('div', { class: 'screen' }, bar(title),
     h('main', { class: 'content' }, h('p', { class: 'plain teams-empty' }, text), link)) };
 }
 
@@ -112,7 +110,7 @@ export async function renderTeams() {
   const wrap = h('div', { class: 'teams-wrap', onscroll: (e) => e.currentTarget.classList.toggle('scrolled', e.currentTarget.scrollLeft > 0) }, table);
 
   const el = h('div', { class: 'screen' },
-    topbar('Teams'),
+    bar('Teams'),
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, `${ev.name} · ${scouted} of ${rows.length} teams scouted`),
       h('p', { class: 'plain teams-note' }, [
@@ -161,7 +159,8 @@ export async function renderTeam({ param }) {
 
   const cover = h('section', { class: 'now team-cover', 'data-alliance': 'none' },
     h('div', { class: 'now-top' },
-      h('a', { class: 'icon-btn', href: '#teams', 'aria-label': 'Back to all teams' }, icon('back')), null),
+      h('a', { class: 'icon-btn', href: backHref('#teams'), 'aria-label': 'Back' }, icon('back')),
+      h('span', { class: 'now-top-title', 'aria-hidden': 'true' }, 'Team'), null),
     h('h1', { class: 'now-hero num', tabindex: '-1' }, team),
     // (Some events only list a placeholder name like "Team 23810": skip it.)
     name && name !== `Team ${team}` ? h('p', { class: 'team-cover-name' }, name)
@@ -173,16 +172,18 @@ export async function renderTeam({ param }) {
 
   // Data checks about this Team, first: the Lead should see them before trusting the numbers.
   const byId = new Map(subs.map((s) => [s.id, s]));
+  const ok = await okKeys(group.id);
   const mineChecks = ev ? openChecks(checksFor(dataChecks(config, subs, data ?? {}, group.settings?.checkSensitivity ?? 'normal'), team),
-    await okKeys(group.id), byId) : [];
+    ok, byId) : [];
   // How many of this Team's Submissions those checks are about: the averages
   // below include them, and the Lead should know.
   const flagged = new Set(mineChecks.flatMap((c) => c.subs).filter((id) => byId.get(id)?.summary?.team === team)).size;
   const checksEl = mineChecks.length ? h('section', { class: 'team-checks' },
     h('h2', { class: 'section-h' }, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'}`),
     h('ul', { class: 'checks' }, mineChecks.map((c) => h('li', { class: `check ${c.kind}` },
-      h('h3', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text), checkButtons(c, byId)))),
-    h('p', { class: 'plain teams-note' }, h('a', { href: '#checks' }, 'All data checks'))) : null;
+      h('h3', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text),
+      checkButtons(c, byId, okButton(c, byId, group.id, ok))))),
+    h('p', { class: 'plain teams-note team-checks-all' }, h('a', { href: '#checks' }, 'All data checks'))) : null;
 
   // Averages, laid out like the results screen.
   const averages = row?.matches ? h('section', {},

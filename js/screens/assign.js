@@ -4,7 +4,8 @@
 // assigns anyone by itself (PRODUCT.md: show data, let humans decide).
 // Changes need signal; the plan saved on the phone still shows without it.
 
-import { h, icon, formField, formMessage, busy, bumper, station } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, formField, formMessage, busy, bumper, station, offlineNote } from '../ui.js';
 import { currentGroup, cachedMembers, listMembers, currentUser } from '../account.js';
 import { isLead, sortMembers } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -83,7 +84,7 @@ export async function renderAssign({ param } = {}) {
   }
 
   const header = h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+    h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
     h('h1', { tabindex: '-1' }, 'Assignments'));
 
   if (!ev) {
@@ -387,7 +388,7 @@ export async function renderAssign({ param } = {}) {
       const why = h('span', { class: 'pick-why' });
       const label = h('label', { class: 'pick-person' }, input,
         h('span', {}, m.display_name, m.user_id === me?.id ? ' (you)' : ''), why);
-      input.addEventListener('change', () => { chosen = m; msg.show(null); });
+      input.addEventListener('change', () => { chosen = m; msg.show(null); add.disabled = false; });
       return { m, input, why, label };
     });
     const legend = h('legend', { class: 'visually-hidden' });
@@ -404,7 +405,7 @@ export async function renderAssign({ param } = {}) {
         x.why.textContent = clash ? `${twoTeams ? 'Already 2 teams' : 'Already watching'} in Q${clash.number}`
           : doubled ? `Would watch 2 teams in Q${doubled.number}` : '';
         if (clash) full += 1;
-        if (clash && chosen === x.m) { chosen = null; x.input.checked = false; }
+        if (clash && chosen === x.m) { chosen = null; x.input.checked = false; add.disabled = true; }
       }
       // Screen readers skip disabled radios, so the legend says how many can't.
       legend.textContent = `Who watches it${full ? ` (${full} ${full === 1 ? 'person is' : 'people are'} already full for these matches)` : ''}`;
@@ -412,7 +413,7 @@ export async function renderAssign({ param } = {}) {
     recheck();
     to.input.addEventListener('input', recheck);
     const stationTeam = teamAtStation(row, p);
-    const add = h('button', { class: 'pill block', type: 'submit' }, 'Add shift');
+    const add = h('button', { class: 'pill block', type: 'submit', disabled: true }, 'Add shift'); // until someone is chosen
     const dialog = h('dialog', { 'aria-labelledby': 'fill-title' },
       h('form', { class: 'form', novalidate: true, method: 'dialog' },
         h('h2', { id: 'fill-title' }, `Who watches ${positionLabel(p)}${stationTeam ? ` (${stationTeam})` : ''} from Q${row.number}?`),
@@ -478,7 +479,7 @@ export async function renderAssign({ param } = {}) {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
       watchTeam && online ? h('p', { class: 'notice' }, `Choose who follows ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
-      online ? null : h('p', { class: 'plain' }, 'This is the plan saved on your phone. Adding and removing open up when it next has signal.'),
+      online ? null : offlineNote('The plan saved on this phone. Add or remove when it has signal.'),
       showGrid ? coverageEl : null,
       grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,
       message.el,

@@ -4,7 +4,8 @@
 //            phone and uploaded (as the Scout's) when it has signal
 // Both work with no signal at all: that's the point.
 
-import { h, icon, buzz, keepScreenOn } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, buzz, keepScreenOn, topbar } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { listSubmissions, getSubmission, putSubmission } from '../db.js';
@@ -15,9 +16,8 @@ import { qrSvg, startScanner } from '../qr.js';
 
 const ADVANCE_MS = 2500;
 
-const topbar = (title, back) => h('header', { class: 'topbar' },
-  h('a', { class: 'icon-btn', href: back, 'aria-label': 'Back' }, icon('back')),
-  h('h1', { tabindex: '-1' }, title));
+// The shared top bar, with Back to where you came from.
+const bar = (title, fallback = '#home') => topbar(title, backHref(fallback));
 
 // ---------- a Scout shows their matches ----------
 export async function renderShowQr() {
@@ -27,7 +27,7 @@ export async function renderShowQr() {
   const unsent = mine.filter(needsSync);
   const list = unsent.length ? unsent : mine.filter((s) => s.eventId === group.currentEvent?.id);
   if (!list.length) {
-    return { el: h('div', { class: 'screen' }, topbar('Show as QR', '#saved'), h('main', { class: 'content' },
+    return { el: h('div', { class: 'screen' }, bar('Show as QR', '#saved'), h('main', { class: 'content' },
       h('p', { class: 'plain teams-empty' }, 'No matches to show yet. Matches you save show up here.'))) };
   }
   const configs = new Map();
@@ -67,7 +67,7 @@ export async function renderShowQr() {
   if (list.length > 1) play(true);
 
   const el = h('div', { class: 'screen' },
-    topbar('Show as QR', '#saved'),
+    bar('Show as QR', '#saved'),
     h('main', { class: 'content qr-show' },
       h('p', { class: 'group-lede' }, unsent.length
         ? `${unsent.length} ${unsent.length === 1 ? 'match' : 'matches'} your group doesn’t have yet`
@@ -153,7 +153,8 @@ export async function renderScan() {
 
   // Before the camera starts, the square it'll fill, with the button in it.
   const startBtn = h('button', { class: 'pill big', type: 'button' }, icon('camera', 22), 'Start the camera');
-  const holder = h('div', { class: 'qr-camera waiting' }, startBtn);
+  const waitHint = h('p', { class: 'qr-waiting-hint' }, 'Point it at a Scout’s Show as QR screen. Matches save on this phone.');
+  const holder = h('div', { class: 'qr-camera waiting' }, startBtn, waitHint);
   let release = null;
   let left = false; // the Lead left while the camera was still starting
   startBtn.addEventListener('click', async () => {
@@ -166,13 +167,13 @@ export async function renderScan() {
       status.textContent = 'Point the camera at a Scout’s code.';
     } catch (err) {
       holder.classList.add('waiting');
-      holder.replaceChildren(startBtn);
+      holder.replaceChildren(startBtn, waitHint);
       showProblem(cameraProblem(err));
     }
   });
 
   const el = h('div', { class: 'screen' },
-    topbar('Scan Scouts’ matches', '#home'),
+    bar('Scan Scouts’ matches', '#home'),
     h('main', { class: 'content qr-scan' },
       h('p', { class: 'group-lede' }, 'For when nobody has signal: each Scout opens My matches → Show as QR.'),
       holder, status, problem, tally,

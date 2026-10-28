@@ -3,7 +3,8 @@
 // Questions are hidden, never deleted, so answers already given keep their
 // wording. Changes need signal; the list itself shows offline.
 
-import { h, icon, formField, formMessage, busy } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, formField, formMessage, busy, offlineNote } from '../ui.js';
 import { currentGroup } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -99,16 +100,16 @@ export async function renderQuestions() {
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#group', 'aria-label': 'Back to your group' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#group'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Custom questions')),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, 'Extra questions for your group’s scouts, on top of the game’s. They show in the match and never add to points. To reword one, hide it and add a new one (answers keep their wording).'),
+      h('p', { class: 'group-lede' }, 'Your own questions, shown in the match. They never add to points.'),
       message.el,
       visible.length ? lists : h('p', { class: 'plain' }, 'No questions yet.'),
       hidden.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Hidden (${hidden.length})`, icon('next', 18)),
         h('ul', { class: 'rows' }, hidden.map(row))) : null,
-      online ? form : h('p', { class: 'plain questions-offline' }, 'These are saved on this phone. Add or hide questions next time it has signal.')),
+      online ? form : offlineNote('Saved on this phone. Add or hide questions when it has signal.')),
   );
   return { el };
 }

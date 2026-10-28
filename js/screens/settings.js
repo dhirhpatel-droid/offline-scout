@@ -1,5 +1,6 @@
 // Settings: your account, the game your group scouts, light/dark theme, and storage info.
 
+import { backHref } from '../nav.js';
 import { h, icon, applyTheme, formField, formMessage, busy, confirmDialog } from '../ui.js';
 import { cachedProfile, updateDisplayName, signOut, currentGroup, setGroupGame } from '../account.js';
 import { isLead } from '../group-rules.js';
@@ -84,7 +85,7 @@ export async function renderSettings() {
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Settings')),
     h('main', { class: 'content' },
       h('section', { class: 'group' }, h('h2', {}, 'Account'), nameForm),

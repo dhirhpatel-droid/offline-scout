@@ -3,6 +3,7 @@
 //   #saved/everyone  – everyone's (Leads, or Scouts if the group allows it)
 // Tap one to view or edit it (delete is inside).
 
+import { backHref } from '../nav.js';
 import { h, icon, busy, bumper } from '../ui.js';
 import { listSubmissions, getSetting } from '../db.js';
 import { positionLabel, matchCode, syncStatus, needsSync } from '../submissions.js';
@@ -65,7 +66,7 @@ export async function renderSaved({ param }) {
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, everyone ? 'Everyone’s matches' : 'My matches')),
     h('main', { class: 'content' }, switcher, body),
     bar,
@@ -99,6 +100,7 @@ export function submissionRow(sub, all = [sub], showScout = false) {
       h('span', { class: 'sub' }, [where, showScout && scout, `saved ${time}`].filter(Boolean).join(' · '))),
     h('span', { class: 'pts' },
       h('span', { class: 'value num' }, sub.estimatedPoints),
+      h('span', { class: 'pts-unit', 'aria-hidden': 'true' }, 'est. pts'),
       mixed ? h('span', { class: `sync-chip ${status.state}` }, status.state === 'sent' ? 'Sent' : 'Not sent') : null),
   );
 }

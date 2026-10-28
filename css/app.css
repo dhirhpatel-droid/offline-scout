@@ -100,6 +100,7 @@ input, textarea { caret-color: var(--text); }
 }
 
 .status {
+  text-wrap: balance;
   display: flex;
   align-items: center;
   gap: var(--s2);
@@ -283,7 +284,7 @@ input, textarea { caret-color: var(--text); }
   color: var(--text); /* full contrast: readable in sunlight */
   min-width: var(--tap);
   min-height: var(--tap);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-weight: 700;
 }
 .segmented button[aria-pressed='true'] {
@@ -304,7 +305,7 @@ input, textarea { caret-color: var(--text); }
 .position-grid .segmented button { min-width: 0; padding: 0 var(--s1); }
 .segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); border-color: var(--red); color: var(--on-alliance); }
 .segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--on-alliance); }
-.segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: #7a6200; color: #0e0e10; } /* dark edge: visible on white too */
+.segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: var(--card-yellow-edge); color: var(--on-card-yellow); }
 
 /* Text inputs */
 .input {
@@ -319,7 +320,8 @@ input, textarea { caret-color: var(--text); }
   font-size: var(--fs-lg);
   font-weight: 600;
 }
-.input:focus { border-color: var(--text); outline: none; }
+.input:focus { border-color: var(--text); }
+.input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .input::placeholder { color: var(--text-3); font-weight: 500; }
 textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertical; line-height: 1.4; }
 .input.num-input { font-size: var(--fs-2xl); font-stretch: 75%; font-weight: 800; }
@@ -354,7 +356,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 .submission-row .pts .value { font-size: var(--fs-2xl); line-height: 1; }
 .sync-chip {
   padding: 2px var(--s2);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: var(--fs-xs);
   font-weight: 700;
   background: var(--surface-2);
@@ -369,7 +371,7 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 /* ---------- Settings ---------- */
 
 .group { margin-top: var(--s5); }
-.group h2 { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; color: var(--text); margin-bottom: var(--s2); }
+.group h2 { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; color: var(--text); margin-bottom: var(--s2); }
 .setting-value { font-size: var(--fs-lg); font-weight: 700; }
 .radio-row {
   display: flex;
@@ -392,11 +394,11 @@ dialog {
   margin: auto auto max(env(safe-area-inset-bottom), var(--s4));
   width: min(100% - 32px, 420px);
   border: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: var(--s5);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 20px 50px rgb(0 0 0 / 0.45);
+  box-shadow: var(--shadow-sheet);
 }
 dialog::backdrop { background: var(--scrim); }
 dialog h2 { font-size: var(--fs-xl); font-weight: 800; }
@@ -432,7 +434,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   bottom: 0; /* exactly as tall as the box, so the label sits in its middle */
   min-height: var(--tap);
   min-width: 72px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: var(--fs-sm);
   color: var(--text-2);
@@ -486,7 +488,7 @@ a.row { color: inherit; }
   display: inline-block;
   margin-left: var(--s2);
   padding: 2px var(--s2);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -534,7 +536,7 @@ a.row { color: inherit; }
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--control-line);
   color: transparent;
 }
@@ -549,7 +551,8 @@ a.row { color: inherit; }
 [data-alliance='none'] .field.tile[aria-pressed='true'] .tile-check { color: var(--primary-bg); background: var(--primary-text); border-color: var(--primary-text); }
 .field.tile:active { transform: scale(0.99); }
 
-.section-title.sub { font-size: var(--fs-xl); padding-top: var(--s5); }
+/* every section heading looks the same (.section-h, .section-title.sub, .group h2) */
+.section-title.sub { font-size: var(--fs-xl); padding: var(--s6) 0 var(--s2); }
 .scouting-as { margin-top: var(--s4); }
 .danger-zone { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
@@ -705,7 +708,7 @@ a.row { color: inherit; }
   display: grid;
   place-items: center;
   min-height: var(--tap);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 2px solid var(--control-line);
   font-weight: 700;
 }
@@ -918,7 +921,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 
 /* Focus on alliance-coloured blocks: white ring (≥ 5:1 on every alliance fill) */
 .match-head, .now, .now-bar, .finish { --focus: var(--on-alliance); }
-.status { text-wrap: balance; }
 
 /* Match periods carry the field clock's time under the name */
 .tabs button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
@@ -1186,3 +1188,29 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .qr-tally li { display: flex; align-items: center; gap: var(--s2); min-height: 44px; border-bottom: 1px solid var(--line); }
 .qr-tally-name { font-weight: 700; }
 .qr-tally-count { margin-left: auto; font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
+
+/* ---------- Whole-app consistency ---------- */
+/* Links inside text look like links (not just by where they sit) */
+.plain a, .teams-note a, .field-hint a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
+/* Buttons on a raised grey surface keep a 3:1 edge */
+.check .small-btn, .assign-form .segmented button, .check-actions .small-btn { border-color: var(--control-line-strong); }
+/* One offline note, the same everywhere */
+.offline-note { display: flex; align-items: flex-start; gap: var(--s2); margin: var(--s3) 0; color: var(--text-2); font-size: var(--fs-sm); }
+.offline-note svg { flex: none; margin-top: 1px; }
+.crash-detail { margin-top: var(--s2); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.crash-actions { display: grid; gap: var(--s3); margin-top: var(--s5); }
+/* The last row on Home never hides behind the bottom bar */
+.home-screen .content { padding-bottom: var(--s6); }
+/* Cover screens (Event, Group, Team): the screen's name next to Back */
+.now-top { align-items: center; }
+.now-top-title { margin-right: auto; font-size: var(--fs-md); font-weight: 700; }
+/* My matches: the number says what it is */
+.submission-row .pts-unit { font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); line-height: 1; }
+.team-checks-all { margin-top: var(--s3); }
+.team-checks-all a { display: inline-flex; align-items: center; min-height: 48px; }
+/* Scan: the instructions sit in the camera square until it starts */
+.qr-camera.waiting { gap: var(--s3); align-content: center; }
+.qr-waiting-hint { max-width: 26ch; text-align: center; color: var(--text-2); font-size: var(--fs-sm); }
+.schedule-key { flex-wrap: wrap; }
+.schedule-key-played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
+.schedule-key-played { margin-left: var(--s2); }

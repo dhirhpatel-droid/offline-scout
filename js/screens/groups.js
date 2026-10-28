@@ -2,6 +2,7 @@
 //   #groups      – the list
 //   #groups/new  – create a group
 
+import { backHref } from '../nav.js';
 import { h, icon, formField, formMessage, busy, bumper } from '../ui.js';
 import {
   cachedGroups, currentGroup, setCurrentGroup, myPendingInvites, acceptInvite, createGroup, cachedProfile,
@@ -75,7 +76,7 @@ export async function renderGroups({ param }) {
 
   const el = h('div', { class: 'screen' },
     empty ? joinCover : h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Scouting groups'),
       h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings and account' }, icon('account'))),
     h('main', { class: 'content' },
@@ -160,7 +161,7 @@ function renderNewGroup() {
 
   const el = h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#groups', 'aria-label': 'Back to groups' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#groups'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'New group')),
     h('main', { class: 'content' }, form));
   return { el };

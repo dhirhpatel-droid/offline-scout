@@ -117,12 +117,12 @@ try {
         s.put({ shifts: [{ id: 's1', scout_id: dhir, position: 'red1', from_match: 18, to_match: 20 }, { id: 's2', scout_id: maya, position: 'blue1', from_match: 14, to_match: 20 }],
           watches: [{ id: 'w1', scout_id: dhir, team_number: 23810 }], savedAt: new Date().toISOString() }, 'plan:g1:ev1');
         // Two announcements from another Lead (unread on this phone).
-        s.put([{ id: 'n2', body: 'Lunch is at 12:30 by the pit entrance. Q19 and Q20 scouts eat after your match.', created_by: maya, author_name: 'Maya', created_at: new Date(Date.now() - 6 * 60000).toISOString() },
-          { id: 'n1', body: 'Switch to Red 2 after lunch.', created_by: maya, author_name: 'Maya', created_at: new Date(Date.now() - 90 * 60000).toISOString() }], 'announcements:g1');
+        s.put([{ id: 'n2', body: 'Lunch is at 12:30 by the pit entrance. Q19 and Q20 scouts eat after your match.', created_by: '00000000-0000-4000-8000-0000000000cc', author_name: 'Coach Sam', created_at: new Date(Date.now() - 6 * 60000).toISOString() },
+          { id: 'n1', body: 'Switch to Red 2 after lunch.', created_by: '00000000-0000-4000-8000-0000000000cc', author_name: 'Coach Sam', created_at: new Date(Date.now() - 90 * 60000).toISOString() }], 'announcements:g1');
         // Two Custom questions (Milestone 7).
         s.put([{ id: 'q1', config_id: 'ftc-2026-biobuzz', section: 'teleop', type: 'choice', label: 'Scored from', options: ['Near side', 'Far side'], position: 0, created_at: '2026-10-19', hidden_at: null },
           { id: 'q2', config_id: 'ftc-2026-biobuzz', section: 'post', type: 'toggle', label: 'Helped their partner', options: null, position: 0, created_at: '2026-10-19', hidden_at: null }], 'questions:g1');
-        s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }], 'members:g1');
+        s.put([{ user_id: dhir, role: 'lead', display_name: 'Dhir' }, { user_id: maya, role: 'scout', display_name: 'Maya' }, { user_id: '00000000-0000-4000-8000-0000000000cc', role: 'lead', display_name: 'Coach Sam' }], 'members:g1');
         const sub = tx.objectStore('submissions');
         [[14, 23810, 'red1', 51, 40], [15, 16012, 'red1', 34, 30], [16, 19455, 'blue2', 72, 20], [17, 21229, 'red1', 0, 10]].forEach((a) => sub.put(mk(...a)));
         // Maya's matches (synced from her phone), so the Teams table has a spread.

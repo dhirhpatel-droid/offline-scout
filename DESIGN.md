@@ -325,6 +325,11 @@ Surface fill, 20px corners, 24px padding, sits at the bottom of the screen so th
 - **Teams table:** a plain sortable table (the printed results-sheet look): team bumpers down the left, numbers right-aligned in condensed tabular digits, the active sort heading in Text colour with an arrow icon, a 2px rule under the headings. Unscouted teams show outlined bumpers and "None".
 
 ### Named Rules
+**The Selected Rule.** One meaning per look, everywhere:
+- *Chosen option* (a segment, a tab, a person in a list): filled. Inside a match it fills with the alliance colour; outside a match (no alliance) it fills with the Primary Pill colours (white on dark, black on light). Position buttons fill with their own alliance colour, because the colour is the answer.
+- *Yours* (a team you scout, your assignment): a white plate with alliance-coloured digits and edge. Never used for "chosen".
+- *Not available* (a person who can't take a shift): quiet text and a plain edge, never filled.
+
 **The Printed Sign Rule.** Things that exist as printed signs at an event (bumpers, station signs) get 6px corners; things you tap stay pills and circles.
 
 **The No Side Stripe Rule.** No coloured left borders on rows; say the alliance with a station sign or bumper instead.

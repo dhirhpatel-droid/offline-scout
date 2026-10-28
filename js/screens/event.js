@@ -3,6 +3,7 @@
 // anyone can check who's in a match. Leads search FIRST's events and pick
 // the one the group is at.
 
+import { backHref } from '../nav.js';
 import { h, icon, formField, formMessage, busy, confirmDialog, bumper } from '../ui.js';
 import { currentGroup, cachedProfile } from '../account.js';
 import { isLead } from '../group-rules.js';
@@ -41,8 +42,8 @@ export async function renderEvent() {
   // ---------- the cover ----------
   const cover = h('section', { class: 'now event-cover', 'data-alliance': 'none' },
     h('div', { class: 'now-top' },
-      h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
-      null),
+      h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
+      h('span', { class: 'now-top-title', 'aria-hidden': 'true' }, 'Event'), null),
     ev
       ? [
           h('h1', { class: 'now-hero event-title', tabindex: '-1' }, ev.name),
@@ -78,7 +79,10 @@ export async function renderEvent() {
     ? h('section', {},
         h('h2', { class: 'section-title sub' }, 'Schedule'),
         nextMatch ? h('p', { class: 'plain schedule-hint' }, 'Tap a team in a match still to play to scout it.') : null,
-        mine.size ? h('p', { class: 'schedule-key', 'aria-hidden': 'true' }, bumper('1234', 'red', { mine: true }), 'your assignments') : null,
+        // The key explains every look a team can have here.
+        mine.size ? h('p', { class: 'schedule-key', 'aria-hidden': 'true' },
+          bumper('1234', 'red', { mine: true }), 'yours, still to play',
+          h('span', { class: 'schedule-key-played' }, bumper('1234', 'red', { mine: true })), 'yours, played') : null,
         h('table', { class: 'schedule', style: `--stations: ${positions.length}` },
           h('caption', { class: 'visually-hidden' }, 'Match schedule. Your matches are marked “you scout”.'),
           h('thead', {}, h('tr', {},

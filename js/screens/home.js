@@ -41,10 +41,12 @@ export async function renderHome() {
     // Only the ones not marked "Looks right" on this phone.
     const checks = lead ? openChecks(dataChecks(config, eventSubs, eventData ?? {}, group.settings?.checkSensitivity ?? 'normal'),
       (await getSetting(`checksOk:${group.id}`)) ?? [], new Map(eventSubs.map((s) => [s.id, s]))) : [];
-    checksRow = checks.length ? h('a', { class: 'row', href: '#checks' },
-      h('div', {}, h('div', { class: 'title' }, 'Data checks to look at'),
-        h('div', { class: 'sub' }, `First: ${checks[0].title}`)),
-      h('span', { class: 'row-end' }, h('span', { class: 'num row-count' }, checks.length), icon('next', 20))) : null;
+    // Always there for Leads (rows that come and go are hard to find).
+    checksRow = lead ? h('a', { class: 'row', href: '#checks' },
+      h('div', {}, h('div', { class: 'title' }, 'Data checks'),
+        h('div', { class: 'sub' }, checks.length ? `First: ${checks[0].title}` : 'Nothing looks off')),
+      checks.length ? h('span', { class: 'row-end' }, h('span', { class: 'num row-count', 'aria-label': `${checks.length} to look at` }, checks.length), icon('next', 20))
+        : icon('next', 20)) : null;
     const done = rows.filter((r) => r.scouted).length;
     teamsRow = h('a', { class: 'row', href: '#teams' },
       h('div', {}, h('div', { class: 'title' }, 'Teams'),
@@ -72,6 +74,21 @@ export async function renderHome() {
     nowBlock(next),
     newsBlock,
     h('main', { class: 'content' },
+      // What's next for you comes first (your Assignments), then, for Leads,
+      // the tools they use most; the group and the event come after.
+      comingUp(next),
+      lead ? h('ul', { class: 'rows home-rows', 'aria-label': 'Lead tools' },
+        checksRow ? h('li', {}, checksRow) : null,
+        teamsRow ? h('li', {}, teamsRow) : null,
+        plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },
+          h('div', {},
+            h('div', { class: 'title' }, 'Assignments'),
+            h('div', { class: 'sub' }, planSummary(plan, eventData?.matches ?? []) ?? 'No one assigned yet. Plan who watches what.')),
+          icon('next', 20))) : null,
+        group.settings?.qrBackup ? h('li', {}, h('a', { class: 'row', href: '#scan' },
+          h('div', {}, h('div', { class: 'title' }, 'Scan Scouts’ matches'),
+            h('div', { class: 'sub' }, 'QR backup: copy matches from phones with no signal')),
+          icon('next', 20))) : null) : null,
       h('ul', { class: 'rows home-rows' },
         h('li', {}, h('a', { class: 'row', href: '#saved' },
           h('div', {},
@@ -87,20 +104,9 @@ export async function renderHome() {
           icon('next', 20))),
         h('li', {}, eventRow(group, lead, eventData)),
         newsRow ? h('li', {}, newsRow) : null,
-        lead && group.settings?.qrBackup ? h('li', {}, h('a', { class: 'row', href: '#scan' },
-          h('div', {}, h('div', { class: 'title' }, 'Scan Scouts’ matches'),
-            h('div', { class: 'sub' }, 'QR backup: copy matches from phones with no signal')),
-          icon('next', 20))) : null,
-        checksRow ? h('li', {}, checksRow) : null,
-        teamsRow ? h('li', {}, teamsRow) : null,
-        plan ? h('li', {}, h('a', { class: 'row', href: '#assign' },
-          h('div', {},
-            h('div', { class: 'title' }, 'Assignments'),
-            h('div', { class: 'sub' }, planSummary(plan, eventData?.matches ?? []) ?? 'No one assigned yet. Plan who watches what.')),
-          icon('next', 20))) : null,
+        // Scouts who may see everyone's data get Teams too.
+        !lead && teamsRow ? h('li', {}, teamsRow) : null,
       ),
-
-      comingUp(next),
 
       submissions.length ? h('section', {},
         h('h2', { class: 'section-h' }, 'Recent'),

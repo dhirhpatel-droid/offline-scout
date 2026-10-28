@@ -2,6 +2,7 @@
 // Current event, each with what looks off and buttons to open the
 // Submissions involved. Nothing here changes data; the Lead looks and decides.
 
+import { backHref } from '../nav.js';
 import { h, icon } from '../ui.js';
 import { matchCode } from '../submissions.js';
 import { load } from './teams.js';
@@ -32,10 +33,20 @@ export function checkButtons(check, byId, extra = null) {
 // Keys of the checks this phone marked "Looks right", per group.
 export const okKeys = async (groupId) => (await getSetting(`checksOk:${groupId}`)) ?? [];
 
+// "Looks right" / "Look again": remembered on this phone, then redraws.
+export function okButton(check, byId, groupId, ok, on = true) {
+  return h('button', { class: 'small-btn quiet', type: 'button', 'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${check.title}`,
+    onclick: async () => {
+      const key = checkKey(check, byId);
+      await setSetting(`checksOk:${groupId}`, on ? [...ok, key] : ok.filter((k) => k !== key));
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } }, on ? 'Looks right' : 'Look again');
+}
+
 export async function renderChecks() {
   const { group, ev, config, data, subs, canSeeAll } = await load();
   const header = h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')),
+    h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
     h('h1', { tabindex: '-1' }, 'Data checks'));
   if (!canSeeAll || !ev) {
     return { el: h('div', { class: 'screen' }, header, h('main', { class: 'content' },
@@ -47,18 +58,10 @@ export async function renderChecks() {
   const ok = await okKeys(group.id);
   const checks = openChecks(all, ok, byId);
   const marked = all.filter((c) => !checks.includes(c));
-  // Mark as right, or look again: remembered on this phone only.
-  const toggleOk = async (c, on) => {
-    const key = checkKey(c, byId);
-    await setSetting(`checksOk:${group.id}`, on ? [...ok, key] : ok.filter((k) => k !== key));
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-  };
-  const okButton = (c, on) => h('button', { class: 'small-btn quiet', type: 'button', onclick: () => toggleOk(c, on),
-    'aria-label': `${on ? 'Mark as right' : 'Look again at'}: ${c.title}` }, on ? 'Looks right' : 'Look again');
   const item = (c, on, short) => h('li', { class: `check ${c.kind}` },
     h('h3', { class: 'check-title' }, short ? c.short ?? c.title : c.title),
     h('p', { class: 'check-text' }, c.text),
-    checkButtons(c, byId, okButton(c, on)));
+    checkButtons(c, byId, okButton(c, byId, group.id, ok, on)));
 
   const sections = KINDS.map(([kind, title, about]) => {
     const mine = checks.filter((c) => c.kind === kind);

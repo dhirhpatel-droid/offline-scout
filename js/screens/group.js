@@ -3,7 +3,8 @@
 // a Scout, remove members and cancel Invites. Anyone can leave.
 // Needs signal: members and settings changes only load or save with it.
 
-import { h, icon, formField, formMessage, busy, confirmDialog } from '../ui.js';
+import { backHref } from '../nav.js';
+import { h, icon, formField, formMessage, busy, confirmDialog, offlineNote } from '../ui.js';
 import {
   currentGroup, currentUser, listMembers, cachedMembers, setRole, removeMember, listGroupInvites, cancelInvite, sendInvite,
   setGroupSetting,
@@ -232,12 +233,13 @@ export async function renderGroup() {
     // The cover: the team number, big, like the number on its robot.
     h('section', { class: 'now group-cover', 'data-alliance': 'none' },
       h('div', { class: 'now-top' },
-        h('a', { class: 'icon-btn', href: '#home', 'aria-label': 'Back to home' }, icon('back')), null),
+        h('a', { class: 'icon-btn', href: backHref('#home'), 'aria-label': 'Back' }, icon('back')),
+        h('span', { class: 'now-top-title', 'aria-hidden': 'true' }, 'Group'), null),
       h('p', { class: 'now-hero num', 'aria-hidden': 'true' }, group.team_number),
       h('h1', { class: 'group-name', tabindex: '-1' }, group.name),
       h('p', { class: 'now-sub' }, `${group.program} team ${group.team_number} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
     h('main', { class: 'content' },
-      lead && !isOnline() ? h('p', { class: 'plain group-offline' }, 'Inviting, roles and settings can be changed the next time this phone has signal. Everything here is the copy saved on it.') : null,
+      lead && !isOnline() ? offlineNote('Saved on this phone. Invite people and change settings when it has signal.') : null,
       message.el,
       inviteForm,
       invitesSection,

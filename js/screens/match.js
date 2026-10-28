@@ -9,6 +9,7 @@
 // Tabs come from the game config's sections. A section with "showWith" (e.g.
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
+import { backHref } from '../nav.js';
 import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
@@ -85,8 +86,8 @@ export async function renderMatch({ param }) {
 
   // ---------- header ----------
   const backBtn = h('a', {
-    class: 'icon-btn', href: editing ? '#saved' : '#home',
-    'aria-label': editing ? 'Back to my matches' : 'Back to home (this match stays saved)',
+    class: 'icon-btn', href: backHref(editing ? '#saved' : '#home'),
+    'aria-label': editing ? 'Back' : 'Back (this match stays saved)',
   }, icon('back'));
   const metaEl = h('div', { class: 'meta' });
   const pointsEl = h('span', { class: 'value num' });
@@ -423,7 +424,7 @@ export async function renderMatch({ param }) {
 
     if (editing) {
       syncNow();
-      location.hash = '#saved';
+      location.hash = backHref('#saved'); // e.g. back to Data checks
       return;
     }
     const waiting = await db.finishDraft();
@@ -552,7 +553,7 @@ export async function renderMatch({ param }) {
     });
     if (!ok) return;
     await db.deleteSubmission(submission.id);
-    location.hash = '#saved';
+    location.hash = backHref('#saved'); // e.g. back to Data checks
   }
 
   updateHeader();
@@ -628,7 +629,7 @@ function clock(sec) {
 function notFound() {
   return h('div', { class: 'screen' },
     h('header', { class: 'topbar' },
-      h('a', { class: 'icon-btn', href: '#saved', 'aria-label': 'Back to my matches' }, icon('back')),
+      h('a', { class: 'icon-btn', href: backHref('#saved'), 'aria-label': 'Back' }, icon('back')),
       h('h1', { tabindex: '-1' }, 'Match not found')),
     h('main', { class: 'content' },
       h('p', { class: 'plain' }, 'This match is no longer on this phone. It may have been deleted.')));

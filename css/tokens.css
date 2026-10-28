@@ -23,6 +23,7 @@
   --surface-2: #27272c;
   --line: #36363d;
   --control-line: #6b6b75; /* outlines of buttons: 3:1 against --bg (WCAG 1.4.11) */
+  --control-line-strong: #82828c; /* outlines on --surface / --surface-2: ≥ 3:1 there too */
   --text: #ffffff;
   --text-2: #b9b9c2;
   --text-3: #8f8f99;
@@ -65,6 +66,12 @@
   --tap-lg: 64px;
   --radius: 14px;
   --plate-radius: 6px; /* bumpers and station signs: printed, square-ish */
+  --radius-sm: 10px;   /* small chips and badges */
+  --radius-md: 12px;   /* segments inside a segmented track */
+  --radius-lg: 20px;   /* the confirm sheet */
+  --shadow-sheet: 0 20px 50px rgb(0 0 0 / 0.45);
+  --card-yellow-edge: #7a6200; /* edge of the yellow-card choice: visible on white and black */
+  --on-card-yellow: #0e0e10;
   --bumper-shade: rgb(0 0 0 / 0.25); /* the darker lower edge of a bumper */
   --on-alliance-rule: rgb(255 255 255 / 0.4); /* dividers drawn on the alliance colour */
 
@@ -80,6 +87,7 @@
     --surface-2: #e4e4ea;
     --line: #d3d3da;
     --control-line: #8a8a94;
+    --control-line-strong: #6e6e78;
     --text: #0e0e10;
     --text-2: #45454d;
     --text-3: #64646d;
@@ -100,6 +108,7 @@
   --surface-2: #e4e4ea;
   --line: #d3d3da;
   --control-line: #8a8a94;
+  --control-line-strong: #6e6e78;
   --text: #0e0e10;
   --text-2: #45454d;
   --text-3: #64646d;
