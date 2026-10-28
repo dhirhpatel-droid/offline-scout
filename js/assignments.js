@@ -113,25 +113,23 @@ export function coverageGrid(plan, matches, positions) {
     });
 }
 
-// Short labels for the grid's cells: each member's first letter, or more
-// letters when two names start the same ("Maya" and "Max" → "May", "Max").
+// Labels for the Coverage grid's cells: each member's first name (cut to 6
+// letters so it fits a cell), read without a key. Two members with the same
+// first name get their last initial ("Sam K", "Sam L"), then a number.
 // members: [{ user_id, display_name }] → Map(user_id → label)
 export function shortNames(members) {
-  const names = members.map((m) => (m.display_name ?? '').trim() || '?');
+  const words = members.map((m) => ((m.display_name ?? '').trim() || '?').split(/\s+/));
+  const first = words.map((w) => w[0].slice(0, 6));
   const labels = new Map();
   members.forEach((m, i) => {
-    const name = names[i];
-    let n = 1;
-    // Grow until no other member's name starts with the same letters.
-    while (n < name.length && names.some((other, j) => j !== i
-      && other.slice(0, n).toLowerCase() === name.slice(0, n).toLowerCase())) n++;
-    labels.set(m.user_id, name[0].toUpperCase() + name.slice(1, n));
+    const same = first.filter((f) => f.toLowerCase() === first[i].toLowerCase()).length > 1;
+    labels.set(m.user_id, same && words[i][1] ? `${first[i].slice(0, 4)} ${words[i][1][0].toUpperCase()}` : first[i]);
   });
-  // Two members with the very same name: number them ("Sam", "Sam 2").
+  // Still the same (identical names): number them ("Sam", "Sam 2").
   const seen = new Map();
   for (const [id, label] of labels) {
-    const count = (seen.get(label) ?? 0) + 1;
-    seen.set(label, count);
+    const count = (seen.get(label.toLowerCase()) ?? 0) + 1;
+    seen.set(label.toLowerCase(), count);
     if (count > 1) labels.set(id, `${label} ${count}`);
   }
   return labels;

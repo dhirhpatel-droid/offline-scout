@@ -333,11 +333,16 @@ export async function renderAssign({ param } = {}) {
       note?.where === 'grid' ? noteEl(note) : null,
       doubled.length ? h('p', { class: 'assign-gaps' }, doubled.map((d) =>
         `${d.m.display_name} watches two teams in ${listMatches(d.in)}.`).join(' ')) : null,
-      // The key first, so the letters can be read as you go.
-      h('p', { class: 'coverage-key' }, [
-        ...members.filter((m) => inGrid(m.user_id)).map((m) => `${labels.get(m.user_id)} ${m.display_name}`),
-        strangers ? '? not in the group' : null,
-      ].filter(Boolean).join(' · ')),
+      // Cells show first names; the key only explains the ones that got
+      // shortened ("Sam K = Sam Kim") and "?".
+      (() => {
+        const explain = [
+          ...members.filter((m) => inGrid(m.user_id) && labels.get(m.user_id) !== m.display_name)
+            .map((m) => `${labels.get(m.user_id)} = ${m.display_name}`),
+          strangers ? '? = not in the group' : null,
+        ].filter(Boolean);
+        return explain.length ? h('p', { class: 'coverage-key' }, explain.join(' · ')) : null;
+      })(),
       h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
         h('caption', { class: 'visually-hidden' }, 'Who watches each Alliance position, in the matches still to play.'),
         h('thead', {}, h('tr', {},

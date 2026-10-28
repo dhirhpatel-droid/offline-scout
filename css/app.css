@@ -660,7 +660,6 @@ a.row { color: inherit; }
   overflow-wrap: anywhere;
 }
 
-.auth-hero .now-hero { font-size: var(--fs-num); }
 .auth-hero + .content { padding-top: var(--s3); }
 
 .finish-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; }
@@ -1214,3 +1213,22 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .schedule-key { flex-wrap: wrap; }
 .schedule-key-played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
 .schedule-key-played { margin-left: var(--s2); }
+
+/* ---------- Pressed (every tappable thing answers a tap) ----------
+   A shade change, never a size change, so nothing around it moves. */
+.row:active, .small-btn:active, .segmented button:active, .tabs button:active,
+.pick-person:active, .announce-strip:active, .now-bar:active, .help-item summary:active,
+.team-list summary:active, .submission-row:active, .link-btn:active {
+  background-image: linear-gradient(var(--press), var(--press));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .row, .small-btn, .segmented button, .tabs button, .pick-person, .submission-row { transition: background-color 120ms ease-out, color 120ms ease-out; }
+}
+/* "Type the team instead": a text button on the alliance colour */
+.link-btn.on-alliance { color: var(--on-alliance); min-height: 44px; margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+/* Sign-in cover: a bigger, balanced headline over the field's red | blue split */
+.auth-hero { position: relative; padding-bottom: calc(var(--s5) + 6px); }
+.auth-hero .now-hero { font-size: var(--fs-display-words); text-wrap: balance; }
+.auth-band { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; height: 6px; }
+.auth-band .red { background: var(--red); }
+.auth-band .blue { background: var(--blue); }

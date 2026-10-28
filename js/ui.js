@@ -44,7 +44,13 @@ const PATHS = {
   account: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.2-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/>',
 };
 
+// Icon sizes come from a fixed scale (inline with text, in buttons, in the top
+// bar, on big tiles), so every screen's icons line up in rhythm.
+export const ICON_SIZES = [18, 22, 24, 28];
+const snap = (size) => ICON_SIZES.reduce((best, s) => (Math.abs(s - size) < Math.abs(best - size) ? s : best));
+
 export function icon(name, size = 24) {
+  size = snap(size);
   const span = document.createElement('span');
   span.setAttribute('aria-hidden', 'true');
   span.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${PATHS[name]}</svg>`;

@@ -137,6 +137,8 @@ export async function renderMatch({ param }) {
   );
 
   const panel = h('main', { class: `content period${readOnly ? ' read-only' : ''}`, role: 'tabpanel', id: 'period-panel', inert: readOnly });
+  let typedByHand = false; // the Scout chose to type the team, not pick it
+  let folded = false;       // Team/position fields hidden (the schedule filled them)
   const bottombar = h('footer', { class: 'bottombar' });
   screen.append(header, panel, bottombar);
 
@@ -153,12 +155,20 @@ export async function renderMatch({ param }) {
     if (canPick) {
       const picker = lineup(scheduled(), team ? [team] : [], pickFromLineup);
       picker.setAttribute('aria-describedby', 'lineup-hint');
+      // Picked from the schedule: the Team number and position fields below
+      // would only repeat it, so they fold away; this brings them back.
+      const typeInstead = team && !typedByHand ? h('button', { class: 'link-btn on-alliance', type: 'button', onclick: () => {
+        typedByHand = true;
+        updateHeader();
+        panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"] input`)?.focus();
+      } }, 'Type the team instead') : null;
       lineupEl.replaceChildren(
         h('p', { class: 'lineup-hint', id: 'lineup-hint' }, team ? 'Tap another team to change' : 'Tap the team you’re scouting'),
-        picker);
+        picker, typeInstead);
     } else {
       lineupEl.replaceChildren(lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
     }
+    foldScheduledFields(canPick && team && team === autoTeam && position && !typedByHand);
     metaEl.textContent = [
       match ? matchCode(submission.summary) : 'Q?',
       // With two Teams, each pill already says its position.
@@ -178,6 +188,15 @@ export async function renderMatch({ param }) {
     if (pair) pointsLabel.textContent = `${team ?? '?'} est. pts`;
     // Tint the phone's status bar with the alliance colour.
     setThemeColor(getComputedStyle(screen).getPropertyValue('--alliance').trim());
+  }
+
+  // Hide (or show) the Team number and Alliance position fields on Setup.
+  function foldScheduledFields(fold) {
+    folded = Boolean(fold);
+    for (const key of [teamKey, positionKey]) {
+      const row = key && panel.querySelector(`[data-field-id="${key.split('.')[1]}"]`);
+      if (row) row.hidden = folded;
+    }
   }
 
   // A team tapped in the line-up fills in both the team and its position.
@@ -351,6 +370,7 @@ export async function renderMatch({ param }) {
     if (i === 0) queueMicrotask(updateTeamNote);
     watchGuests(section);
     renderBottombar();
+    foldScheduledFields(folded); // the fields were just redrawn
     window.scrollTo({ top: 0 });
   }
 

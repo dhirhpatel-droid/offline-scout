@@ -112,11 +112,13 @@ test('an empty plan leaves every station open', () => {
 test('short names use the first letter, more when two names start the same', () => {
   const labels = shortNames([
     { user_id: 'a', display_name: 'Dhir' },
-    { user_id: 'b', display_name: 'Maya' },
-    { user_id: 'c', display_name: 'max' },
+    { user_id: 'b', display_name: 'Maya Lee' },
+    { user_id: 'c', display_name: 'Alexandra' },
     { user_id: 'd', display_name: '' },
+    { user_id: 'e', display_name: 'Sam Kim' },
+    { user_id: 'f', display_name: 'Sam Li' },
   ]);
-  assert.deepEqual([...labels.values()], ['D', 'May', 'Max', '?']);
+  assert.deepEqual([...labels.values()], ['Dhir', 'Maya', 'Alexan', '?', 'Sam K', 'Sam L']);
 });
 
 test('members with the very same name get numbered labels', () => {

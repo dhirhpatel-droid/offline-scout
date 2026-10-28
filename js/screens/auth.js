@@ -43,7 +43,9 @@ export async function renderAuth({ param }) {
     ? h('section', { class: 'now auth-hero', 'data-alliance': 'none' },
         h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout')),
         h('h1', { class: 'now-hero', tabindex: '-1' }, 'Scout every match. Even with no signal.'),
-        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so bad gym wifi never costs you data.'))
+        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so bad gym wifi never costs you data.'),
+        // The two sides of the field, red and blue: the app's world in one line.
+        h('div', { class: 'auth-band', 'aria-hidden': 'true' }, h('span', { class: 'red' }), h('span', { class: 'blue' })))
     : h('header', { class: 'topbar' }, h('span', { class: 'wordmark' }, 'Offline Scout'));
 
   const el = h('div', { class: 'screen' },
