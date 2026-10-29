@@ -42,7 +42,7 @@ export function okButton(check, byId, groupId, ok, on = true) {
       const key = checkKey(check, byId);
       await setSetting(`checksOk:${groupId}`, on ? [...ok, key] : ok.filter((k) => k !== key));
       window.dispatchEvent(new HashChangeEvent('hashchange'));
-    } }, icon(on ? 'check' : 'back', 18), on ? 'Looks right' : 'Look again');
+    } }, icon(on ? 'check' : 'undo', 18), on ? 'Looks right' : 'Look again');
 }
 
 export async function renderChecks() {

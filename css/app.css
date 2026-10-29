@@ -498,7 +498,7 @@ a.row { color: inherit; }
   min-height: var(--tap);
   padding: 0 var(--s3);
   border-radius: 999px;
-  border: 2px solid var(--control-line);
+  border: 2px solid var(--control-line-strong); /* ≥ 3:1 on its own grey fill */
   background: var(--surface-2);
   font-weight: 700;
   font-size: var(--fs-sm);
@@ -710,7 +710,7 @@ a.row { color: inherit; }
   font-weight: 700;
 }
 .seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
-.field.tile:disabled { border-style: dashed; cursor: not-allowed; } /* readable, just not changeable */
+.field.tile:disabled { border-color: var(--line); cursor: not-allowed; } /* readable, just not changeable */
 .field.tile[aria-pressed='true']:disabled { background: transparent; border-color: var(--control-line); color: var(--text); }
 .field.tile[aria-pressed='true']:disabled .tile-check { background: var(--text); border-color: var(--text); color: var(--bg); }
 /* Off the match screen (no alliance), a ticked tile uses the main colour. */
@@ -1221,7 +1221,7 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
   .row, .small-btn, .segmented button, .tabs button, .pick-person, .submission-row { transition: background-color 120ms ease-out, color 120ms ease-out; }
 }
 /* "Type the team instead": a text button on the alliance colour */
-.link-btn.on-alliance { color: var(--on-alliance); min-height: 44px; margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn.on-alliance { color: var(--on-alliance); min-height: var(--tap); margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 /* Sign-in cover: a bigger, balanced headline over the field's red | blue split */
 .auth-hero { position: relative; padding-bottom: calc(var(--s5) + 6px); }
 .auth-hero .now-hero { font-size: var(--fs-display-words); text-wrap: balance; }
@@ -1230,18 +1230,15 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .auth-band .blue { background: var(--blue); }
 
 /* ---------- Round 2 polish ---------- */
-/* Mine / Everyone is one switch: a track with the chosen side raised (like the period tabs) */
-/* Station signs in Coming up are labels, not buttons: outlined, quieter than the bumper */
 /* Disabled is solid and quiet (dashed means "Open" in the Coverage grid) */
 .pill:disabled, .pill[aria-disabled='true'] { border-style: solid; border-color: var(--surface-2); }
 /* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
 .schedule-score { white-space: nowrap; }
 .schedule-score .red, .schedule-score .blue { font-weight: 600; }
 .schedule-score .won { font-weight: 800; color: var(--text); }
-/* Check cards: the Open buttons together, "Looks right" a quieter text button */
+/* Check cards: the Open buttons together, then "Looks right" */
 .check-actions { display: grid; gap: var(--s1); }
 .check-open { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.check-ok { justify-self: start; min-height: 44px; padding-left: 0; color: var(--text-2); font-weight: 700; }
 /* Teams: the column help */
 .teams-help { margin-top: var(--s3); }
 .teams-help dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); padding-bottom: var(--s3); font-size: var(--fs-sm); }
@@ -1253,11 +1250,9 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
    part filled (like the period tabs and Mine/Everyone). Each part stays
    ≥ 56px. Position buttons stay separate: each is its own alliance colour. */
 .segmented { gap: 2px; padding: 2px; border: 2px solid var(--control-line); border-radius: var(--radius); }
-.segmented button, .segmented .seg-link { border-color: transparent; border-radius: calc(var(--radius) - 4px); }
+.segmented button, .segmented .seg-link { border-color: transparent; border-radius: var(--radius-sm); }
 .position-grid .segmented { gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
 .position-grid .segmented button { border-color: var(--control-line); border-radius: var(--radius-md); }
-.position-grid .segmented button[data-color='red'] { border-color: var(--red); }
-.position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
 .segmented.wrap { gap: 2px; }
 /* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
 .field.counter { padding: var(--s1) 0; }
@@ -1266,15 +1261,12 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .bottombar::before { content: ''; position: absolute; left: 0; right: 0; top: -24px; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
 /* Phones show scrollbars only while scrolling; never a stray bar over the header */
 @media (pointer: coarse) { html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; } }
-/* The match footer's status stays on one line */
 /* Setup: halves sit in one row without their own short dividers; space before the next card */
 .period > .field.half { border-bottom: 0; }
 .period > .field.half + .field.half + * { border-top: 1px solid var(--line); }
 .period > .field.tile { margin: var(--s2) 0; }
 /* Cover screens (Event, Group, Team): the crumb is the same voice as other top-bar titles */
 .now-top-title { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
-/* In-match text buttons meet the 56px rule */
-.link-btn.on-alliance { min-height: var(--tap); }
 /* "Discard this match" is red everywhere */
 .now .now-discard { color: var(--on-alliance); text-decoration: underline; text-underline-offset: 3px; }
 /* Focus rings only from the keyboard, not after a tap */
@@ -1286,11 +1278,20 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
 /* Two Teams: say which one you're scoring, right above the counters */
 .scoring-for { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); font-weight: 700; color: var(--text-2); }
-.team-switch button[aria-current='true'] .switch-pos::after { content: ' · now'; }
 /* Offline Group settings: the tile, greyed, with its state and why */
 .field.tile[aria-disabled='true'] { opacity: 1; cursor: not-allowed; border-style: solid; border-color: var(--line); }
-.field.tile[aria-disabled='true'] .field-hint::after { content: ' Change with signal.'; }
 .assign-form-h { font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--s3); }
 .status-two { display: grid; line-height: 1.2; }
 .status-two strong { color: var(--text); font-weight: 800; }
 .status-two > span { font-size: var(--fs-xs); white-space: nowrap; }
+/* Round 4: help where it's needed, and saves said where you tapped */
+/* The header's points open a short "what is this?" sheet */
+.match-head button.points { min-width: var(--tap); min-height: var(--tap); color: inherit; }
+.match-head button.points .label { text-decoration: underline dotted; text-underline-offset: 3px; }
+/* "Still needed: team number" in the match footer: tap it to go back and fill it */
+.status-missing { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; min-height: var(--tap); text-align: left; font-size: var(--fs-sm); font-weight: 700; color: var(--danger); }
+.status-missing svg { color: var(--danger); flex: none; }
+/* A Group setting's own line: "Saved for the group" or what went wrong */
+.tile-saved { display: block; margin-top: var(--s1); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.tile-saved.error { color: var(--danger); }
+.crash-detail summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--text-2); }

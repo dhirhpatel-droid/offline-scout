@@ -37,6 +37,7 @@ const PATHS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
+  undo: '<path d="M9 6L4.5 10.5 9 15"/><path d="M4.5 10.5H15a4.5 4.5 0 0 1 0 9h-3"/>',
   next: '<path d="M9 5l7 7-7 7"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   device: '<rect x="6.5" y="3" width="11" height="18" rx="2.5"/><path d="M10.5 17.5h3"/>',
@@ -173,6 +174,19 @@ export function confirmDialog({ title, body, confirmLabel }) {
     document.body.append(dialog);
     dialog.showModal();
   });
+}
+
+// A short explanation in the same sheet, with one button to close it.
+export function infoDialog({ title, body }) {
+  const dialog = h('dialog', { 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-body' },
+    h('h2', { id: 'dlg-title' }, title),
+    h('p', { id: 'dlg-body' }, body),
+    h('div', { class: 'actions' },
+      h('button', { class: 'pill secondary block', autofocus: true, onclick: () => close() }, 'Got it')));
+  const close = () => { dialog.close(); dialog.remove(); };
+  dialog.addEventListener('cancel', close);
+  document.body.append(dialog);
+  dialog.showModal();
 }
 
 // The colour of the phone's status bar (Android, installed iOS app).

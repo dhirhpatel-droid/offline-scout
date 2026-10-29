@@ -145,19 +145,27 @@ export async function renderGroup() {
       if (!isOnline()) {
         // The same tile, greyed (it says why in its hint), showing On/Off.
         return h('div', { class: 'field tile', role: 'switch', 'aria-checked': String(on), 'aria-disabled': 'true' },
-          h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
+          h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, `${hint} Change with signal.`)),
           h('span', { class: 'setting-state' }, on ? 'On' : 'Off'));
       }
+      // Its own line says it saved (or why not), right where the Lead tapped.
+      const saved = h('span', { class: 'tile-saved', role: 'status' });
       const tile = h('button', { class: 'field tile', type: 'button', 'aria-pressed': String(on) },
-        h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint)),
+        h('span', { class: 'tile-text' }, h('span', { class: 'field-label' }, label), h('span', { class: 'field-hint' }, hint), saved),
         h('span', { class: 'tile-check', 'aria-hidden': 'true' }, icon('check', 26)));
       tile.addEventListener('click', async () => {
         on = !on;
         tile.setAttribute('aria-pressed', String(on));
-        try { await setGroupSetting(group.id, key, on); } catch (err) {
+        saved.className = 'tile-saved';
+        saved.textContent = 'Saving…';
+        try {
+          await setGroupSetting(group.id, key, on);
+          saved.textContent = `${on ? 'On' : 'Off'} · saved for the group`;
+        } catch (err) {
           on = !on;
           tile.setAttribute('aria-pressed', String(on));
-          message.show(friendlyError(err), 'error');
+          saved.className = 'tile-saved error';
+          saved.textContent = friendlyError(err);
         }
       });
       return tile;

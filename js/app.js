@@ -6,7 +6,7 @@
 // Hash routing needs no server setup, so it works on GitHub Pages and offline.
 
 import { getSetting, setSetting, requestPersistentStorage } from './db.js';
-import { setThemeColor, applyTheme, h } from './ui.js';
+import { setThemeColor, applyTheme, h, topbar } from './ui.js';
 import { sb } from './supabase.js';
 import { currentUser, currentGroup, refreshAccount } from './account.js';
 import { startAutoSync } from './sync.js';
@@ -24,7 +24,7 @@ import { renderQuestions } from './screens/questions.js';
 import { renderChecks } from './screens/checks.js';
 import { renderAnnouncements } from './screens/announce.js';
 import { renderShowQr, renderScan } from './screens/qr.js';
-import { noteVisit } from './nav.js';
+import { noteVisit, backHref } from './nav.js';
 
 const root = document.getElementById('app');
 
@@ -88,10 +88,11 @@ async function route(opts = {}) {
     console.error(err);
     // Never a dead end: say what happened and offer a way out.
     root.replaceChildren(h('div', { class: 'screen' },
-      h('header', { class: 'topbar' }, h('h1', { tabindex: '-1' }, 'Something went wrong')),
+      topbar('Something went wrong', backHref('#home')),
       h('main', { class: 'content' },
-        h('p', { class: 'plain' }, 'Your saved matches are safe on this phone. Go back home, or reload the app.'),
-        h('p', { class: 'plain crash-detail' }, err.message),
+        h('p', { class: 'plain' }, 'Your saved matches are safe on this phone. Go back, go home, or reload the app.'),
+        // The technical message is for whoever fixes the app, so it's folded away.
+        h('details', { class: 'plain crash-detail' }, h('summary', {}, 'Details for the app’s maker'), h('p', {}, err.message)),
         h('div', { class: 'actions crash-actions' },
           h('a', { class: 'pill block', href: '#home' }, 'Back to home'),
           h('button', { class: 'pill secondary block', type: 'button', onclick: () => location.reload() }, 'Reload')))));

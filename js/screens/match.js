@@ -10,7 +10,7 @@
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
 import { backHref } from '../nav.js';
-import { h, icon, savedStatus, confirmDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, infoDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -28,6 +28,7 @@ import { findMatch, teamAt, timeOf, isAtEvent } from '../schedule.js';
 import { myPlan } from '../now-scouting.js';
 import { withCustom } from '../custom-rules.js';
 import { cachedQuestions } from '../custom.js';
+import { EST_PTS_HELP } from './settings.js';
 
 export async function renderMatch({ param }) {
   const editing = Boolean(param);
@@ -112,7 +113,7 @@ export async function renderMatch({ param }) {
     'aria-label': active ? `${sub.summary.team ?? 'This team'}, ${positionLabel(sub.summary.position)}, showing now`
       : `Switch to ${sub.summary.team ?? 'the other team'}, ${positionLabel(sub.summary.position)}` },
     h('span', { class: 'num switch-team' }, sub.summary.team ?? '?'),
-    h('span', { class: 'switch-pos' }, positionLabel(sub.summary.position)));
+    h('span', { class: 'switch-pos' }, positionLabel(sub.summary.position), active ? ' · now' : ''));
   const thisPill = pair ? pill(submission, true) : null;
   const otherPill = pair ? pill(pair, false) : null;
   otherPill?.addEventListener('click', async () => {
@@ -127,7 +128,9 @@ export async function renderMatch({ param }) {
   const header = h('header', { class: 'match-head' },
     h('div', { class: 'row1' },
       backBtn, metaEl,
-      h('div', { class: 'points', 'aria-live': 'polite' },
+      // Tap the points for what they mean (asked in the stands, not in Settings).
+      h('button', { class: 'points', type: 'button', 'aria-live': 'polite',
+        onclick: () => infoDialog({ title: 'Estimated points', body: EST_PTS_HELP }) },
         pointsEl, pointsLabel),
     ),
     teamEl,
@@ -172,7 +175,7 @@ export async function renderMatch({ param }) {
     // schedule knows the match (unless the Scout chose to type it).
     foldScheduledFields(canPick && !typedByHand && (!team || (team === autoTeam && position)));
     metaEl.textContent = [
-      match ? matchCode(submission.summary) : 'Q?',
+      match ? matchCode(submission.summary) : 'Match ?',
       // With two Teams, each pill already says its position.
       // (No "pick a position" while the line-up hint already asks.)
       pair ? null : position ? positionLabel(position) : canPick ? null : 'pick a position',
@@ -414,7 +417,7 @@ export async function renderMatch({ param }) {
     let action;
     if (readOnly) {
       action = last
-        ? h('a', { class: 'pill', href: '#saved' }, 'Back to matches')
+        ? h('a', { class: 'pill', href: backHref('#saved') }, 'Back to matches')
         : h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
             `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     } else if (last || (noShow && !editing)) {
@@ -431,10 +434,15 @@ export async function renderMatch({ param }) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => showSection(current + 1) },
         `Next: ${tabSections[current + 1].label}`, icon('next', 20));
     }
-    fill(bottombar, 
-      readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`))
-        : savedStatus(handover?.note ?? 'Saved on this phone'),
-      action);
+    // Moved on without the team (the match started)? Not blocked, so Auto
+    // isn't missed, but the footer says what's still needed; tap to fill it.
+    const earlier = readOnly ? [] : missingRequired(config, submission)
+      .filter((m) => tabSections.indexOf(tabOf(m.section)) < current);
+    const status = readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`))
+      : earlier.length ? h('button', { class: 'status-missing', type: 'button', onclick: () => showMissing(earlier, 'Needed') },
+        icon('alert', 18), h('span', {}, `Still needed: ${earlier.map((m) => m.field.label.toLowerCase()).join(', ')}`))
+        : savedStatus(handover?.note ?? 'Saved on this phone');
+    fill(bottombar, status, action);
   }
 
   // ---------- submit / next match ----------
@@ -466,7 +474,7 @@ export async function renderMatch({ param }) {
     showFinish();
   }
 
-  function showMissing(missing) {
+  function showMissing(missing, why = 'Needed before saving') {
     const tabIndex = tabSections.indexOf(tabOf(missing[0].section));
     showSection(tabIndex);
     for (const { section, field } of missing) {
@@ -474,7 +482,7 @@ export async function renderMatch({ param }) {
       const row = panel.querySelector(`[data-field-id="${field.id}"]`);
       if (!row) continue;
       row.classList.add('invalid');
-      row.append(h('p', { class: 'error-text', role: 'alert' }, `Needed before saving: ${field.label.toLowerCase()}`));
+      row.append(h('p', { class: 'error-text', role: 'alert' }, `${why}: ${field.label.toLowerCase()}`));
     }
     panel.querySelector('.invalid input, .invalid button')?.focus();
   }
@@ -574,7 +582,7 @@ export async function renderMatch({ param }) {
     const { team } = submission.summary;
     const ok = await confirmDialog({
       title: `Delete ${matchCode(submission.summary)}?`,
-      body: `${matchCode(submission.summary)}, team ${team ?? '—'} will be removed from this phone. This can't be undone.`,
+      body: `${matchCode(submission.summary)}, team ${team ?? '—'} will be deleted for you and, the next time this phone has signal, for your group. This can't be undone.`,
       confirmLabel: 'Delete match',
     });
     if (!ok) return;

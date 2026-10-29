@@ -73,7 +73,7 @@ export async function renderShowQr() {
         ? `${unsent.length} ${unsent.length === 1 ? 'match' : 'matches'} your group doesn’t have yet`
         : 'All your matches at this event'),
       frame, caption, count, controls,
-      h('p', { class: 'plain qr-help' }, 'Turn your screen brightness up. Your Lead opens Offline Scout → Scan Scouts’ matches and points the camera here. The screen stays on while this is open.')),
+      h('p', { class: 'plain qr-help' }, 'Turn your screen brightness up. Your Lead taps Scan Scouts’ matches on their Home screen and points the camera here. The screen stays on while this is open.')),
   );
   const release = keepScreenOn();
   return { el, cleanup: () => { clearInterval(timer); release(); } };
@@ -175,7 +175,7 @@ export async function renderScan() {
   const el = h('div', { class: 'screen' },
     bar('Scan Scouts’ matches', '#home'),
     h('main', { class: 'content qr-scan' },
-      h('p', { class: 'group-lede' }, 'For when nobody has signal: each Scout opens My matches → Show as QR.'),
+      h('p', { class: 'group-lede' }, 'For when nobody has signal: each Scout taps Show my matches as QR on their Home screen.'),
       holder, status, problem, tally,
       h('a', { class: 'pill secondary block', href: '#saved/everyone' }, 'Done: see everyone’s matches'),
       h('p', { class: 'plain qr-help' }, 'Scanned matches are saved on this phone and sent to your group, as each Scout’s own, the next time it has signal.')),

@@ -57,7 +57,7 @@ One Scout's record of what one Team did in one Match. It belongs to the Scouting
 _Avoid_: entry, report, announcement
 
 **Draft**:
-A Submission still being scouted on a Scout's phone, saved on every tap but not yet submitted. A phone has at most one Draft.
+A Submission still being scouted on a Scout's phone, saved on every tap but not yet submitted. A phone has one Draft, or two when a Scout watches two Teams in the same match.
 _Avoid_: in-progress entry, unsaved match
 
 **Match level**:

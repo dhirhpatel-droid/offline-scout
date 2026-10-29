@@ -97,6 +97,11 @@ export async function renderHome() {
               ? `${submissions.length} saved · ${unsent ? `${unsent} waiting to send` : lastSyncAt ? 'all sent to your group' : 'on this phone'}`
               : 'None yet. Matches you save show up here.')),
           icon('next', 20))),
+        // No signal, but the group uses QR backup: one tap to show them to a Lead.
+        group.settings?.qrBackup && unsent ? h('li', {}, h('a', { class: 'row', href: '#qr' },
+          h('div', {}, h('div', { class: 'title' }, 'Show my matches as QR'),
+            h('div', { class: 'sub' }, `${unsent} waiting · for your Lead to scan`)),
+          icon('next', 20))) : null,
         h('li', {}, h('a', { class: 'row', href: '#group' },
           h('div', {},
             h('div', { class: 'title' }, group.name),
@@ -108,7 +113,8 @@ export async function renderHome() {
         !lead && teamsRow ? h('li', {}, teamsRow) : null,
       ),
 
-      submissions.length ? h('section', {},
+      // Leads already have a lot here; My matches is one tap away.
+      submissions.length && !lead ? h('section', {},
         h('h2', { class: 'section-h' }, 'Recent'),
         h('ul', { class: 'submission-list' }, submissions.slice(0, 3).map((s) => h('li', {}, submissionRow(s, submissions))))) : null,
     ),

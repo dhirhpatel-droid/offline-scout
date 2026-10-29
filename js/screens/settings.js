@@ -112,10 +112,12 @@ export async function renderSettings() {
 
 // Short answers to what scouts ask in the stands. Each one opens in place
 // (no extra screen to get lost in) and works offline like everything else.
+// Also opened by tapping the points on the match screen.
+export const EST_PTS_HELP = 'Points worked out from your taps, using the point values in this season’s game. It isn’t the official score: '
+  + 'fouls are recorded but not taken off, because in FTC a foul gives points to the other alliance.';
+
 const HELP = [
-  ['What are “est. pts”?',
-    'Points worked out from your taps, using the point values in this season’s game. It isn’t the official score: '
-    + 'fouls are recorded but not taken off, because in FTC a foul gives points to the other alliance.'],
+  ['What are “est. pts”?', EST_PTS_HELP],
   ['What if there’s no signal?',
     'Nothing changes while you scout. Every tap is saved on this phone straight away, even if the app closes. '
     + 'Your matches go to your group the next time the phone has signal, usually before you go in or after you leave the gym.'],
