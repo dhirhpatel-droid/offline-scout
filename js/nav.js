@@ -23,6 +23,14 @@ export function backHref(fallback) {
   return stack.at(-2) ?? fallback;
 }
 
+// After a save or delete: return to the screen before, the way Back does,
+// so the phone's back gesture can't land on the match just left (or deleted).
+export function returnTo(fallback) {
+  const target = backHref(fallback);
+  if (history.state?.back === target) history.back();
+  else location.replace(target);
+}
+
 // A link to the screen right before this one goes back in the browser's
 // history instead of adding a new entry. Otherwise the phone's own back
 // gesture would then return to the screen you just left, and loop.

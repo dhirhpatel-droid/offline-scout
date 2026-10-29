@@ -9,7 +9,7 @@
 // Tabs come from the game config's sections. A section with "showWith" (e.g.
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
-import { backHref } from '../nav.js';
+import { backHref, returnTo } from '../nav.js';
 import { h, icon, savedStatus, confirmDialog, infoDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
@@ -149,16 +149,23 @@ export async function renderMatch({ param }) {
   const bottombar = h('footer', { class: 'bottombar' });
   screen.append(header, panel, bottombar);
 
+  // The schedule knows the match and no team was typed by hand: the
+  // line-up is buttons, so one tap picks the team.
+  function canPickNow() {
+    const { team } = submission.summary;
+    return Boolean(!readOnly && !pair && teamKey && positionKey && scheduled() && (!team || team === autoTeam));
+  }
+
   function updateHeader() {
     const { match, team, position, alliance } = submission.summary;
     screen.dataset.alliance = alliance ?? 'none';
-    teamEl.textContent = team ?? 'Which team?';
+    teamEl.textContent = team ?? (canPickNow() ? 'Tap your team' : 'Which team?');
     teamEl.classList.toggle('empty', !team);
     if (thisPill) thisPill.querySelector('.switch-team').textContent = team ?? '?';
     // The schedule knows the match and no team was typed by hand: the
     // line-up is buttons, so one tap picks the team, and another tap
     // changes it (typing still works below).
-    const canPick = Boolean(!readOnly && !pair && teamKey && positionKey && scheduled() && (!team || team === autoTeam));
+    const canPick = canPickNow();
     if (canPick) {
       const picker = lineup(scheduled(), team ? [team] : [], pickFromLineup);
       picker.setAttribute('aria-describedby', 'lineup-hint');
@@ -170,7 +177,9 @@ export async function renderMatch({ param }) {
         panel.querySelector(`[data-field-id="${teamKey.split('.')[1]}"] input`)?.focus();
       } }, 'Type the team instead') : null;
       fill(lineupEl, 
-        h('p', { class: 'lineup-hint', id: 'lineup-hint' }, team ? 'Tap another team to change' : 'Tap the team you’re scouting'),
+        // With no team yet the big heading already says "Tap your team", so
+        // the hint is there only for screen readers (no asking twice).
+        h('p', { class: `lineup-hint${team ? '' : ' visually-hidden'}`, id: 'lineup-hint' }, team ? 'Tap another team to change' : 'Tap the team you’re scouting'),
         picker, typeInstead);
     } else {
       fill(lineupEl, lineup(scheduled(), [team, pair?.summary.team].filter(Boolean)) ?? '');
@@ -467,7 +476,7 @@ export async function renderMatch({ param }) {
 
     if (editing) {
       syncNow();
-      location.hash = backHref('#saved'); // e.g. back to Data checks
+      returnTo('#saved'); // e.g. back to Data checks
       return;
     }
     const waiting = await db.finishDraft();
@@ -550,7 +559,7 @@ export async function renderMatch({ param }) {
         // Laid out like the results screen after a match: each period, then the total.
         h('dl', { class: 'parts' }, breakdown,
           h('div', { class: 'part total' },
-            h('dt', { class: 'part-label' }, 'Estimated total'),
+            h('dt', { class: 'part-label' }, 'Estimated points'),
             h('dd', { class: 'part-value num' }, submission.estimatedPoints))),
         h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
         statusEl),
@@ -602,7 +611,7 @@ export async function renderMatch({ param }) {
     });
     if (!ok) return;
     await db.deleteSubmission(submission.id);
-    location.hash = backHref('#saved'); // e.g. back to Data checks
+    returnTo('#saved'); // e.g. back to Data checks
   }
 
   updateHeader();
@@ -679,5 +688,6 @@ function notFound() {
   return h('div', { class: 'screen' },
     topbar('Match not found', backHref('#saved')),
     h('main', { class: 'content' },
-      h('p', { class: 'plain' }, 'This match is no longer on this phone. It may have been deleted.')));
+      h('p', { class: 'plain' }, 'This match is no longer on this phone. It may have been deleted.'),
+      h('div', { class: 'actions crash-actions' }, h('a', { class: 'pill block', href: '#saved' }, 'My matches'))));
 }

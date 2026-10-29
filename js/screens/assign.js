@@ -244,7 +244,7 @@ export async function renderAssign({ param } = {}) {
         const n = Number(team.input.value);
         if (!Number.isInteger(n) || n < 1) return team.setError('Enter a team number.');
         if (data?.teams.length && !isAtEvent(data.teams, n)) return team.setError(`${n} isn’t on this event’s team list.`);
-        if (current.watches.some((w) => w.team_number === n)) return team.setError(`${m.display_name} already follows ${n}.`);
+        if (current.watches.some((w) => w.team_number === n)) return team.setError(`${m.display_name} already has a Team watch on ${n}.`);
         added = { shifts: current.shifts, watches: [...current.watches, { scout_id: m.user_id, team_number: n }] };
       }
 
@@ -265,7 +265,7 @@ export async function renderAssign({ param } = {}) {
             await addAndNote(m.user_id, 'shift', s, `Added ${positionLabel(s.position)} for Q${s.from_match}–Q${s.to_match}.`);
           } else {
             const w = added.watches.at(-1);
-            await addAndNote(m.user_id, 'watch', w, `Added: follows ${w.team_number} in every match they play.`);
+            await addAndNote(m.user_id, 'watch', w, `Added: Team watch on ${w.team_number}, every match they play.`);
           }
         } catch (err) { formMsg.show(friendlyError(err), 'error'); }
       });
@@ -487,7 +487,7 @@ export async function renderAssign({ param } = {}) {
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
-      watchTeam && online ? h('p', { class: 'notice' }, `Choose who follows ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
+      watchTeam && online ? h('p', { class: 'notice' }, `Choose who watches ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
       online ? null : offlineNote('Your plan is saved on this phone and still shows here. Adding and removing happen with signal.'),
       showGrid ? coverageEl : null,
       grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,

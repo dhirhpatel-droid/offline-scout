@@ -129,7 +129,7 @@ export async function renderHome() {
 
 // The big block at the top.
 function nowBlock(next) {
-  const settings = h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings and account' }, icon('account'));
+  const settings = h('a', { class: 'icon-btn', href: '#settings', 'aria-label': 'Settings, help and account' }, icon('account'));
   const top = h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout'), settings);
 
   if (next.kind === 'draft') {

@@ -1088,7 +1088,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .teams-table tbody tr:active, .teams-table tbody tr:active th { background: var(--surface); }
 .pick-why { font-size: var(--fs-xs); font-weight: 600; }
 .bumper.open.can-fill { gap: 2px; border-style: solid; color: var(--text); }
-.assign-note:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* Teams: rows are tappable; the sticky team column keeps an edge when scrolled */
 .teams-table .team-row { cursor: pointer; }
 .teams-table tbody th, .teams-table thead th:first-child { box-shadow: 1px 0 0 var(--line); }
@@ -1154,7 +1153,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .announce-strip-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .announce-strip-head > svg:last-child { margin-left: auto; }
 .announce-removed { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap-lg); border-bottom: 1px solid var(--line); color: var(--text-2); font-weight: 600; }
-.announce-item:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* ---------- QR backup ---------- */
 /* The code always sits on white, even in dark mode: scanners need dark on light. */
@@ -1256,7 +1254,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
 .field.counter { padding: var(--s1) 0; }
 /* When a period is taller than the screen, a fade above the bottom bar says "more below" */
-.bottombar { position: sticky; }
 .bottombar::before { content: ''; position: absolute; left: 0; right: 0; top: -24px; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
 /* Phones show scrollbars only while scrolling; never a stray bar over the header */
 @media (pointer: coarse) { html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; } }
@@ -1269,7 +1266,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* "Discard this match" is red everywhere */
 .now .now-discard { color: var(--on-alliance); text-decoration: underline; text-underline-offset: 3px; }
 /* Focus rings only from the keyboard, not after a tap */
-.announce-item:focus, .assign-note:focus { outline: none; }
 .announce-item:focus-visible, .assign-note:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* Outlines on raised grey cards use the stronger line (≥ 3:1 there) */
 :is(.check, .assign-form, .qr-problem, .help-item, .announce-strip) :is(.pill.secondary, .small-btn, .input, .segmented) { border-color: var(--control-line-strong); }

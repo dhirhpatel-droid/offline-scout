@@ -94,8 +94,10 @@ export async function renderSettings() {
   themeGroup.append(...themeButtons);
 
   const el = h('div', { class: 'screen' },
-    topbar('Settings', backHref('#home')),
+    topbar('Settings and help', backHref('#home')),
     h('main', { class: 'content' },
+      // Help first: it's what most people open this screen for.
+      helpSection(),
       h('section', { class: 'group' }, h('h2', {}, 'Account'), nameForm),
       h('section', { class: 'group' },
         h('h2', {}, 'Game'),
@@ -112,7 +114,6 @@ export async function renderSettings() {
         h('p', { class: 'plain setting-note' }, persisted
           ? 'Protected: the browser will not clear it to free up space.'
           : 'Add Offline Scout to your home screen so the phone keeps your matches safe, even when it’s low on space.')),
-      helpSection(),
       h('section', { class: 'group danger-zone' }, signOutBtn),
     ),
     await nowScoutingBar(),

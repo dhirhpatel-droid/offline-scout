@@ -101,12 +101,20 @@ export async function renderGroup() {
 
   function inviteRow(inv) {
     const cancel = h('button', { class: 'small-btn danger', type: 'button', 'aria-label': `Cancel invite for ${inv.email}` }, 'Cancel');
-    cancel.addEventListener('click', () => busy(cancel, '…', async () => {
-      try {
-        await cancelInvite(inv.id);
-        await load();
-      } catch (err) { message.show(friendlyError(err), 'error'); }
-    }));
+    cancel.addEventListener('click', async () => {
+      const ok = await confirmDialog({
+        title: `Cancel the invite for ${inv.email}?`,
+        body: 'The link in their email stops working. You can invite them again later.',
+        confirmLabel: 'Cancel invite',
+      });
+      if (ok) await busy(cancel, '…', async () => {
+        try {
+          await cancelInvite(inv.id);
+          await load();
+          message.show(`Invite for ${inv.email} cancelled.`, 'info');
+        } catch (err) { message.show(friendlyError(err), 'error'); }
+      });
+    });
     const days = Math.max(0, Math.ceil((new Date(inv.expires_at) - Date.now()) / 86400000));
     return h('li', { class: 'row' },
       h('div', {}, h('div', { class: 'title' }, inv.email), h('div', { class: 'sub' }, `Invite expires in ${days} ${days === 1 ? 'day' : 'days'}`)),
