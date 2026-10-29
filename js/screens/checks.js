@@ -79,9 +79,9 @@ export async function renderChecks() {
       h('p', { class: 'group-lede' }, checks.length
         ? `${ev.name} · ${checks.length} to look at`
         : `${ev.name} · nothing looks off`),
-      h('p', { class: 'plain teams-note' }, 'Checks never change anything. Open a match to fix it, or tap Looks right.'),
-      h('p', { class: 'plain teams-note' }, 'Sensitivity: ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change in Group settings')),
-      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'When two scouts disagree, a total is far from the official score, or a team doesn’t fit the schedule, it shows up here.'),
+      // One line before the checks: how picky they are, and where to change it.
+      h('p', { class: 'plain teams-note' }, 'Sensitivity ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change')),
+      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'When two scouts disagree, a total is far from the official score, or a team doesn’t fit the schedule, it shows up here. Checks never change anything: you open the match and decide.'),
       marked.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Marked right on this phone (${marked.length})`, icon('next', 18)),
         h('ul', { class: 'checks' }, marked.map((c) => item(c, false, false)))) : null),

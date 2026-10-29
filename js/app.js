@@ -24,7 +24,7 @@ import { renderQuestions } from './screens/questions.js';
 import { renderChecks } from './screens/checks.js';
 import { renderAnnouncements } from './screens/announce.js';
 import { renderShowQr, renderScan } from './screens/qr.js';
-import { noteVisit, backHref } from './nav.js';
+import { noteVisit, backHref, backLinksUseHistory } from './nav.js';
 
 const root = document.getElementById('app');
 
@@ -126,7 +126,7 @@ async function finishEmailLink() {
       kind: 'error',
       text: /expired|invalid/i.test(link.error)
         ? 'That email link has expired or was already used. Sign in, or ask for a new link.'
-        : link.error,
+        : 'That email link didn’t work. Sign in, or ask for a new link.',
     });
     return '#auth';
   }
@@ -151,6 +151,7 @@ applyTheme((await getSetting('theme')) ?? 'system');
 const landing = await finishEmailLink();
 if (landing) history.replaceState(null, '', landing);
 window.addEventListener('hashchange', route);
+document.addEventListener('click', backLinksUseHistory);
 route();
 registerServiceWorker();
 requestPersistentStorage();

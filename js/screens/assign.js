@@ -342,6 +342,11 @@ export async function renderAssign({ param } = {}) {
         ].filter(Boolean);
         return explain.length ? h('p', { class: 'coverage-key' }, explain.join(' · ')) : null;
       })(),
+      h('details', { class: 'help-item' },
+        h('summary', {}, h('span', {}, 'How Coverage works'), icon('next', 18)),
+        h('p', {}, 'Each row is a match still to play, each column an Alliance position. A name means that Scout watches it, '
+          + 'from a Position shift or a Team watch. Open means nobody does: tap it to choose someone. '
+          + 'The app shows the gaps but never assigns anyone by itself.')),
       h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
         h('caption', { class: 'visually-hidden' }, 'Who watches each Alliance position, in the matches still to play.'),
         h('thead', {}, h('tr', {},

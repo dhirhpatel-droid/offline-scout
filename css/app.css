@@ -272,19 +272,24 @@ input, textarea { caret-color: var(--text); }
   align-items: center;
   gap: var(--s3);
 }
+/* Every pick-one choice is ONE control: an outlined track with the chosen
+   part filled (like the period tabs and Mine/Everyone). Each part stays ≥ 56px. */
 .segmented {
   display: flex;
-  gap: var(--s2);
+  gap: 2px;
+  padding: 2px;
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius);
 }
 .segmented.wide { margin-top: var(--s2); }
 .field.half .segmented button { min-width: 0; }
 .segmented button {
   flex: 1;
-  border: 2px solid var(--control-line); /* unselected: hollow, with a visible edge */
+  border: 2px solid transparent; /* the track gives the edge */
   color: var(--text); /* full contrast: readable in sunlight */
   min-width: var(--tap);
   min-height: var(--tap);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-weight: 700;
 }
 .segmented button[aria-pressed='true'] {
@@ -460,10 +465,11 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 }
 .pill:disabled,
 .pill[aria-disabled='true'] {
-  /* Clearly not pressable: no primary colour, quiet text. */
+  /* Clearly not pressable: no primary colour, quiet text. Solid edge
+     (dashed means "Open" in the Coverage grid). */
   background: var(--surface-2);
   color: var(--text-3);
-  border: 2px dashed var(--control-line);
+  border: 2px solid var(--control-line-strong);
   cursor: not-allowed;
 }
 
@@ -1111,7 +1117,7 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .check { padding: var(--s3) var(--s4); border-radius: var(--radius); background: var(--surface); }
 .check-title { font-weight: 800; font-size: var(--fs-md); }
 .check-text { color: var(--text-2); font-size: var(--fs-sm); margin-top: var(--s1); }
-.check-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
+.check-actions { display: grid; gap: var(--s1); margin-top: var(--s2); }
 /* links styled as small buttons: centre the words like a <button> does */
 .check-actions .small-btn { display: inline-flex; align-items: center; text-decoration: none; background: var(--bg); }
 .checks-about { font-size: var(--fs-sm); margin: calc(-1 * var(--s1)) 0 var(--s3); }
@@ -1230,14 +1236,11 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .auth-band .blue { background: var(--blue); }
 
 /* ---------- Round 2 polish ---------- */
-/* Disabled is solid and quiet (dashed means "Open" in the Coverage grid) */
-.pill:disabled, .pill[aria-disabled='true'] { border-style: solid; border-color: var(--surface-2); }
 /* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
 .schedule-score { white-space: nowrap; }
 .schedule-score .red, .schedule-score .blue { font-weight: 600; }
 .schedule-score .won { font-weight: 800; color: var(--text); }
 /* Check cards: the Open buttons together, then "Looks right" */
-.check-actions { display: grid; gap: var(--s1); }
 .check-open { display: flex; flex-wrap: wrap; gap: var(--s2); }
 /* Teams: the column help */
 .teams-help { margin-top: var(--s3); }
@@ -1246,14 +1249,10 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .teams-help dd { margin: 0; color: var(--text-2); }
 
 /* ---------- Round 3 polish ---------- */
-/* Every pick-one choice is ONE control: an outlined track with the chosen
-   part filled (like the period tabs and Mine/Everyone). Each part stays
-   ≥ 56px. Position buttons stay separate: each is its own alliance colour. */
-.segmented { gap: 2px; padding: 2px; border: 2px solid var(--control-line); border-radius: var(--radius); }
-.segmented button, .segmented .seg-link { border-color: transparent; border-radius: var(--radius-sm); }
+/* Position buttons stay separate: each is its own alliance colour. */
+.segmented .seg-link { border-color: transparent; border-radius: var(--radius-sm); }
 .position-grid .segmented { gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
 .position-grid .segmented button { border-color: var(--control-line); border-radius: var(--radius-md); }
-.segmented.wrap { gap: 2px; }
 /* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
 .field.counter { padding: var(--s1) 0; }
 /* When a period is taller than the screen, a fade above the bottom bar says "more below" */
@@ -1274,7 +1273,7 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .announce-item:focus-visible, .assign-note:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* Outlines on raised grey cards use the stronger line (≥ 3:1 there) */
 :is(.check, .assign-form, .qr-problem, .help-item, .announce-strip) :is(.pill.secondary, .small-btn, .input, .segmented) { border-color: var(--control-line-strong); }
-/* "Looks right": a real (secondary) button with a check, not grey text */
+/* "Looks right": its own row under the Open buttons, a real (secondary) button with a check, not grey text */
 .check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
 /* Two Teams: say which one you're scoring, right above the counters */
 .scoring-for { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); font-weight: 700; color: var(--text-2); }

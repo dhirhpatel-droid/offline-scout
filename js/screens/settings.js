@@ -61,6 +61,16 @@ export async function renderSettings() {
     ? configs.map((c) => {
         const input = h('input', { type: 'radio', name: 'game', value: c.id, checked: c.id === game.id });
         input.addEventListener('change', async () => {
+          // It changes every phone in the group, so ask first.
+          const ok = await confirmDialog({
+            title: `Scout ${c.name}?`,
+            body: 'New matches on every phone in your group use this game. Matches already saved keep theirs.',
+            confirmLabel: 'Change game',
+          });
+          if (!ok) {
+            input.closest('section').querySelector(`input[value="${game.id}"]`).checked = true;
+            return;
+          }
           try {
             await setGroupGame(group.id, c.id);
             gameMessage.show('Game changed for the whole group. New matches use it.', 'info');
@@ -92,14 +102,14 @@ export async function renderSettings() {
         gameMessage.el,
         ...gameSection,
         programMismatch
-          ? h('p', { class: 'plain', style: 'margin-top:8px' }, `This is an ${game.name.split(' ')[0]} game and your group is ${group.program}. The ${group.program} game is added after its kickoff.`)
-          : h('p', { class: 'plain', style: 'margin-top:8px' }, 'Set by your group’s Leads, so everyone scouts the same game.')),
+          ? h('p', { class: 'plain setting-note' }, `This is an ${game.name.split(' ')[0]} game and your group is ${group.program}. The ${group.program} game is added after its kickoff.`)
+          : h('p', { class: 'plain setting-note' }, 'Set by your group’s Leads, so everyone scouts the same game.')),
       h('section', { class: 'group' }, h('h2', { id: 'theme-h' }, 'Theme'), themeGroup,
-        h('p', { class: 'plain', style: 'margin-top:8px' }, 'Light is easiest to read in sunlight. Auto follows your phone’s setting.')),
+        h('p', { class: 'plain setting-note' }, 'Light is easiest to read in sunlight. Auto follows your phone’s setting.')),
       h('section', { class: 'group' },
         h('h2', {}, 'Storage'),
         h('p', { class: 'setting-value' }, `${count} ${count === 1 ? 'match' : 'matches'} saved on this phone`),
-        h('p', { class: 'plain', style: 'margin-top:4px' }, persisted
+        h('p', { class: 'plain setting-note' }, persisted
           ? 'Protected: the browser will not clear it to free up space.'
           : 'Add Offline Scout to your home screen so the phone keeps your matches safe, even when it’s low on space.')),
       helpSection(),

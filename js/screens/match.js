@@ -77,6 +77,10 @@ export async function renderMatch({ param }) {
 
   // A Draft nobody typed anything into is thrown away when you leave.
   let touched = editing;
+  // Editing a saved match: every tap is saved straight away (a phone can die
+  // mid-edit), so "Undo changes" puts it back the way it was when opened.
+  const original = editing ? structuredClone(submission) : null;
+  let changed = false;
   let stopListening = null;
   let nextUp = null; // my remaining Assignments, worked out after saving
 
@@ -129,7 +133,7 @@ export async function renderMatch({ param }) {
     h('div', { class: 'row1' },
       backBtn, metaEl,
       // Tap the points for what they mean (asked in the stands, not in Settings).
-      h('button', { class: 'points', type: 'button', 'aria-live': 'polite',
+      h('button', { class: 'points', type: 'button',
         onclick: () => infoDialog({ title: 'Estimated points', body: EST_PTS_HELP }) },
         pointsEl, pointsLabel),
     ),
@@ -218,6 +222,7 @@ export async function renderMatch({ param }) {
   }
 
   async function save() {
+    if (editing && !changed) { changed = true; queueMicrotask(renderBottombar); }
     refresh(config, submission);
     if (editing) await db.putSubmission(submission);
     else await db.putDraft(submission);
@@ -371,7 +376,8 @@ export async function renderMatch({ param }) {
     if (readOnly) {
       panel.prepend(h('p', { class: 'notice' }, `${submission.summary.scout ?? 'Another scout'}’s match · view only. ${
         isLead(group) ? 'Lead edits are turned off for this group.' : 'Only the scout who saved it, or a Lead, can change it.'}`));
-    } else if (editing && i === tabSections.length - 1) {
+    } else if (editing && (i === 0 || i === tabSections.length - 1)) {
+      // First tab too, where Discard sits for a match being scouted.
       panel.append(deleteButton());
     }
     if (!editing && i === 0) panel.append(discardButton());
@@ -423,7 +429,7 @@ export async function renderMatch({ param }) {
     } else if (last || (noShow && !editing)) {
       // A robot that didn't show up has nothing more to record: save straight away.
       action = h('button', { class: 'pill', type: 'button', onclick: submit },
-        editing ? 'Save changes' : noShow && !last ? `Save ${code} (no-show)` : `Save ${code}`);
+        editing ? 'Done' : noShow && !last ? `Save ${code} (no-show)` : `Save ${code}`);
     } else if (guest) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => {
         seenGuests.add(`guest-${guest.id}`);
@@ -439,6 +445,9 @@ export async function renderMatch({ param }) {
     const earlier = readOnly ? [] : missingRequired(config, submission)
       .filter((m) => tabSections.indexOf(tabOf(m.section)) < current);
     const status = readOnly ? h('p', { class: 'status' }, h('span', {}, `View only · ${submission.summary.scout ?? 'another scout'}`))
+      : editing && changed ? h('p', { class: 'status' }, icon('device', 18),
+        h('span', { role: 'status' }, 'Changes saved'),
+        h('button', { class: 'link-btn', type: 'button', onclick: undoChanges }, 'Undo changes'))
       : earlier.length ? h('button', { class: 'status-missing', type: 'button', onclick: () => showMissing(earlier, 'Needed') },
         icon('alert', 18), h('span', {}, `Still needed: ${earlier.map((m) => m.field.label.toLowerCase()).join(', ')}`))
         : savedStatus(handover?.note ?? 'Saved on this phone');
@@ -472,6 +481,12 @@ export async function renderMatch({ param }) {
     await db.setSetting('nextCarry', nextMatchCarry(submission));
     nextUp = await myPlan();
     showFinish();
+  }
+
+  async function undoChanges() {
+    // A new updatedAt, so the group gets the match back as it was too.
+    await db.putSubmission({ ...original, updatedAt: new Date().toISOString() });
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
   }
 
   function showMissing(missing, why = 'Needed before saving') {

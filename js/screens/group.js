@@ -57,12 +57,24 @@ export async function renderGroup() {
     const actions = h('div', { class: 'row-actions' });
     if (lead && !isMe && isOnline()) {
       const roleBtn = h('button', { class: 'small-btn', type: 'button' }, m.role === 'lead' ? 'Make Scout' : 'Make Lead');
-      roleBtn.addEventListener('click', () => busy(roleBtn, '…', async () => {
+      roleBtn.addEventListener('click', async () => {
+        // A role changes what someone can do in the whole group, so ask first
+        // (like Remove), then say what changed.
+        const toLead = m.role !== 'lead';
+        const ok = await confirmDialog({
+          title: toLead ? `Make ${m.display_name} a Lead?` : `Make ${m.display_name} a Scout?`,
+          body: toLead ? 'Leads plan Assignments, pick the event, invite people and change Group settings.'
+            : 'They’ll scout and see their Assignments, but can’t plan or change Group settings.',
+          confirmLabel: toLead ? 'Make Lead' : 'Make Scout',
+        });
+        if (ok) await busy(roleBtn, '…', async () => {
         try {
-          await setRole(group.id, m.user_id, m.role === 'lead' ? 'scout' : 'lead');
+          await setRole(group.id, m.user_id, toLead ? 'lead' : 'scout');
           await load();
+          message.show(`${m.display_name} is now a ${toLead ? 'Lead' : 'Scout'}.`, 'info');
         } catch (err) { message.show(friendlyError(err), 'error'); }
-      }));
+        });
+      });
       const removeBtn = h('button', { class: 'small-btn danger', type: 'button', 'aria-label': `Remove ${m.display_name}` }, 'Remove');
       removeBtn.addEventListener('click', async () => {
         const ok = await confirmDialog({
