@@ -26,7 +26,7 @@ function loadJsQR() {
     const s = document.createElement('script');
     s.src = 'vendor/jsqr-1.4.0.js';
     s.onload = () => resolve(window.jsQR);
-    s.onerror = () => reject(new Error('Couldn’t load the QR reader.'));
+    s.onerror = () => reject(new Error('Couldn’t open the QR reader. Close and reopen the app, then try again.'));
     document.head.append(s);
   });
   return jsQRLoading;

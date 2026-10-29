@@ -58,7 +58,7 @@ export async function renderSaved({ param }) {
   // sending fails, so with QR backup on, Show as QR is always there too.
   const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now') : null;
   const qrBtn = unsent && group?.settings?.qrBackup
-    ? h('a', { class: `pill${sendBtn ? ' secondary' : ''}`, href: '#qr' }, 'Show as QR') : null;
+    ? h('a', { class: `pill${sendBtn ? ' secondary' : ''}`, href: '#qr' }, 'Show my matches as QR') : null;
   sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));

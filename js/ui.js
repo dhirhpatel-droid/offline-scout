@@ -232,8 +232,8 @@ export function formField(label, attrs = {}, hint = null) {
 }
 
 // A password field with a Show/Hide button (easier to type right on a phone).
-export function passwordField(label, autocomplete) {
-  const f = formField(label, { type: 'password', autocomplete, minlength: 8, autocapitalize: 'off', spellcheck: 'false' });
+export function passwordField(label, autocomplete, hint) {
+  const f = formField(label, { type: 'password', autocomplete, minlength: 8, autocapitalize: 'off', spellcheck: 'false' }, hint);
   const toggle = h('button', { type: 'button', class: 'reveal', 'aria-pressed': 'false' }, 'Show');
   toggle.addEventListener('click', () => {
     const show = f.input.type === 'password';

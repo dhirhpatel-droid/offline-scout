@@ -568,7 +568,8 @@ export async function renderMatch({ param }) {
           nextCode ? `Scout ${nextCode}${nextTeam ? ` · ${nextTeam}` : ''}` : 'Scout the next match', icon('next', 22)),
         h('div', { class: 'two' },
           h('a', { class: 'pill secondary block', href: `#match/${submission.id}` }, `Edit ${code}`),
-          h('a', { class: 'pill secondary block', href: '#saved' }, 'My matches'))),
+          h('a', { class: 'pill secondary block', href: '#saved' }, 'My matches')),
+        planned ? h('button', { class: 'link-btn', type: 'button', onclick: startNext }, 'Scout a different match') : null),
     );
     bottombar.remove(); // the status is in the result above
     panel.querySelector('h2').focus();

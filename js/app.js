@@ -24,7 +24,7 @@ import { renderQuestions } from './screens/questions.js';
 import { renderChecks } from './screens/checks.js';
 import { renderAnnouncements } from './screens/announce.js';
 import { renderShowQr, renderScan } from './screens/qr.js';
-import { noteVisit, backHref, backLinksUseHistory } from './nav.js';
+import { noteVisit, backHref, backLinksUseHistory, replaceWith } from './nav.js';
 
 const root = document.getElementById('app');
 
@@ -103,15 +103,15 @@ async function route(opts = {}) {
 // A link to a screen that doesn't exist (an old or mistyped address).
 async function notFound() {
   return { el: h('div', { class: 'screen' },
-    h('header', { class: 'topbar' }, h('h1', { tabindex: '-1' }, 'Page not found')),
+    topbar('Page not found', backHref('#home')),
     h('main', { class: 'content' },
       h('p', { class: 'plain' }, 'That link doesn’t go anywhere in Offline Scout. Your matches are safe on this phone.'),
       h('div', { class: 'actions crash-actions' }, h('a', { class: 'pill block', href: '#home' }, 'Back to home')))) };
 }
 
 function redirect(hash) {
-  // replace() so the back button doesn't bounce between screens.
-  location.replace(hash);
+  // Replaced, not added, so the back button doesn't bounce between screens.
+  replaceWith(hash);
 }
 
 // Email links (confirm email, invite, password reset) come back to the app

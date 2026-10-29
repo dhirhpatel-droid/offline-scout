@@ -160,7 +160,9 @@ function nowBlock(next) {
         two ? null : 'your next assignment',
       ].filter(Boolean).join(' · ')),
       lineup(next.match, next.items.map((a) => a.team)),
-      go);
+      go,
+      // The plan is a plan: any other match can still be scouted.
+      h('a', { class: 'link-btn on-alliance now-other', href: '#match' }, 'Scout a different match'));
   }
   if (next.kind === 'all-done') {
     return h('section', { class: 'now', 'data-alliance': 'none' },
@@ -234,6 +236,6 @@ function eventRow(group, lead, data) {
 // The footer says where your matches are (sending is the one thing it reports).
 function footerStatus(unsent, lastSyncAt) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
-  return h('p', { class: `status ${st.state}` }, icon(st.state === 'sent' ? 'check' : 'device', 18),
+  return h('p', { class: `status ${st.state}`, role: 'status' }, icon(st.state === 'sent' ? 'check' : 'device', 18),
     h('span', {}, st.text));
 }

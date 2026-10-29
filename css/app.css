@@ -1290,3 +1290,6 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .tile-saved { display: block; margin-top: var(--s1); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
 .tile-saved.error { color: var(--danger); }
 .crash-detail summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--text-2); }
+/* "Scout a different match" under an Assignment's big button: the plan never locks a Scout in */
+.now-other { display: flex; align-items: center; margin-top: var(--s2); }
+.finish-actions .link-btn { justify-self: start; }

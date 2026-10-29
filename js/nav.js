@@ -5,12 +5,17 @@
 
 const stack = [];
 let shown = null; // the screen on show right now
+let replacing; // set while an entry is being replaced (not added)
 
 // Called by the router on every screen change.
 export function noteVisit(hash) {
   // Each entry in the browser's history remembers the screen before it, the
   // first time it's shown (going back to it later keeps what it had).
-  if (!history.state || !('back' in history.state)) history.replaceState({ ...history.state, back: shown }, '');
+  // A replaced entry keeps the one before it that the old entry had.
+  if (!history.state || !('back' in history.state)) {
+    history.replaceState({ ...history.state, back: replacing !== undefined ? replacing : shown }, '');
+  }
+  replacing = undefined;
   shown = hash;
   if (stack.at(-1) === hash) return;          // the same screen redrawn
   if (stack.at(-2) === hash) stack.pop();     // went back one step
@@ -28,7 +33,13 @@ export function backHref(fallback) {
 export function returnTo(fallback) {
   const target = backHref(fallback);
   if (history.state?.back === target) history.back();
-  else location.replace(target);
+  else replaceWith(target);
+}
+
+// Swap this screen for another without adding to the history.
+export function replaceWith(hash) {
+  replacing = history.state?.back ?? null;
+  location.replace(hash);
 }
 
 // A link to the screen right before this one goes back in the browser's

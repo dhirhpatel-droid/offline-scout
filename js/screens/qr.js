@@ -27,7 +27,7 @@ export async function renderShowQr() {
   const unsent = mine.filter(needsSync);
   const list = unsent.length ? unsent : mine.filter((s) => s.eventId === group.currentEvent?.id);
   if (!list.length) {
-    return { el: h('div', { class: 'screen' }, bar('Show as QR', '#saved'), h('main', { class: 'content' },
+    return { el: h('div', { class: 'screen' }, bar('Show my matches as QR', '#saved'), h('main', { class: 'content' },
       h('p', { class: 'plain teams-empty' }, 'No matches to show yet. Matches you save show up here.'))) };
   }
   const configs = new Map();
@@ -67,7 +67,7 @@ export async function renderShowQr() {
   if (list.length > 1) play(true);
 
   const el = h('div', { class: 'screen' },
-    bar('Show as QR', '#saved'),
+    bar('Show my matches as QR', '#saved'),
     h('main', { class: 'content qr-show' },
       h('p', { class: 'group-lede' }, unsent.length
         ? `${unsent.length} ${unsent.length === 1 ? 'match' : 'matches'} your group doesn’t have yet`
@@ -153,7 +153,7 @@ export async function renderScan() {
 
   // Before the camera starts, the square it'll fill, with the button in it.
   const startBtn = h('button', { class: 'pill big', type: 'button' }, icon('camera', 22), 'Start the camera');
-  const waitHint = h('p', { class: 'qr-waiting-hint' }, 'Point it at a Scout’s Show as QR screen. Matches save on this phone.');
+  const waitHint = h('p', { class: 'qr-waiting-hint' }, 'Point it at a Scout’s QR codes. Matches save on this phone.');
   const holder = h('div', { class: 'qr-camera waiting' }, startBtn, waitHint);
   let release = null;
   let left = false; // the Lead left while the camera was still starting
@@ -175,7 +175,7 @@ export async function renderScan() {
   const el = h('div', { class: 'screen' },
     bar('Scan Scouts’ matches', '#home'),
     h('main', { class: 'content qr-scan' },
-      h('p', { class: 'group-lede' }, 'For when nobody has signal: each Scout taps Show my matches as QR on their Home screen.'),
+      h('p', { class: 'group-lede' }, 'For when nobody has signal: each Scout opens My matches and taps Show my matches as QR.'),
       holder, status, problem, tally,
       h('a', { class: 'pill secondary block', href: '#saved/everyone' }, 'Done: see everyone’s matches'),
       h('p', { class: 'plain qr-help' }, 'Scanned matches are saved on this phone and sent to your group, as each Scout’s own, the next time it has signal.')),

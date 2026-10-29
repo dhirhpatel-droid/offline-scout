@@ -43,7 +43,7 @@ export async function renderAuth({ param }) {
     ? h('section', { class: 'now auth-hero', 'data-alliance': 'none' },
         h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout')),
         h('h1', { class: 'now-hero', tabindex: '-1' }, 'Scout every match. Even with no signal.'),
-        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so bad gym wifi never costs you data.'),
+        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so no signal in the gym never costs you data.'),
         // The two sides of the field, red and blue: the app's world in one line.
         h('div', { class: 'auth-band', 'aria-hidden': 'true' }, h('span', { class: 'red' }), h('span', { class: 'blue' })))
     : h('header', { class: 'topbar' }, h('span', { class: 'wordmark' }, 'Offline Scout'));
@@ -97,7 +97,7 @@ const FORMS = {
     const name = formField('Your name', { type: 'text', autocomplete: 'nickname', autocapitalize: 'words', maxlength: 40 },
       'Shown to your Scouting group, e.g. on matches you scout.');
     const email = formField('Email', { type: 'email', autocomplete: 'email', inputmode: 'email', autocapitalize: 'off' });
-    const password = passwordField('Password', 'new-password');
+    const password = passwordField('Password', 'new-password', 'At least 8 characters.');
     const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Create account');
     const form = h('form', { class: 'form', novalidate: true },
       h('p', { class: 'lede' }, 'We only store your name and email, so your Scouting group knows who scouted what.'),
@@ -183,7 +183,7 @@ async function newPasswordForm(message, askName) {
   const profile = await cachedProfile();
   const name = askName ? formField('Your name', { type: 'text', autocomplete: 'nickname', autocapitalize: 'words', maxlength: 40 }) : null;
   if (name && profile?.display_name) name.input.value = profile.display_name;
-  const password = passwordField('New password', 'new-password');
+  const password = passwordField('New password', 'new-password', 'At least 8 characters.');
   const submit = h('button', { class: 'pill big block', type: 'submit' }, askName ? 'Finish setting up' : 'Save password');
   const form = h('form', { class: 'form', novalidate: true },
     askName ? h('p', { class: 'lede' }, 'You were invited to a Scouting group. Choose the name your group will see and a password.') : null,
