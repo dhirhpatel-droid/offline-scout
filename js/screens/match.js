@@ -26,7 +26,7 @@ import { findRole } from '../config.js';
 import { cachedEvent } from '../events.js';
 import { findMatch, teamAt, timeOf, isAtEvent } from '../schedule.js';
 import { myPlan } from '../now-scouting.js';
-import { withCustom } from '../custom-rules.js';
+import { withCustom, withoutHidden } from '../custom-rules.js';
 import { cachedQuestions } from '../custom.js';
 import { EST_PTS_HELP } from './settings.js';
 
@@ -40,10 +40,11 @@ export async function renderMatch({ param }) {
   // Remember whether this Draft is brand new (nothing typed yet), before
   // anything below updates it.
   const freshDraft = !editing && submission.createdAt === submission.updatedAt;
-  // The Game config plus this group's Custom questions (which never score).
   const group = await currentGroup();
-  const config = withCustom(await loadConfig(submission.configId),
-    await cachedQuestions(submission.groupId ?? group?.id), submission.values);
+  // The game's questions, minus any the group's Leads hid, plus the group's own.
+  const config = withoutHidden(withCustom(await loadConfig(submission.configId),
+    await cachedQuestions(submission.groupId ?? group?.id), submission.values),
+  group?.settings?.hiddenFields, submission.values);
   // Fill in the scout from the account if a hidden field still needs it.
   const profile = await cachedProfile();
   // (Not when opening a saved match: that would put your name on someone else's.)

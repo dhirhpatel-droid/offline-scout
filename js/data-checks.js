@@ -107,18 +107,17 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
 // bonuses, so a gap is normal; a big one may mean a missed or extra tap.)
 export function scoreGaps(config, subs, matches, limits = SENSITIVITY.normal) {
   const out = [];
-  // The final score Scouts read off the field screen: used when the official
-  // one hasn't downloaded yet (no signal at the event).
-  const scoreSec = config.sections.find((sec) => sec.fields.some((f) => f.role === 'allianceScore'));
-  const scoreKey = scoreSec && fieldKey(scoreSec.id, scoreSec.fields.find((f) => f.role === 'allianceScore').id);
   for (const m of matches) {
+    // The final scores Scouts read off the field screen: used when the
+    // official ones haven't downloaded yet (no signal at the event).
+    const seen = fieldScores(config, subs, m.level, m.number);
     for (const side of ['red', 'blue']) {
       const teams = m[side] ?? [];
       const inMatch = (s) => levelOf(s) === m.level && s.summary?.match === m.number;
       const here = subs.filter((s) => teams.includes(s.summary?.team) && inMatch(s));
       let official = m.played ? m[`${side}_score`] ?? null : null;
       const fromField = official == null;
-      if (fromField) official = enteredScore(here, scoreKey);
+      if (fromField) official = seen?.[side] ?? null;
       if (official == null) continue;
       const perTeam = teams.map((team) => {
         const mine = here.filter((s) => s.summary?.team === team);
@@ -145,11 +144,20 @@ export function scoreGaps(config, subs, matches, limits = SENSITIVITY.normal) {
   return out;
 }
 
-// The final alliance score Scouts typed in (the middle one, if they differ).
-function enteredScore(subs, key) {
-  if (!key) return null;
-  const seen = subs.map((s) => s.values?.[key]).filter((v) => typeof v === 'number').sort((a, b) => a - b);
-  return seen.length ? seen[Math.floor((seen.length - 1) / 2)] : null;
+// The final scores Scouts typed in for a match: { red, blue }, each the
+// middle one if they differ, or null when nobody typed both.
+export function fieldScores(config, subs, level, number) {
+  const keyOf = (role) => {
+    for (const sec of config.sections) for (const f of sec.fields) if (f.role === role) return fieldKey(sec.id, f.id);
+    return null;
+  };
+  const inMatch = subs.filter((s) => levelOf(s) === (level ?? 'qual') && s.summary?.match === number);
+  const middle = (key) => {
+    const seen = inMatch.map((s) => s.values?.[key]).filter((v) => typeof v === 'number').sort((a, b) => a - b);
+    return seen.length ? seen[Math.floor((seen.length - 1) / 2)] : null;
+  };
+  const [red, blue] = [keyOf('redScore'), keyOf('blueScore')].map((k) => (k ? middle(k) : null));
+  return red == null || blue == null ? null : { red, blue };
 }
 
 // Values that can't be right, checked against the Event's teams and schedule

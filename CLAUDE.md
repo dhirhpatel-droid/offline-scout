@@ -142,8 +142,9 @@ form would not even open, so we lost scouting data when we needed it most.
   sign-out clears the account's data from the phone; sync skips other people's leftover matches
   and keeps going past one failure, re-downloads when your role changes, looks back a minute;
   Assignments only count this event's matches; QR codes are checked strictly. New: Number
-  answer type for Custom questions, "Final alliance score" in every match (config v5, role
-  `allianceScore`, used by Data checks before official scores arrive), bottom tab bar
+  answer type for Custom questions, Red and Blue final score in every match (config v6, roles
+  `redScore`/`blueScore`: Team pages show "Won 45–30 (scouts)" and Data checks use them before
+  official scores arrive), Leads can hide the game's own questions (`hiddenFields`), bottom tab bar
   (DESIGN.md "Tab Bar"). Not yet tested by Dhir on phones.
 - **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.

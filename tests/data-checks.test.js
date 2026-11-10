@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { dataChecks, disagreements, scoreGaps, impossible, checksFor } from '../js/data-checks.js';
+import { dataChecks, disagreements, scoreGaps, impossible, checksFor, fieldScores } from '../js/data-checks.js';
 
 const config = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
 
@@ -59,8 +59,10 @@ test('an alliance total far from the official score is flagged, only when every 
 
 test('with no official score yet, the final score Scouts typed in is used instead', () => {
   const unplayed = [{ level: 'qual', number: 1, red: [1, 2], blue: [3, 4], played: false }];
-  // Scouts read 60 (and one 64) off the field screen; their taps add up to 20.
-  const red = [sub(1, 1, { 'auto.hiveTips': 1, 'post.allianceScore': 60 }), sub(2, 1, { 'post.allianceScore': 64 })];
+  // Scouts read 60–20 (and one 64–20) off the field screen; their taps add up to 20.
+  const red = [sub(1, 1, { 'auto.hiveTips': 1, 'post.redScore': 60, 'post.blueScore': 20 }),
+    sub(2, 1, { 'post.redScore': 64, 'post.blueScore': 20 })];
+  assert.deepEqual(fieldScores(config, red, 'qual', 1), { red: 60, blue: 20 });
   const [c] = scoreGaps(config, red, unplayed);
   assert.match(c.title, /20 scouted, 60 on the field screen/);
   // Nobody typed a score: nothing to compare with.

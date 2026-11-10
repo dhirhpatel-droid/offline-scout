@@ -1,6 +1,6 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 5,
+  "version": 6,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
@@ -177,13 +177,21 @@
       "title": "After the match",
       "fields": [
         {
-          "id": "allianceScore",
+          "id": "redScore",
           "type": "number",
-          "label": "Final alliance score",
-          "role": "allianceScore",
+          "label": "Red final score",
+          "role": "redScore",
           "min": 0,
           "max": 999,
-          "hint": "The alliance’s score on the field screen after the match. Leave it empty if you didn’t see it."
+          "hint": "From the field screen after the match. Leave empty if you didn’t see it."
+        },
+        {
+          "id": "blueScore",
+          "type": "number",
+          "label": "Blue final score",
+          "role": "blueScore",
+          "min": 0,
+          "max": 999
         },
         {
           "id": "driverSkill",

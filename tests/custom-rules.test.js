@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { checkQuestion, parseOptions, toField, withCustom, customKey } from '../js/custom-rules.js';
+import { checkQuestion, parseOptions, toField, withCustom, customKey, withoutHidden } from '../js/custom-rules.js';
 import { estimatePoints } from '../js/scoring.js';
 
 const config = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
@@ -53,4 +53,15 @@ test('a cleared answer doesn\'t keep a hidden question showing', () => {
 test('Custom answers never add to Estimated points', () => {
   const merged = withCustom(config, [q({ type: 'counter' })]);
   assert.equal(estimatePoints(merged, { [customKey(q())]: 10 }), 0);
+});
+
+test('a Lead can hide the game\'s own questions, but never the ones the app needs', () => {
+  const game = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
+  const keys = (c) => c.sections.flatMap((s) => s.fields.map((f) => `${s.id}.${f.id}`));
+  const hidden = withoutHidden(game, ['teleop.defense', 'pre.team', 'end.park']);
+  assert.ok(!keys(hidden).includes('teleop.defense'));
+  assert.ok(keys(hidden).includes('pre.team'), 'the team number always stays');
+  assert.ok(!hidden.sections.some((s) => s.id === 'end'), 'a period with nothing left goes too');
+  // A match that already answered it keeps it.
+  assert.ok(keys(withoutHidden(game, ['teleop.defense'], { 'teleop.defense': 'heavy' })).includes('teleop.defense'));
 });

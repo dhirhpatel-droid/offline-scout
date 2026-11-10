@@ -21,7 +21,7 @@ import { forEvent, teamRows, sortRows, formatAvg, fieldSummary, scoringSections,
 import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
-import { dataChecks, checksFor, openChecks } from '../data-checks.js';
+import { dataChecks, checksFor, openChecks, fieldScores } from '../data-checks.js';
 import { checkButtons, checkBody, okKeys, okButton } from './checks.js';
 
 // Everything the Lead views need (also used by the Checks screen).
@@ -227,7 +227,7 @@ export async function renderTeam({ param }) {
       return h('li', {},
         h('span', { class: 'num team-match-code' }, code, m.games > 1 ? h('span', { class: 'team-match-games' }, `${m.games} games`) : null),
         station(positionLabel(pos), pos.replace(/\d/, '')),
-        h('span', { class: 'team-match-when' }, m.played ? result(m, pos) : timeOf(m) ?? ''),
+        h('span', { class: 'team-match-when' }, outcome(m, pos, fieldScores(config, subs, m.level, m.number))),
         h('span', { class: `team-match-scouted${n ? '' : ' none'}` },
           pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : n ? 'No-show' : m.played ? 'Not scouted' : ''));
     }),
@@ -261,13 +261,17 @@ function avgCell(n, words = 'no data') {
   return n == null ? [h('span', { 'aria-hidden': 'true' }, '—'), h('span', { class: 'visually-hidden' }, words)] : formatAvg(n);
 }
 
-// A played match from this Team's side: "Won 45–30", "Lost 30–45", "Tied 20–20".
-function result(m, pos) {
-  if (m.red_score == null) return 'Played';
-  const red = pos.startsWith('red');
-  const ours = red ? m.red_score : m.blue_score;
-  const theirs = red ? m.blue_score : m.red_score;
-  return `${ours > theirs ? 'Won' : ours < theirs ? 'Lost' : 'Tied'} ${ours}–${theirs}`;
+// How a match went from this Team's side: "Won 45–30", "Lost 30–45",
+// "Tied 20–20". The official score when it has downloaded; otherwise the one
+// scouts read off the field screen, marked "(scouts)"; else the time.
+function outcome(m, pos, seen) {
+  const official = m.played && m.red_score != null;
+  if (!official && !seen) return m.played ? 'Played' : timeOf(m) ?? '';
+  const red = official ? m.red_score : seen.red;
+  const blue = official ? m.blue_score : seen.blue;
+  const [ours, theirs] = pos.startsWith('red') ? [red, blue] : [blue, red];
+  const words = `${ours > theirs ? 'Won' : ours < theirs ? 'Lost' : 'Tied'} ${ours}–${theirs}`;
+  return official ? words : `${words} (scouts)`;
 }
 
 // One field's summary as a definition row: "LEAVE · 4 of 5".

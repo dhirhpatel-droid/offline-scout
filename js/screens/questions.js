@@ -5,10 +5,10 @@
 
 import { backHref } from '../nav.js';
 import { h, icon, formField, formMessage, busy, offlineNote, topbar } from '../ui.js';
-import { currentGroup } from '../account.js';
+import { currentGroup, setGroupSetting } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
-import { QUESTION_TYPES, checkQuestion } from '../custom-rules.js';
+import { QUESTION_TYPES, checkQuestion, canHide } from '../custom-rules.js';
 import { cachedQuestions, addQuestion, setHidden } from '../custom.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
@@ -57,6 +57,37 @@ export async function renderQuestions() {
     return mine.length ? h('section', {}, h('h2', { class: 'section-h' }, s.label), h('ul', { class: 'rows' }, mine.map(row))) : null;
   });
 
+  // ---------- the game's own questions ----------
+  // A Lead can hide the ones this group doesn't use. Hiding one that scores
+  // means its points stop counting in new matches.
+  const hiddenFields = group.settings?.hiddenFields ?? [];
+  const gameRow = (s, f) => {
+    const key = `${s.id}.${f.id}`;
+    const off = hiddenFields.includes(key);
+    const btn = online ? h('button', { class: 'small-btn', type: 'button',
+      'aria-label': `${off ? 'Show' : 'Hide'} “${f.label}”` }, off ? 'Show again' : 'Hide') : null;
+    btn?.addEventListener('click', () => busy(btn, '…', async () => {
+      try {
+        await setGroupSetting(group.id, 'hiddenFields', off ? hiddenFields.filter((k) => k !== key) : [...hiddenFields, key]);
+        await reload(off ? `“${f.label}” is back in the match.`
+          : `“${f.label}” is hidden in new matches.${f.points ? ' Its points no longer count.' : ''} Answers already given stay.`);
+      } catch (err) { message.show(friendlyError(err), 'error'); }
+    }));
+    const kind = typeWord(f.type === 'notes' ? 'text' : f.type);
+    return h('li', { class: `row question-row${off ? ' hidden-q' : ''}` },
+      h('div', {}, h('div', { class: 'title' }, f.label),
+        h('div', { class: 'sub' }, [kind, f.points ? `${f.points} pts` : null, off ? 'hidden' : null].filter(Boolean).join(' · '))),
+      btn);
+  };
+  const gameSections = config.sections.map((s) => {
+    const fields = s.fields.filter(canHide);
+    return fields.length ? [h('h3', { class: 'team-fields-h' }, s.label), h('ul', { class: 'rows' }, fields.map((f) => gameRow(s, f)))] : null;
+  });
+  const gameList = h('details', { class: 'team-list game-questions' },
+    h('summary', {}, `Questions from the game${hiddenFields.length ? ` (${hiddenFields.length} hidden)` : ''}`, icon('next', 18)),
+    h('p', { class: 'plain teams-note' }, 'Hide the ones your group doesn’t use. Match, team, position and scores always stay.'),
+    gameSections);
+
   // ---------- add a question ----------
   let section = config.sections.find((s) => s.id === 'post')?.id ?? config.sections.at(-1).id;
   let type = 'toggle';
@@ -101,12 +132,13 @@ export async function renderQuestions() {
   const el = h('div', { class: 'screen' },
     topbar('Custom questions', backHref('#group')),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, 'Your own questions, shown in the match. They never add to points.'),
+      h('p', { class: 'group-lede' }, 'Your own questions, shown in the match. They never add to points. You can also hide the game’s questions your group doesn’t use.'),
       message.el,
       visible.length ? lists : h('p', { class: 'plain' }, 'No questions yet.'),
       hidden.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Hidden (${hidden.length})`, icon('next', 18)),
         h('ul', { class: 'rows' }, hidden.map(row))) : null,
+      gameList,
       online ? form : offlineNote('Your questions are saved on this phone and still show in matches. Adding and hiding happen with signal.')),
   );
   return { el };

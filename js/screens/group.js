@@ -239,7 +239,10 @@ export async function renderGroup() {
   const shown = questions.filter((q) => !q.hidden_at).length;
   const questionsLink = lead ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#questions' },
     h('div', {}, h('div', { class: 'title' }, 'Custom questions'),
-      h('div', { class: 'sub' }, shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'} in the match` : 'Add your own questions to the match')),
+      h('div', { class: 'sub' }, [
+        shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'}` : 'Add your own, or hide the game’s',
+        group.settings?.hiddenFields?.length ? `${group.settings.hiddenFields.length} from the game hidden` : null,
+      ].filter(Boolean).join(' · '))),
     icon('next', 20)))) : null;
 
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');

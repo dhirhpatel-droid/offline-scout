@@ -69,3 +69,22 @@ export function withCustom(config, questions = [], values = {}) {
   return { ...config, sections };
 }
 
+
+// Questions from the game that a Lead hid for the group (Group setting
+// hiddenFields, e.g. ["teleop.defense"]). Fields the app needs (a role) or
+// that are required never hide. A Submission that already has an answer
+// keeps showing it, so nothing recorded disappears. A period left with no
+// questions disappears too.
+export const canHide = (field) => !field.role && !field.required && !field.custom;
+const answered = (v) => v !== undefined && v !== null && v !== '' && v !== 0 && v !== false;
+export function withoutHidden(config, hidden = [], values = {}) {
+  if (!hidden?.length) return config;
+  const sections = config.sections.map((s) => ({
+    ...s,
+    fields: s.fields.filter((f) => {
+      const key = `${s.id}.${f.id}`;
+      return !hidden.includes(key) || !canHide(f) || answered(values[key]);
+    }),
+  })).filter((s) => s.fields.length);
+  return { ...config, sections };
+}

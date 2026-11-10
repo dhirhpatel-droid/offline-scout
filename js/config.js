@@ -7,9 +7,9 @@ export const FIELD_TYPES = ['text', 'number', 'choice', 'toggle', 'counter', 'ra
 
 // Roles tell the app which fields carry special meaning (the header, the
 // "next match" button), so the app never depends on one game's field names.
-// allianceScore: the final score a Scout read off the field screen (used by
-// Data checks when the official score hasn't downloaded yet).
-export const ROLES = ['scoutName', 'matchLevel', 'matchNumber', 'teamNumber', 'alliancePosition', 'noShow', 'allianceScore'];
+// redScore / blueScore: the final scores a Scout read off the field screen
+// (used for "Won 45–30" and Data checks before official scores download).
+export const ROLES = ['scoutName', 'matchLevel', 'matchNumber', 'teamNumber', 'alliancePosition', 'noShow', 'redScore', 'blueScore'];
 const REQUIRED_ROLES = ['scoutName', 'matchLevel', 'matchNumber', 'teamNumber', 'alliancePosition'];
 
 // Returns a list of problems. An empty list means the config is valid.
