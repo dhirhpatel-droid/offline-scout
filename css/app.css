@@ -1391,3 +1391,32 @@ h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; } /* focused f
 
 /* Why it exists */
 .origin { margin: var(--s6) 0 var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-2); max-width: 46ch; }
+
+/* ---------- Install tip ----------
+   How to put Offline Scout on the home screen, free, from the browser. The
+   small one is a quiet raised block (Home, Settings); the first one opens the
+   sign-in screen with numbered steps. Gone once the app is installed. */
+.install-tip { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
+.install-tip > h2:not(.section-h) { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-md); font-weight: 800; }
+.install-lede { margin-top: var(--s1); font-size: var(--fs-sm); color: var(--text-2); }
+.install-tip.first { margin-top: 0; padding: 0; background: none; border-radius: 0; }
+.install-tip.first .install-lede { font-size: var(--fs-md); }
+/* Numbered steps: the number in a circle, because the order matters */
+.install-steps { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: var(--s3); counter-reset: step; }
+.install-steps li { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: var(--s3); counter-increment: step; font-size: var(--fs-md); }
+.install-steps li::before {
+  content: counter(step);
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary-bg); color: var(--primary-text);
+  font-weight: 800; font-size: var(--fs-sm);
+}
+.install-tip:not(.first) .install-steps li { font-size: var(--fs-sm); grid-template-columns: 26px 1fr; }
+.install-tip:not(.first) .install-steps li::before { width: 26px; height: 26px; font-size: var(--fs-xs); }
+.install-glyph { display: inline-flex; align-items: center; gap: 2px; font-weight: 800; vertical-align: -3px; }
+.install-both { display: grid; gap: var(--s4); margin-top: var(--s2); }
+.install-both h3 { font-size: var(--fs-sm); font-weight: 800; color: var(--text-2); margin-top: var(--s2); }
+.install-actions { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s3); }
+.install-actions:empty { display: none; }
+.install-actions .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+.install-tip.first + .form > .section-h:first-child, .install-tip.first + .you-get { margin-top: var(--s6); }
+.install-tip.first { padding-bottom: var(--s5); border-bottom: 1px solid var(--line); }

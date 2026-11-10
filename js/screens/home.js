@@ -19,6 +19,7 @@ import { loadConfig } from '../config.js';
 import { timeOf } from '../schedule.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { submissionRow } from './saved.js';
+import { installTip } from '../install.js';
 
 export async function renderHome() {
   const [all, group, next, me, lastSyncAt, eventData] = await Promise.all([
@@ -74,6 +75,8 @@ export async function renderHome() {
     nowBlock(next),
     newsBlock,
     h('main', { class: 'content' },
+      // Still in a browser tab? How to install it (until they say Not now).
+      await installTip({ dismissible: true }),
       // What's next for you comes first (your Assignments), then, for Leads,
       // the tools they use most; the group and the event come after.
       myAssignments(await myPlan(), next),

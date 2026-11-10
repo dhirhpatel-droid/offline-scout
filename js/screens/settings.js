@@ -1,6 +1,7 @@
 // Settings: your account, the game your group scouts, light/dark theme, and storage info.
 
 import { backHref } from '../nav.js';
+import { installTip } from '../install.js';
 import { h, icon, applyTheme, formField, formMessage, busy, confirmDialog, topbar } from '../ui.js';
 import { cachedProfile, updateDisplayName, signOut, currentGroup, setGroupGame } from '../account.js';
 import { isLead } from '../group-rules.js';
@@ -97,6 +98,7 @@ export async function renderSettings() {
     topbar('Settings and help', backHref('#home')),
     h('main', { class: 'content' },
       // Help first: it's what most people open this screen for.
+      await installTip(),
       helpSection(),
       h('section', { class: 'group' }, h('h2', {}, 'Account'), nameForm),
       h('section', { class: 'group' },

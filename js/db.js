@@ -129,7 +129,7 @@ export async function finishDraft() {
 // Signing out on a shared phone: the next person mustn't see this group's
 // data. Only this phone's own preferences stay, plus matches not sent yet
 // (they go to the group when their Scout signs back in; nobody else sends them).
-const KEEP_SETTINGS = new Set(['theme', 'teamsSort']);
+const KEEP_SETTINGS = new Set(['theme', 'teamsSort', 'installTipHidden']);
 export async function forgetAccountData(keepSubmission) {
   for (const s of await listAllSubmissions()) if (!keepSubmission(s)) await removeSubmission(s.id);
   const keys = await run('settings', 'readonly', (s) => s.getAllKeys());

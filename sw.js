@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v44';
+const VERSION = 'v45';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -47,6 +47,7 @@ const APP_FILES = [
   'vendor/jsqr-1.4.0.js',
   'js/ui.js',
   'js/nav.js',
+  'js/install.js',
   'js/db.js',
   'js/config.js',
   'js/scoring.js',

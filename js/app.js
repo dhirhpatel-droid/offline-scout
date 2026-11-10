@@ -26,6 +26,7 @@ import { renderChecks } from './screens/checks.js';
 import { renderAnnouncements } from './screens/announce.js';
 import { renderShowQr, renderScan } from './screens/qr.js';
 import { noteVisit, backHref, backLinksUseHistory, replaceWith } from './nav.js';
+import { listenForInstall } from './install.js';
 
 const root = document.getElementById('app');
 
@@ -177,6 +178,7 @@ async function registerServiceWorker() {
 applyTheme((await getSetting('theme')) ?? 'system');
 const landing = await finishEmailLink();
 if (landing) history.replaceState(null, '', landing);
+listenForInstall();
 window.addEventListener('hashchange', route);
 document.addEventListener('click', backLinksUseHistory);
 route();

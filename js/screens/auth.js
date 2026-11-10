@@ -13,6 +13,7 @@ import { signIn, signUp, sendPasswordReset, setPasswordAndName, cachedProfile, r
 import { checkSignUp, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
 import { getSetting, setSetting } from '../db.js';
+import { installTip } from '../install.js';
 
 const TITLES = {
   signin: 'Sign in',
@@ -38,6 +39,8 @@ export async function renderAuth({ param }) {
   const intro = mode === 'signin' || mode === 'signup';
   const body = h('main', { class: 'content' },
     intro ? null : h('h1', { class: 'screen-title', tabindex: '-1' }, TITLES[mode]),
+    // Install first: on iPhone the installed app doesn't share Safari's sign-in.
+    intro ? await installTip({ first: true }) : null,
     mode === 'signup' ? youGet() : null,
     await FORMS[mode](message),
     mode === 'signin' ? howItWorks() : null,
