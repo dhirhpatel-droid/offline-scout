@@ -144,7 +144,8 @@ form would not even open, so we lost scouting data when we needed it most.
   Assignments only count this event's matches; QR codes are checked strictly. New: Number
   answer type for Custom questions, Red and Blue final score in every match (config v6, roles
   `redScore`/`blueScore`: Team pages show "Won 45–30 (scouts)" and Data checks use them before
-  official scores arrive), Leads can hide the game's own questions (`hiddenFields`), bottom tab bar
+  official scores arrive), Leads can hide the game's own questions (`hiddenFields`), Home lists
+  every Assignment as To do / Saved (tap any to scout it; nothing assumed from results), bottom tab bar
   (DESIGN.md "Tab Bar"). Not yet tested by Dhir on phones.
 - **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.

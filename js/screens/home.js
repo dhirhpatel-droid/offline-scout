@@ -76,7 +76,7 @@ export async function renderHome() {
     h('main', { class: 'content' },
       // What's next for you comes first (your Assignments), then, for Leads,
       // the tools they use most; the group and the event come after.
-      comingUp(next.kind === 'draft' ? { kind: 'assigned', later: (await myPlan()).todo } : next),
+      myAssignments(await myPlan(), next),
       lead ? h('ul', { class: 'rows home-rows', 'aria-label': 'Lead tools' },
         checksRow ? h('li', {}, checksRow) : null,
         teamsRow ? h('li', {}, teamsRow) : null,
@@ -168,7 +168,7 @@ function nowBlock(next) {
     return h('section', { class: 'now', 'data-alliance': 'none' },
       top,
       h('h1', { class: 'now-hero', tabindex: '-1' }, 'All done'),
-      h('p', { class: 'now-sub' }, `You’ve scouted all ${next.total} of your assignments. Extra matches still count.`),
+      h('p', { class: 'now-sub' }, `You’ve saved a match for all ${next.total} of your assignments. Extra matches still count.`),
       h('a', { class: 'pill big block now-go', href: '#match' }, 'Scout another match', icon('next', 22)));
   }
   if (next.kind === 'next') {
@@ -188,20 +188,43 @@ function nowBlock(next) {
     h('a', { class: 'pill big block now-go', href: '#match' }, 'Scout a match', icon('next', 22)));
 }
 
-// The rest of your Assignments, in match order (the next few).
-function comingUp(next) {
-  if (next.kind !== 'assigned' || !next.later.length) return null;
-  const shown = next.later.slice(0, 5);
-  return h('section', {},
-    h('h2', { class: 'section-h' }, 'Coming up'),
-    h('ol', { class: 'coming-up' }, shown.map((g) => h('li', {},
+// Every one of your Assignments, in match order: To do or Saved. Tap one to
+// scout it (Saved ones too, to scout it again). Nothing is assumed: it says
+// Saved only when this phone has your saved match for it at this event.
+function myAssignments(plan, next) {
+  if (!plan.assigned) return null;
+  const todo = plan.groups.filter((g) => !g.saved);
+  const saved = plan.groups.filter((g) => g.saved);
+  const row = (g) => {
+    const go = h('button', { class: 'coming-row', type: 'button',
+      'aria-label': `${g.saved ? 'Saved' : 'To do'}: ${g.code}, ${g.items.map((a) => `${positionLabel(a.position)}${a.team ? ` team ${a.team}` : ''}`).join(' and ')}. Scout it.` },
       h('span', { class: 'coming-when' },
         h('span', { class: 'num coming-code' }, g.code),
-        h('span', { class: 'coming-time' }, g.time ?? '')),
+        h('span', { class: 'coming-time' }, next.kind === 'assigned' && g.code === next.code ? 'Next' : g.played && !g.saved ? 'Played' : g.time ?? '')),
       h('span', { class: 'coming-what' }, g.items.map((a) => h('span', { class: 'coming-item' },
         station(positionLabel(a.position), a.position.replace(/\d/, '')),
-        a.team ? bumper(a.team, a.position.replace(/\d/, ''), { mine: true }) : h('span', { class: 'coming-tbd' }, 'team not out yet'))))))),
-    next.later.length > shown.length ? h('p', { class: 'plain' }, `And ${next.later.length - shown.length} more after that.`) : null);
+        a.team ? bumper(a.team, a.position.replace(/\d/, ''), { mine: true }) : h('span', { class: 'coming-tbd' }, 'team not out yet')))),
+      h('span', { class: `coming-state${g.saved ? ' saved' : ''}` }, g.saved ? [icon('check', 18), 'Saved'] : 'To do', icon('next', 18)));
+    go.addEventListener('click', async () => {
+      // An unfinished match would be replaced: ask first.
+      if (next.kind === 'draft') {
+        const ok = await confirmDialog({
+          title: `Start ${g.code} instead?`,
+          body: `Your unfinished match ${next.code ?? ''} is discarded. Matches you already saved are not affected.`,
+          confirmLabel: `Start ${g.code}`,
+        });
+        if (!ok) return;
+      }
+      await startPlannedMatch(g.items);
+    });
+    return h('li', {}, go);
+  };
+  return h('section', {},
+    h('h2', { class: 'section-h' }, `Your assignments (${todo.length} to do)`),
+    todo.length ? h('ol', { class: 'coming-up' }, todo.map(row)) : null,
+    saved.length ? h('details', { class: 'team-list' },
+      h('summary', {}, `Saved (${saved.length})`, icon('next', 18)),
+      h('ol', { class: 'coming-up' }, saved.map(row))) : null);
 }
 
 function discardLink() {

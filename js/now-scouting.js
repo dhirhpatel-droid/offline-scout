@@ -13,7 +13,7 @@ import { matchCode, positionLabel, allianceOf } from './submissions.js';
 import { currentEventData, cachedPlan } from './events.js';
 import { currentGroup, cachedProfile } from './account.js';
 import { findMatch, teamAt, timeOf } from './schedule.js';
-import { assignmentsFor, upcoming, byMatch } from './assignments.js';
+import { assignmentsFor, byMatch, isDone } from './assignments.js';
 
 // My Assignments still to do at the Current event, grouped by match.
 // Works offline: the plan and schedule are copies saved on this phone.
@@ -27,13 +27,23 @@ export async function myPlan() {
   const mine = assignmentsFor({ scoutId: profile.id, shifts: plan.shifts, watches: plan.watches, matches: eventData?.matches ?? [] });
   // Only this event's matches count (Q1 Red 1 at the last event isn't this one).
   const mySubs = all.filter((s) => (s.scoutId === profile.id || !s.scoutId) && s.eventId === ev.id);
-  const todo = byMatch(upcoming(mine, mySubs)).map((g) => ({
-    ...g,
-    code: matchCode({ level: g.level, match: g.number }),
-    match: findMatch(eventData?.matches, g.level, g.number),
-    time: timeOf(findMatch(eventData?.matches, g.level, g.number)),
-  }));
-  return { assigned: mine.length > 0, total: mine.length, todo };
+  // Every Assignment stays in the list: "Saved" only when this phone really
+  // has a saved match for it at this event. Nothing is assumed (a match the
+  // results say was played but you didn't save is still To do).
+  const groups = byMatch(mine).map((g) => {
+    const match = findMatch(eventData?.matches, g.level, g.number);
+    return {
+      ...g,
+      code: matchCode({ level: g.level, match: g.number }),
+      match,
+      time: timeOf(match),
+      played: Boolean(match?.played),
+      saved: g.items.every((a) => isDone(a, mySubs)),
+    };
+  });
+  // What to scout next: the first one not saved, matches still to play first.
+  const todo = [...groups.filter((g) => !g.saved && !g.played), ...groups.filter((g) => !g.saved && g.played)];
+  return { assigned: mine.length > 0, total: groups.length, groups, todo };
 }
 
 export async function whatsNext() {

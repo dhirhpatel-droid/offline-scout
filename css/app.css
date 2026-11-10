@@ -802,18 +802,24 @@ a.row { color: inherit; }
 /* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
 .now-hero.two { font-size: var(--fs-hero); }
 
-/* Home: "Coming up", the rest of your Assignments, read like the queuing
-   screen at an event: match and time, then station and team. */
+/* Home: "Your assignments", read like the queuing screen at an event: match
+   and time, then station and team, then To do / Saved. Each row is a button. */
 .coming-up { list-style: none; margin: 0; padding: 0; }
-.coming-up li {
+.coming-up li { border-bottom: 1px solid var(--line); }
+.coming-row {
   display: grid;
-  grid-template-columns: 5.5rem 1fr;
+  grid-template-columns: 5.5rem 1fr auto;
   align-items: center;
   gap: var(--s3);
+  width: 100%;
   min-height: var(--tap-lg);
   padding: var(--s2) 0;
-  border-bottom: 1px solid var(--line);
+  text-align: left;
 }
+.coming-row:active { background-image: linear-gradient(var(--press), var(--press)); }
+.coming-state { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--fs-sm); font-weight: 800; color: var(--text); }
+.coming-state.saved { font-weight: 700; color: var(--text-2); }
+.coming-state svg:last-child { color: var(--text-2); }
 .coming-when { display: grid; }
 .coming-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
 .coming-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
