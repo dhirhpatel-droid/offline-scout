@@ -164,6 +164,24 @@ async function finishEmailLink() {
   return '#groups'; // email confirmed: join or create a group
 }
 
+// Offline Scout moved from GitHub Pages to offline-scout.vercel.app. A phone
+// keeps its matches per address, so before sending someone over, this sends
+// any matches still waiting. Only if something can't be sent (no signal),
+// it stays here for now, and moves next time.
+const NEW_HOME = 'https://offline-scout.vercel.app/';
+async function movedAway() {
+  if (location.hostname !== 'dhirhpatel-droid.github.io') return false;
+  const { listAllSubmissions, getDraft } = await import('./db.js');
+  const { hasUnsentChanges } = await import('./sync-rules.js');
+  const { syncNow } = await import('./sync.js');
+  // A match being scouted right now stays here until it's saved and sent.
+  const waiting = async () => Boolean(await getDraft()) || (await listAllSubmissions()).some(hasUnsentChanges);
+  if (await waiting()) await syncNow();
+  if (await waiting()) return false;
+  location.replace(NEW_HOME + location.hash);
+  return true;
+}
+
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
@@ -179,6 +197,7 @@ applyTheme((await getSetting('theme')) ?? 'system');
 const landing = await finishEmailLink();
 if (landing) history.replaceState(null, '', landing);
 listenForInstall();
+if (await movedAway()) await new Promise(() => {}); // on its way to the new address
 window.addEventListener('hashchange', route);
 document.addEventListener('click', backLinksUseHistory);
 route();

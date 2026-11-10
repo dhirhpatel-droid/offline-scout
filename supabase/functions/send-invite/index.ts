@@ -12,7 +12,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 
 // Only the app itself (and a local copy while developing) may call this.
-const APP_ORIGINS = ['https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
+// (The GitHub address stays allowed while people move to the new one.)
+const APP_ORIGINS = ['https://offline-scout.vercel.app', 'https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
 let CORS: Record<string, string> = {};
 const corsFor = (req: Request) => {
   const origin = req.headers.get('Origin') ?? '';
@@ -28,7 +29,7 @@ const reply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
 // Where the email's link may lead: only the app.
-const APP_URLS = ['https://dhirhpatel-droid.github.io/offline-scout/', 'http://localhost:8000/'];
+const APP_URLS = ['https://offline-scout.vercel.app/', 'https://dhirhpatel-droid.github.io/offline-scout/', 'http://localhost:8000/'];
 const MAX_INVITES_PER_HOUR = 20;
 
 Deno.serve(async (req) => {

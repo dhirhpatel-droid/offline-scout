@@ -6,7 +6,7 @@ in airplane mode. Every tap is saved on the phone straight away.
 Milestone 1: FTC **BIOBUZZ** (2026–27) match scouting. FRC comes next season. Games are
 JSON config files, not code.
 
-**Live app:** https://dhirhpatel-droid.github.io/offline-scout/
+**Live app:** https://offline-scout.vercel.app
 
 ## Using it
 

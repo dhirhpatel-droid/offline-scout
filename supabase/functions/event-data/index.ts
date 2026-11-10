@@ -15,7 +15,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import { FTCSCOUT_URL, SEARCH_QUERY, eventQuery, toRows, toMatchRow, toSearchResult } from './ftcscout.js';
 
 // Only the app itself (and a local copy while developing) may call this.
-const APP_ORIGINS = ['https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
+// (The GitHub address stays allowed while people move to the new one.)
+const APP_ORIGINS = ['https://offline-scout.vercel.app', 'https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
 let CORS: Record<string, string> = {};
 const corsFor = (req: Request) => {
   const origin = req.headers.get('Origin') ?? '';

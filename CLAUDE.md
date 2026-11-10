@@ -42,7 +42,9 @@ form would not even open, so we lost scouting data when we needed it most.
 - **Data format:** see `docs/data-format.md`. Values keyed `section.field`; Submissions
   record `configId` + `configVersion`, have UUIDs, and carry a `syncedAt` marker.
   Bump `DB_VERSION` in `js/db.js` (with an upgrade step) whenever stored data changes shape.
-- **Hosting:** GitHub Pages from `main` (https://dhirhpatel-droid.github.io/offline-scout/).
+- **Hosting:** Vercel from `main` (https://offline-scout.vercel.app, settings in `vercel.json`, no build).
+  GitHub Pages (https://dhirhpatel-droid.github.io/offline-scout/) still serves the same files and sends
+  people to Vercel once their matches are sent (`movedAway` in `js/app.js`). Moved Nov 10, 2026.
   All paths are relative so it works in that sub-folder.
 - **Look:** chosen with Dhir via the impeccable skill. Bold, Spotify-like: near-black (or
   white in light mode), the alliance colour fills the match header and the + buttons,
