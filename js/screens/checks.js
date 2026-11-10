@@ -32,6 +32,18 @@ export function checkButtons(check, byId, extra = null) {
     extra);
 }
 
+// What looks off. When scouts disagree it's a small table, one column per
+// Scout, so the numbers line up instead of running together in a sentence.
+export function checkBody(c) {
+  if (!c.rows?.length || !c.scouts?.length) return h('p', { class: 'check-text' }, c.text);
+  return h('table', { class: 'check-table' },
+    h('caption', { class: 'visually-hidden' }, 'What each scout saw'),
+    h('thead', {}, h('tr', {}, h('td'), c.scouts.map((name) => h('th', { scope: 'col' }, name)))),
+    h('tbody', {}, c.rows.map((r) => h('tr', { class: r.total ? 'total' : '' },
+      h('th', { scope: 'row' }, r.label),
+      r.values.map((v) => h('td', { class: 'num' }, String(v)))))));
+}
+
 // Keys of the checks this phone marked "Looks right", per group.
 export const okKeys = async (groupId) => (await getSetting(`checksOk:${groupId}`)) ?? [];
 
@@ -61,7 +73,7 @@ export async function renderChecks() {
   const marked = all.filter((c) => !checks.includes(c));
   const item = (c, on, short) => h('li', { class: `check ${c.kind}` },
     h('h3', { class: 'check-title' }, short ? c.short ?? c.title : c.title),
-    h('p', { class: 'check-text' }, c.text),
+    checkBody(c),
     checkButtons(c, byId, okButton(c, byId, group.id, ok, on)));
 
   const sections = KINDS.map(([kind, title, about]) => {

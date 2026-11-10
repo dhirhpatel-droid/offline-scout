@@ -58,19 +58,24 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
     if (group.length < 2) continue;
     const [first] = group;
     const reasons = [];
+    // The same differences as a table: one row each, one column per Scout.
+    const rows = [];
     const shows = group.map((s) => s.values?.[noShow] === true);
     if (noShow && shows.some(Boolean) && !shows.every(Boolean)) {
       reasons.push(`${group.filter((s, i) => shows[i]).map(scoutOf).join(' and ')} said it didn’t show up`);
+      rows.push({ label: 'Showed up', values: shows.map((x) => (x ? 'no' : 'yes')) });
     } else {
       const pts = group.map((s) => estimatePoints(config, s.values ?? {}));
       if (Math.max(...pts) - Math.min(...pts) > limits.points) {
         reasons.push(group.map((s, i) => `${scoutOf(s)} ${pts[i]}`).join(', ') + ' est. pts');
+        rows.push({ label: 'est. pts', values: pts, total: true });
         // Where the difference is: each scoring period that doesn't match.
         const parts = group.map((s) => pointsBySection(config, s.values ?? {}));
         for (const sec of config.sections.filter((x) => x.fields.some((f) => f.points))) {
           const p = parts.map((x) => x[sec.id]);
           if (Math.max(...p) !== Math.min(...p)) {
             reasons.push(`${sec.label}: ${group.map((s, i) => `${scoutOf(s)} ${p[i]}`).join(', ')}`);
+            rows.push({ label: sec.label, values: p });
           }
         }
       }
@@ -78,6 +83,7 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
         const answers = group.map((s) => s.values?.[t.key] === true);
         if (answers.some(Boolean) && !answers.every(Boolean)) {
           reasons.push(`${t.label}: ${group.map((s, i) => `${scoutOf(s)} ${answers[i] ? 'yes' : 'no'}`).join(', ')}`);
+          rows.push({ label: t.label, values: answers.map((x) => (x ? 'yes' : 'no')) });
         }
       }
     }
@@ -87,6 +93,8 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
       title: `${matchCode(first.summary)} · ${first.summary.team}: scouts disagree`,
       short: `${matchCode(first.summary)} · ${first.summary.team}`, // under a "Scouts disagree" heading
       text: reasons.join('. ') + '.',
+      scouts: group.map(scoutOf),
+      rows,
       subs: group.map((s) => s.id),
     });
   }

@@ -1293,3 +1293,13 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 /* "Scout a different match" under an Assignment's big button: the plan never locks a Scout in */
 .now-other { display: flex; align-items: center; margin-top: var(--s2); }
 .finish-actions .link-btn { justify-self: start; }
+/* Scouts disagree: what each scout saw, side by side (numbers right-aligned so they line up) */
+.check-table { margin-top: var(--s2); border-collapse: collapse; font-size: var(--fs-sm); }
+.check-table th, .check-table td { padding: var(--s1) 0; text-align: left; }
+.check-table th:not(:first-child), .check-table td { padding-left: var(--s5); text-align: right; }
+.check-table thead th { font-weight: 800; color: var(--text); }
+.check-table tbody th { font-weight: 600; color: var(--text-2); }
+.check-table td { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.check-table tbody tr { border-top: 1px solid var(--line); }
+.check-table tr.total td { font-size: var(--fs-md); font-weight: 800; }
+.check .check-actions { margin-top: var(--s3); }

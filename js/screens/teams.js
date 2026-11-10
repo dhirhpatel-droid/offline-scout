@@ -22,7 +22,7 @@ import { timeAgo } from '../sync.js';
 import { submissionRow } from './saved.js';
 import { nowScoutingBar } from '../now-scouting.js';
 import { dataChecks, checksFor, openChecks } from '../data-checks.js';
-import { checkButtons, okKeys, okButton } from './checks.js';
+import { checkButtons, checkBody, okKeys, okButton } from './checks.js';
 
 // Everything the Lead views need (also used by the Checks screen).
 export async function load() {
@@ -188,7 +188,7 @@ export async function renderTeam({ param }) {
   const checksEl = mineChecks.length ? h('section', { class: 'team-checks' },
     h('h2', { class: 'section-h' }, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'}`),
     h('ul', { class: 'checks' }, mineChecks.map((c) => h('li', { class: `check ${c.kind}` },
-      h('h3', { class: 'check-title' }, c.title), h('p', { class: 'check-text' }, c.text),
+      h('h3', { class: 'check-title' }, c.title), checkBody(c),
       checkButtons(c, byId, okButton(c, byId, group.id, ok))))),
     h('p', { class: 'plain teams-note team-checks-all' }, h('a', { href: '#checks' }, 'All data checks'))) : null;
 

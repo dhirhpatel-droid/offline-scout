@@ -22,6 +22,10 @@ test('two Scouts far apart on points disagree; close ones don\'t', () => {
   assert.equal(c.kind, 'disagree');
   assert.match(c.text, /Dhir 20, Maya 60 est\. pts/);
   assert.match(c.text, /Auto: Dhir 20, Maya 60/);
+  // The same differences as table rows, one value per Scout.
+  assert.deepEqual(c.scouts, ['Dhir', 'Maya']);
+  assert.deepEqual(c.rows[0], { label: 'est. pts', values: [20, 60], total: true });
+  assert.ok(c.rows.some((r) => r.label === 'Auto' && r.values.join() === '20,60'));
   assert.equal(c.subs.length, 2);
   const close = [sub(1, 1, { 'teleop.garden': 1 }), sub(1, 1, { 'teleop.garden': 3 })]; // 1 vs 3
   assert.equal(disagreements(config, close).length, 0);

@@ -119,9 +119,11 @@ form would not even open, so we lost scouting data when we needed it most.
   don't fit the schedule; Group setting `checkSensitivity`; #checks, Home row, Team pages).
 - **Tested by Dhir on two phones with real accounts (Oct 20, 2026):** Milestones 4–7 all work
   (event pick, Assignments, Teams, Custom questions, Data checks, offline scouting).
-  For that test "Confirm email" was turned OFF in Supabase Auth (built-in email only reaches
-  the project team). Turn it back ON once custom SMTP is set up (Resend needs a verified
-  domain; Gmail app password is the no-domain option). Not decided yet.
+- **Email sending (set up by Dhir, Nov 10, 2026):** Supabase Auth sends through Gmail SMTP
+  (an app password, kept only in Supabase's SMTP settings, never in the repo). "Confirm email"
+  is back ON. The Confirm signup, Invite user and Reset password templates are customised
+  (signed "Lo-Ellen Black · FTC 16415"). Invites to an email that already has an account send
+  no email: the Invite waits in the app. Later: own domain + Resend for better inbox delivery.
 - **Announcements (built Oct 22, 2026):** Leads post short messages (≤280 chars) to the
   group (`announcements` table, migration applied); phones download them with sync
   (`js/announcements.js`, screen `js/screens/announce.js`, rules in `js/announcement-rules.js`); the newest unread shows
@@ -132,7 +134,7 @@ form would not even open, so we lost scouting data when we needed it most.
   vendored (`vendor/qrcode-generator-2.0.4.mjs`, `vendor/jsqr-1.4.0.js`). A Lead may upload a
   member's Submission (migration `*_qr_backup.sql`, `added_by` column). Camera not tested
   on a real phone yet.
-- **Next:** email sending (above), then a real event; later items in docs/roadmap.md. Re-run the impeccable
+- **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 
 ## Commands
