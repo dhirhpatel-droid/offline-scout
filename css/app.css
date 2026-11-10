@@ -1346,3 +1346,48 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 @media (prefers-reduced-motion: no-preference) {
   .tab-mark { transition: background-color 120ms ease-out; }
 }
+
+/* ---------- Sign in / Create account: what the app is ----------
+   The hero says it; "How it works" shows it with the app's own pieces
+   (station sign, bumper, the save line, a results row), drawn small. */
+.auth-hero + .content > .form:first-child > .section-h:first-child,
+.auth-hero + .content > .you-get + .form > .section-h:first-child { margin-top: var(--s5); }
+h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; } /* focused for screen readers, not a visible ring */
+
+.how { margin-top: var(--s6); }
+.how-steps { list-style: none; margin: 0; padding: 0; }
+.how-step {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--line);
+}
+.how-step:last-child { border-bottom: 0; }
+.how-art { display: grid; justify-items: start; gap: var(--s1); }
+.how-art .bumper { font-size: var(--fs-lg); }
+.how-words { display: grid; gap: 2px; }
+.how-words strong { font-size: var(--fs-md); font-weight: 800; }
+.how-words span { font-size: var(--fs-sm); color: var(--text-2); max-width: 40ch; }
+/* A counter, small: − 3 + with the alliance-red plus */
+.how-tap { display: inline-flex; align-items: center; gap: var(--s2); }
+.how-minus, .how-plus { display: grid; place-items: center; border-radius: 50%; }
+.how-minus { width: 30px; height: 30px; border: 2px solid var(--control-line); color: var(--text); }
+.how-plus { width: 40px; height: 40px; background: var(--red); color: var(--on-alliance); }
+.how-count { font-size: var(--fs-2xl); line-height: 1; min-width: 1ch; text-align: center; }
+/* The save line, as a chip */
+.how-saved { display: inline-flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s3) var(--s1) var(--s2); border-radius: 999px; background: var(--surface); font-weight: 800; }
+/* A results row */
+.how-result { display: grid; gap: 2px; }
+.how-result .num { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+.how-result span:last-child { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+
+/* Create account: what you get, three lines with icons */
+.you-get { list-style: none; margin: var(--s4) 0 0; padding: 0; display: grid; gap: var(--s3); }
+.you-get li { display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: var(--s3); font-weight: 700; }
+.you-get svg { color: var(--text-2); }
+.form-note { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Why it exists */
+.origin { margin: var(--s6) 0 var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-2); max-width: 46ch; }

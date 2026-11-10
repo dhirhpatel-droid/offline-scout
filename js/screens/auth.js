@@ -8,7 +8,7 @@
 //
 // You only need signal here once. After that the phone keeps you signed in.
 
-import { h, formField, passwordField, formMessage, busy } from '../ui.js';
+import { h, icon, formField, passwordField, formMessage, busy, bumper, station } from '../ui.js';
 import { signIn, signUp, sendPasswordReset, setPasswordAndName, cachedProfile, refreshAccount } from '../account.js';
 import { checkSignUp, isEmail } from '../group-rules.js';
 import { friendlyError, isOnline } from '../supabase.js';
@@ -33,17 +33,26 @@ export async function renderAuth({ param }) {
     await setSetting('authNote', null);
   }
 
+  // Sign in and Create account are where new people meet the app, so they
+  // say what it is and how it works. The other steps keep it short.
+  const intro = mode === 'signin' || mode === 'signup';
   const body = h('main', { class: 'content' },
-    mode === 'signin' ? null : h('h1', { class: 'screen-title', tabindex: '-1' }, TITLES[mode]),
+    intro ? null : h('h1', { class: 'screen-title', tabindex: '-1' }, TITLES[mode]),
+    mode === 'signup' ? youGet() : null,
     await FORMS[mode](message),
+    mode === 'signin' ? howItWorks() : null,
+    intro ? origin() : null,
   );
 
-  // Sign in opens with what the app is for; the other steps keep it short.
-  const top = mode === 'signin'
-    ? h('section', { class: 'now auth-hero', 'data-alliance': 'none' },
+  const top = intro
+    ? h('section', { class: `now auth-hero${mode === 'signup' ? ' short' : ''}`, 'data-alliance': 'none' },
         h('div', { class: 'now-top' }, h('span', { class: 'wordmark' }, 'Offline Scout')),
-        h('h1', { class: 'now-hero', tabindex: '-1' }, 'Scout every match. Even with no signal.'),
-        h('p', { class: 'now-sub' }, 'Tap as it happens. Every match saves on your phone, so no signal in the gym never costs you data.'),
+        mode === 'signin'
+          ? h('h1', { class: 'now-hero', tabindex: '-1' }, 'Scout every match. Even with no signal.')
+          : h('h1', { class: 'now-hero', tabindex: '-1' }, 'Join your team’s scouting.'),
+        h('p', { class: 'now-sub' }, mode === 'signin'
+          ? 'Scouting for FTC and FRC teams. Every tap saves on your phone, so a gym with no signal never costs you data.'
+          : 'Free for every FTC and FRC team. It takes a minute.'),
         // The two sides of the field, red and blue: the app's world in one line.
         h('div', { class: 'auth-band', 'aria-hidden': 'true' }, h('span', { class: 'red' }), h('span', { class: 'blue' })))
     : h('header', { class: 'topbar' }, h('span', { class: 'wordmark' }, 'Offline Scout'));
@@ -55,6 +64,45 @@ export async function renderAuth({ param }) {
       h('p', { class: 'status' }, 'You need signal to sign in once. After that, Offline Scout works with none.')),
   );
   return { el };
+}
+
+// How it works, in four steps, each drawn with the app's own event pieces
+// (a station sign, a bumper, the save line, a results row), so a newcomer
+// sees the real thing. The pictures are decoration; the words say it all.
+function howItWorks() {
+  const step = (art, title, text) => h('li', { class: 'how-step' },
+    h('span', { class: 'how-art', 'aria-hidden': 'true' }, art),
+    h('span', { class: 'how-words' }, h('strong', {}, title), h('span', {}, text)));
+  return h('section', { class: 'how', 'aria-labelledby': 'how-h' },
+    h('h2', { class: 'section-h', id: 'how-h' }, 'How it works'),
+    h('ol', { class: 'how-steps' },
+      step([station('Red 1', 'red'), bumper(16415, 'red', { mine: true })],
+        'Your Lead plans who watches what',
+        'Pick the event and the schedule comes in from FIRST. Each Scout gets their matches and the robot to watch.'),
+      step(h('span', { class: 'how-tap' }, h('span', { class: 'how-minus' }, icon('minus', 18)), h('span', { class: 'num how-count' }, '3'), h('span', { class: 'how-plus' }, icon('plus', 22))),
+        'Tap as it happens',
+        'Big buttons, one period at a time, almost no typing. Eyes stay on the field.'),
+      step(h('span', { class: 'how-saved' }, icon('device', 22), h('span', {}, 'Saved')),
+        'Saved on your phone, always',
+        'No signal in the gym? Nothing changes. Matches go to your group when the phone has signal again, or by QR code.'),
+      step(h('span', { class: 'how-result' }, h('span', { class: 'num' }, 'Won 45–30'), h('span', {}, '38.5 avg')),
+        'Your Lead sees every team',
+        'Averages for every team, each match, and Data checks when two scouts disagree. The numbers you pick alliances with.')));
+}
+
+// On Create account: what you get, short, above the form.
+function youGet() {
+  const item = (name, text) => h('li', {}, icon(name, 22), h('span', {}, text));
+  return h('ul', { class: 'you-get' },
+    item('device', 'Works with no signal: every match saves on your phone'),
+    item('plan', 'Your matches, planned by your Lead'),
+    item('teams', 'Every team’s numbers, for alliance selection'));
+}
+
+// Why it exists: a true story, the best reason to trust it.
+function origin() {
+  return h('p', { class: 'origin' },
+    'Built by a student on Lo-Ellen Park’s robotics teams after our online scouting form wouldn’t even open on the venue wifi at provincials, and we lost the data when it mattered most.');
 }
 
 function offlineCheck(message) {
@@ -71,6 +119,7 @@ const FORMS = {
     const password = passwordField('Password', 'current-password');
     const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Sign in');
     const form = h('form', { class: 'form', novalidate: true },
+      h('h2', { class: 'section-h' }, 'Sign in'),
       message.el, email.el, password.el,
       h('div', { class: 'actions' },
         submit,
@@ -100,8 +149,9 @@ const FORMS = {
     const password = passwordField('Password', 'new-password', 'At least 8 characters.');
     const submit = h('button', { class: 'pill big block', type: 'submit' }, 'Create account');
     const form = h('form', { class: 'form', novalidate: true },
-      h('p', { class: 'lede' }, 'We only store your name and email, so your Scouting group knows who scouted what.'),
+      h('h2', { class: 'section-h' }, 'Create your account'),
       message.el, name.el, email.el, password.el,
+      h('p', { class: 'form-note' }, 'We only keep your name and email, so your group knows who scouted what.'),
       h('div', { class: 'actions' },
         submit,
         h('a', { class: 'pill secondary block', href: '#auth' }, 'I already have an account')));
