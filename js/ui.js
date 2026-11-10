@@ -37,6 +37,11 @@ const PATHS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
+  home: '<path d="M4 10.5L12 4l8 6.5"/><path d="M6.5 9v11h11V9"/>',
+  matches: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  teams: '<path d="M5 20v-8M12 20V5M19 20v-5"/>',
+  plan: '<rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10.5h16M9 3.5v4M15 3.5v4"/>',
+  group: '<circle cx="9" cy="8.5" r="3.5"/><path d="M3 20c.8-3.3 3.1-5.3 6-5.3s5.2 2 6 5.3"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6M17.5 14.9c1.6.8 2.8 2.5 3.4 5.1"/>',
   undo: '<path d="M9 6L4.5 10.5 9 15"/><path d="M4.5 10.5H15a4.5 4.5 0 0 1 0 9h-3"/>',
   next: '<path d="M9 5l7 7-7 7"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
@@ -174,6 +179,23 @@ export function confirmDialog({ title, body, confirmLabel }) {
     document.body.append(dialog);
     dialog.showModal();
   });
+}
+
+// The tab bar along the bottom of every screen except a match being scouted:
+// one tap to anywhere, where the thumb already is. The chosen tab is filled
+// (the Selected Rule). Teams shows only to people who may see everyone's
+// data; Plan only to Leads.
+export function tabBar(active, { lead = false, teams = false } = {}) {
+  const tabs = [
+    ['home', '#home', 'Home'],
+    ['matches', '#saved', 'Matches'],
+    teams ? ['teams', '#teams', 'Teams'] : null,
+    lead ? ['plan', '#assign', 'Plan'] : null,
+    ['group', '#group', 'Group'],
+  ].filter(Boolean);
+  return h('nav', { class: 'tabbar', 'aria-label': 'Main' }, tabs.map(([id, href, label]) =>
+    h('a', { class: 'tab', href, ...(id === active ? { 'aria-current': 'page' } : {}) },
+      h('span', { class: 'tab-mark' }, icon(id, 24)), h('span', { class: 'tab-label' }, label))));
 }
 
 // A short explanation in the same sheet, with one button to close it.

@@ -134,6 +134,17 @@ form would not even open, so we lost scouting data when we needed it most.
   vendored (`vendor/qrcode-generator-2.0.4.mjs`, `vendor/jsqr-1.4.0.js`). A Lead may upload a
   member's Submission (migration `*_qr_backup.sql`, `added_by` column). Camera not tested
   on a real phone yet.
+- **Security + run-through fixes and tab bar (Nov 10, 2026):** security review found nothing
+  High (no leaked keys; signed-out access reads nothing). Fixed: helper functions answer only
+  members, size limits, Submission name from the profile, a leaver's plan removed
+  (`*_security_fixes.sql`); invite links locked to the app, 20 invites/hour, same reply whether or
+  not an account exists, CORS only the app, no error details (`send-invite`, `event-data`);
+  sign-out clears the account's data from the phone; sync skips other people's leftover matches
+  and keeps going past one failure, re-downloads when your role changes, looks back a minute;
+  Assignments only count this event's matches; QR codes are checked strictly. New: Number
+  answer type for Custom questions, "Final alliance score" in every match (config v5, role
+  `allianceScore`, used by Data checks before official scores arrive), bottom tab bar
+  (DESIGN.md "Tab Bar"). Not yet tested by Dhir on phones.
 - **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

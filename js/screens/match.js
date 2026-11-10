@@ -46,7 +46,8 @@ export async function renderMatch({ param }) {
     await cachedQuestions(submission.groupId ?? group?.id), submission.values);
   // Fill in the scout from the account if a hidden field still needs it.
   const profile = await cachedProfile();
-  if (profile?.display_name && !submission.values['pre.scout']) {
+  // (Not when opening a saved match: that would put your name on someone else's.)
+  if (!editing && profile?.display_name && !submission.values['pre.scout']) {
     submission.values['pre.scout'] = profile.display_name;
     refresh(config, submission);
   }

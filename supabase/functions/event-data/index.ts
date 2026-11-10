@@ -14,10 +14,17 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import { FTCSCOUT_URL, SEARCH_QUERY, eventQuery, toRows, toMatchRow, toSearchResult } from './ftcscout.js';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// Only the app itself (and a local copy while developing) may call this.
+const APP_ORIGINS = ['https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
+let CORS: Record<string, string> = {};
+const corsFor = (req: Request) => {
+  const origin = req.headers.get('Origin') ?? '';
+  return {
+    'Access-Control-Allow-Origin': APP_ORIGINS.includes(origin) ? origin : APP_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
 };
 const reply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
@@ -43,6 +50,7 @@ async function scoresTypeFor(season: number) {
 }
 
 Deno.serve(async (req) => {
+  CORS = corsFor(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return reply(405, { error: 'Use POST' });
 
@@ -68,14 +76,14 @@ Deno.serve(async (req) => {
 
   try {
     if (body.action === 'search') {
-      const text = String(body.text ?? '').trim();
+      const text = String(body.text ?? '').trim().slice(0, 60);
       const data = await ftcscout(SEARCH_QUERY, { season, text: text || null });
       return reply(200, { events: (data.eventsSearch ?? []).map(toSearchResult) });
     }
 
     if (body.action === 'import') {
       const code = String(body.code ?? '').trim().toUpperCase();
-      if (!code) return reply(400, { error: 'Missing event code.' });
+      if (!/^[A-Z0-9]{2,16}$/.test(code)) return reply(400, { error: 'That isn’t an event code.' });
       const admin = createClient(url, secretKey);
 
       // Fresh enough? Then don't ask FTCScout again.
@@ -110,6 +118,8 @@ Deno.serve(async (req) => {
 
     return reply(400, { error: 'Unknown action.' });
   } catch (err) {
-    return reply(502, { error: `Couldn’t get event data right now (${(err as Error).message}). Try again soon.` });
+    // The details go to the server log, not to the phone.
+    console.error('event-data failed:', (err as Error).message);
+    return reply(502, { error: 'Couldn’t get event data right now. Try again soon.' });
   }
 });

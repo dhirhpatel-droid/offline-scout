@@ -135,12 +135,10 @@ export async function renderGroup() {
       await busy(send, 'Sending…', async () => {
         try {
           const address = email.input.value.trim().toLowerCase();
-          const result = await sendInvite(group.id, address);
+          await sendInvite(group.id, address);
           email.input.value = '';
           message.show(
-            result.emailed ? `Invite sent to ${address}. They’ll get an email with a link to join.`
-              : result.hasAccount ? `${address} already has an account. They’ll see your invite next time they open Offline Scout.`
-                : `Invite saved, but the email didn’t send (${result.emailError}). Ask them to create an account with ${address}; the invite will be waiting.`,
+            `Invite saved for ${address}. New to Offline Scout? They get an email with a link. Already have an account? They see it next time they open the app.`,
             'info');
           await load();
         } catch (err) {

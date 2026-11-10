@@ -10,10 +10,10 @@ const configs = { [config.id]: config };
 // A saved Submission as the Scout's phone has it.
 function scoutsSub() {
   const sub = {
-    id: '1f2e3d4c-5b6a-4789-8abc-def012345678', groupId: 'g1', eventId: 'e1', scoutId: 's1', event: 'Sudbury Qualifier',
+    id: '1f2e3d4c-5b6a-4789-8abc-def012345678', groupId: 'aaaaaaaa-0000-4000-8000-000000000001', eventId: 'aaaaaaaa-0000-4000-8000-000000000002', scoutId: 'aaaaaaaa-0000-4000-8000-000000000003', event: 'Sudbury Qualifier',
     configId: config.id, configVersion: config.version,
     values: { 'pre.scout': 'Maya', 'pre.level': 'qual', 'pre.match': 18, 'pre.team': 23810, 'pre.position': 'red2',
-      'auto.leave': true, 'auto.hiveTips': 1, 'teleop.flower': 3, 'post.notes': 'Fast cycles', 'teleop.custom-q1': 'Far side' },
+      'auto.leave': true, 'auto.hiveTips': 1, 'teleop.flower': 3, 'post.notes': 'Fast cycles', 'teleop.custom-1f2e3d4c-0000-4000-8000-000000000001': 'Far side' },
     createdAt: '2026-11-21T15:00:00.000Z', submittedAt: '2026-11-21T15:03:00.000Z', deletedAt: null, syncedAt: null,
   };
   refresh(config, sub, new Date('2026-11-21T15:03:00.000Z'));
@@ -28,7 +28,7 @@ test('pack → unpack gives back the same Submission', () => {
   assert.equal(error, undefined);
   assert.deepEqual(back.values, sub.values);
   assert.equal(back.id, sub.id);
-  assert.equal(back.scoutId, 's1');
+  assert.equal(back.scoutId, 'aaaaaaaa-0000-4000-8000-000000000003');
   assert.equal(back.updatedAt, sub.updatedAt);
   assert.equal(back.submittedAt, sub.submittedAt);
   assert.equal(back.estimatedPoints, sub.estimatedPoints);
@@ -45,8 +45,9 @@ test('names and notes with accents or curly quotes survive (the code is plain AS
 });
 
 test('the code stays small enough to scan off a phone screen', () => {
-  // About 300 bytes keeps the QR around version 10–12: easy to scan.
-  assert.ok(pack(config, scoutsSub()).length < 400, `was ${pack(config, scoutsSub()).length}`);
+  // With real ids (UUIDs) a full match is about 430 bytes: a version 13–14
+  // QR at medium error correction, still easy to scan off a bright screen.
+  assert.ok(pack(config, scoutsSub()).length < 500, `was ${pack(config, scoutsSub()).length}`);
 });
 
 test('unpack refuses what it can\'t trust, in words', () => {
@@ -101,4 +102,20 @@ test('a real QR code made from a match reads back to the same match (no camera)'
   const found = jsQR(pixels, size, size);
   assert.equal(found?.data, text);
   assert.equal(unpack(found.data, configs).sub.values['post.notes'], 'Zoë’s robot — fast');
+});
+
+test('a tampered code can\'t slip in odd keys, bad times or a fake game', () => {
+  const configs = { [config.id]: config };
+  const good = JSON.parse(pack(config, scoutsSub()).slice(PREFIX.length));
+  const code = (a) => PREFIX + JSON.stringify(a);
+  // Keys that aren't Custom questions, and values that aren't plain, are dropped.
+  const extra = [...good];
+  extra[14] = { __proto__: { x: 1 }, 'constructor': 'x', 'teleop.notAField': 5, 'teleop.custom-1f2e3d4c-0000-4000-8000-000000000002': { a: 1 } };
+  const { sub: s } = unpack(code(extra), configs);
+  assert.equal(Object.keys(s.values).some((k) => /notAField|constructor|0002/.test(k)), false);
+  // A bad time or a game id like "constructor" is refused, not a crash.
+  const badTime = [...good]; badTime[10] = 'not a time!';
+  assert.ok(unpack(code(badTime), configs).error);
+  const fakeGame = [...good]; fakeGame[7] = 'constructor';
+  assert.ok(unpack(code(fakeGame), configs).error);
 });

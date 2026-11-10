@@ -6,23 +6,38 @@
 //   → saves the Invite (the database checks they're a Lead of that group)
 //   → if the person has no account yet, Supabase emails them a sign-up link;
 //     if they already have one, they'll see the Invite next time they open the app.
+//   The reply is the same either way, so nobody can use invites to find out
+//   which emails have an account. At most 20 invites per Lead per hour.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// Only the app itself (and a local copy while developing) may call this.
+const APP_ORIGINS = ['https://dhirhpatel-droid.github.io', 'http://localhost:8000'];
+let CORS: Record<string, string> = {};
+const corsFor = (req: Request) => {
+  const origin = req.headers.get('Origin') ?? '';
+  return {
+    'Access-Control-Allow-Origin': APP_ORIGINS.includes(origin) ? origin : APP_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
 };
 
 const reply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
+// Where the email's link may lead: only the app.
+const APP_URLS = ['https://dhirhpatel-droid.github.io/offline-scout/', 'http://localhost:8000/'];
+const MAX_INVITES_PER_HOUR = 20;
+
 Deno.serve(async (req) => {
+  CORS = corsFor(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return reply(405, { error: 'Use POST' });
 
-  const { groupId, email: rawEmail, redirectTo } = await req.json().catch(() => ({}));
+  const { groupId, email: rawEmail, redirectTo: asked } = await req.json().catch(() => ({}));
+  const redirectTo = APP_URLS.includes(asked) ? asked : APP_URLS[0];
   const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!groupId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return reply(400, { error: 'Enter a valid email address.' });
@@ -44,6 +59,15 @@ Deno.serve(async (req) => {
   const { data: { user } } = await asCaller.auth.getUser();
   if (!user) return reply(401, { error: 'Sign in again, then try once more.' });
 
+  // Every invite can send an email through the team's Gmail: limit them.
+  const admin = createClient(url, secretKey);
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await admin.from('invites').select('id', { count: 'exact', head: true })
+    .eq('invited_by', user.id).gt('created_at', hourAgo);
+  if ((count ?? 0) >= MAX_INVITES_PER_HOUR) {
+    return reply(429, { error: 'That’s a lot of invites in one hour. Wait a bit, then send the rest.' });
+  }
+
   // Replace any earlier open Invite for this email, then save the new one.
   // The database refuses both unless the caller is a Lead of this group.
   await asCaller.from('invites').delete().eq('group_id', groupId).eq('email', email).is('accepted_at', null);
@@ -54,18 +78,16 @@ Deno.serve(async (req) => {
 
   // 2. Email a sign-up link if they don't have an account yet. This uses the
   //    secret key, which Supabase gives server functions automatically.
-  const admin = createClient(url, secretKey);
   const { data: group } = await asCaller.from('groups').select('name, program, team_number').eq('id', groupId).single();
   const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo,
     data: { invited_to: group ? `${group.program} ${group.team_number} · ${group.name}` : '' },
   });
 
-  if (inviteError) {
-    // Already has an account: they'll see the Invite in the app.
-    if (/already|registered|exists/i.test(inviteError.message)) return reply(200, { emailed: false, hasAccount: true });
-    // Saved, but the email failed (e.g. Supabase's hourly email limit).
-    return reply(200, { emailed: false, hasAccount: false, emailError: inviteError.message });
+  // Already has an account (no email: the Invite waits in the app), or the
+  // email failed: logged here, and the same reply as a sent one.
+  if (inviteError && !/already|registered|exists/i.test(inviteError.message)) {
+    console.error('invite email failed:', inviteError.message);
   }
-  return reply(200, { emailed: true, hasAccount: false });
+  return reply(200, { saved: true });
 });

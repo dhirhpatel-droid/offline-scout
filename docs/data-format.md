@@ -41,7 +41,9 @@ Two kinds of JSON: **Game configs** (what to scout) and **Submissions** (one Sco
 - **roles** mark the fields the app itself needs. Exactly one field each:
   `scoutName`, `matchLevel` (a choice of `qual`/`playoff`), `matchNumber`, `teamNumber`,
   `alliancePosition` (type `position`) are required; `noShow` is optional (when Yes,
-  Estimated points are 0).
+  Estimated points are 0). `allianceScore` (optional, a `number`) is the final alliance score
+  a Scout reads off the field screen; Data checks use it when the official score hasn't
+  downloaded yet.
 - `"width": "half"` makes a field take half a row, so two sit side by side (number fields are
   always half width).
 - `"required": true` blocks saving until the field is filled in.
@@ -112,7 +114,8 @@ Still undecided: the QR payload (QR backup is a later, optional Group setting).
 A group's extra questions (table `custom_questions`) are merged into the Game config on
 the phone (`withCustom` in `js/custom-rules.js`). An answer is stored in the Submission's
 `values` like any other, under `<section>.custom-<question id>`. Custom fields never have
-`points`, so they never change Estimated points. A config field may also give `min`/`max`;
+`points`, so they never change Estimated points. Answer types: Yes/No, Count, Pick one,
+Rating 1–5, Number (number pad, never negative) and Short note. A config field may also give `min`/`max`;
 Data checks flag numbers outside them.
 
 ## QR backup

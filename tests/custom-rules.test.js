@@ -23,6 +23,8 @@ test('toField turns a question into a config field with no points', () => {
   assert.deepEqual(toField(q({ type: 'choice', options: ['L', 'R'] })),
     { id: 'custom-q1', type: 'choice', label: 'Cycled from the far side', custom: true, hint: 'Your group’s question', options: [{ value: 'L', label: 'L' }, { value: 'R', label: 'R' }] });
   assert.equal(toField(q({ type: 'rating' })).max, 5);
+  assert.equal(toField(q({ type: 'number' })).type, 'number');
+  assert.equal(toField(q({ type: 'number' })).min, 0);
 });
 
 test('withCustom adds questions to their sections; hidden ones only if answered', () => {

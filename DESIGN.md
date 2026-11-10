@@ -310,6 +310,16 @@ Used for Yes/No, ratings and pick-one options. A Surface track (16px corners, 4p
 - **List link:** 64px Surface row, 14px corners, bold label, count in Text 2 on the right.
 - **Saved match row:** alliance badge (40px, 10px corners), team number and details, points on the right; 1px line between rows.
 
+### Tab Bar
+Along the bottom of every screen except a match being scouted (the match keeps the whole
+bottom for its own footer), sign-in and choosing a group. Tabs: Home, Matches, Teams (only for
+people who may see everyone's data), Plan (Leads only), Group. Each tab is a 24px icon over a
+short label, at least 56px tall, all sharing the width equally. The chosen tab follows the
+Selected Rule: its icon sits in a filled pill (Primary Pill colours) and its label goes bold;
+the others are Text 2. It sits in a dock with the screen's own footer (save status, Resume),
+so both stay under the thumb. Nested screens (a Team page, Event, Custom questions) keep
+their Back button and light up the tab they belong to.
+
 ### Bottom Sheet (confirm dialog)
 Surface fill, 20px corners, 24px padding, sits at the bottom of the screen so the buttons land under the thumb. Stacked full-width pills.
 

@@ -1303,3 +1303,40 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
 .check-table tbody tr { border-top: 1px solid var(--line); }
 .check-table tr.total td { font-size: var(--fs-md); font-weight: 800; }
 .check .check-actions { margin-top: var(--s3); }
+
+/* ---------- Tab bar ----------
+   Along the bottom of every screen except a match being scouted. It sits in
+   a dock with the screen's own footer (save status, "Resume"), so both stay
+   under the thumb. The chosen tab is filled, like every chosen thing. */
+.dock { position: sticky; bottom: 0; z-index: 5; background: var(--bg); }
+.dock .bottombar { position: relative; padding-bottom: var(--s3); }
+.dock .now-bar { margin-top: var(--s2); }
+.tabbar {
+  display: flex;
+  padding: var(--s1) var(--s2) max(env(safe-area-inset-bottom), var(--s1));
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.tab {
+  flex: 1 1 0;
+  min-width: 0; /* five tabs always share the width, even on a small phone */
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: var(--tap);
+  padding: var(--s1) 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-decoration: none;
+}
+.tab-mark { display: grid; place-items: center; width: min(56px, 100%); height: 32px; border-radius: 999px; }
+.tab[aria-current='page'] { color: var(--text); font-weight: 800; }
+.tab[aria-current='page'] .tab-mark { background: var(--primary-bg); color: var(--primary-text); }
+.tab:active .tab-mark { background-image: linear-gradient(var(--press), var(--press)); }
+.tab:focus-visible { outline: none; }
+.tab:focus-visible .tab-mark { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .tab-mark { transition: background-color 120ms ease-out; }
+}

@@ -13,6 +13,7 @@ export const QUESTION_TYPES = [
   ['counter', 'Count'],
   ['choice', 'Pick one'],
   ['rating', 'Rating 1–5'],
+  ['number', 'Number'],
   ['text', 'Short note'],
 ];
 
@@ -44,6 +45,7 @@ export function toField(q) {
   const field = { id: `custom-${q.id}`, type: q.type, label: q.label, custom: true, hint: 'Your group’s question' };
   if (q.type === 'choice') field.options = (q.options ?? []).map((o) => ({ value: o, label: o }));
   if (q.type === 'rating') Object.assign(field, { min: 1, max: 5 });
+  if (q.type === 'number') field.min = 0; // typed on the number pad, never negative
   return field;
 }
 

@@ -6,7 +6,9 @@
 // runs at a time. Without signal it simply does nothing; nothing is lost.
 //
 // What the phone remembers (IndexedDB settings):
-//   pull:<groupId> – the server time of the last change downloaded for a group
+//   pull:<groupId>:<who> – the server time of the last change downloaded for
+//                    a group. <who> is the person and what they may see, so a
+//                    Scout who becomes a Lead downloads everything again.
 //   lastSyncAt     – when a sync last finished
 
 import { sb, isOnline } from './supabase.js';
@@ -31,9 +33,15 @@ export function syncNow() {
 }
 
 export async function unsentCount() {
-  // Your own waiting matches (scanned QR copies of other Scouts' don't count).
-  return (await listAllSubmissions()).filter((s) => hasUnsentChanges(s) && !s.viaQr).length;
+  // Your own waiting matches (scanned QR copies of other Scouts', and matches
+  // someone else left on a shared phone, don't count).
+  const me = (await currentUser())?.id;
+  return (await listAllSubmissions()).filter((s) => hasUnsentChanges(s) && !s.viaQr && isMine(s, me)).length;
 }
+
+// Made by this person (or before anyone signed in). On a shared phone, the
+// last person's unsent matches wait for them: nobody else sends them.
+const isMine = (s, me) => !s.scoutId || s.scoutId === me;
 
 async function doSync() {
   const result = { ok: false, sent: 0, received: 0, waiting: 0 };
@@ -48,13 +56,19 @@ async function doSync() {
     const myGroupIds = new Set(groups.map((g) => g.id));
     const current = await currentGroup();
 
-    // 1. Send: everything with changes the server hasn't got.
+    // 1. Send: everything with changes the server hasn't got. One that fails
+    //    stays waiting, and the others still go.
+    let sendError = null;
     for (let sub of await listAllSubmissions()) {
       if (!hasUnsentChanges(sub)) continue;
+      if (!sub.viaQr && !isMine(sub, user.id)) continue;
       sub = claim(sub, { userId: user.id, groupId: current?.id });
       if (!myGroupIds.has(sub.groupId)) continue; // not in that group any more: keep it on the phone
       const { data, error } = await sb.rpc('save_submission', { s: toServer(sub) });
-      if (error) throw error;
+      if (error) {
+        sendError ??= error;
+        continue;
+      }
       if (data === 'saved') {
         await putSubmission({ ...sub, syncedAt: sub.updatedAt });
         result.sent += 1;
@@ -68,15 +82,21 @@ async function doSync() {
 
     // 2. Download: what changed in each of my groups since last time.
     for (const g of groups) {
-      const cursorKey = `pull:${g.id}`;
+      const cursorKey = `pull:${g.id}:${user.id}:${g.role}:${Boolean(g.settings?.scoutsSeeAll)}`;
       let cursor = (await getSetting(cursorKey)) ?? '1970-01-01T00:00:00Z';
+      // Look back a minute: when many phones send at once, a save that
+      // started earlier can finish after one already downloaded. Repeats
+      // are skipped below.
+      let since = new Date(new Date(cursor).getTime() - 60_000).toISOString();
       for (;;) {
         const { data: rows, error } = await sb.from('submissions').select('*')
-          .eq('group_id', g.id).gt('server_updated_at', cursor)
+          .eq('group_id', g.id).gte('server_updated_at', since)
           .order('server_updated_at').limit(500);
         if (error) throw error;
         for (const row of rows) {
           const local = await getSubmission(row.id);
+          if (cursor < row.server_updated_at) cursor = row.server_updated_at;
+          if (local && !hasUnsentChanges(local) && !row.deleted_at && local.updatedAt === fromServer(row).updatedAt) continue; // have it
           const action = decide(local, row);
           if (action === 'add' || action === 'replace') {
             await putSubmission(fromServer(row));
@@ -85,10 +105,10 @@ async function doSync() {
             await removeSubmission(row.id);
             result.received += 1;
           }
-          cursor = row.server_updated_at;
         }
         await setSetting(cursorKey, cursor);
-        if (rows.length < 500) break;
+        if (rows.length < 500 || cursor === since) break; // (500 with one time: can't page further)
+        since = cursor;
       }
     }
 
@@ -102,6 +122,7 @@ async function doSync() {
       result.announcements = Boolean(news?.changed);
     }
 
+    if (sendError) throw sendError; // after downloading, so the rest still came in
     result.ok = true;
     result.waiting = await unsentCount();
     await setSetting('lastSyncAt', new Date().toISOString());

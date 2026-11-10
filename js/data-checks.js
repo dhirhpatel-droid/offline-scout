@@ -107,32 +107,49 @@ export function disagreements(config, subs, limits = SENSITIVITY.normal) {
 // bonuses, so a gap is normal; a big one may mean a missed or extra tap.)
 export function scoreGaps(config, subs, matches, limits = SENSITIVITY.normal) {
   const out = [];
+  // The final score Scouts read off the field screen: used when the official
+  // one hasn't downloaded yet (no signal at the event).
+  const scoreSec = config.sections.find((sec) => sec.fields.some((f) => f.role === 'allianceScore'));
+  const scoreKey = scoreSec && fieldKey(scoreSec.id, scoreSec.fields.find((f) => f.role === 'allianceScore').id);
   for (const m of matches) {
-    if (!m.played || m.red_score == null || m.blue_score == null) continue;
     for (const side of ['red', 'blue']) {
-      const official = m[`${side}_score`];
       const teams = m[side] ?? [];
+      const inMatch = (s) => levelOf(s) === m.level && s.summary?.match === m.number;
+      const here = subs.filter((s) => teams.includes(s.summary?.team) && inMatch(s));
+      let official = m.played ? m[`${side}_score`] ?? null : null;
+      const fromField = official == null;
+      if (fromField) official = enteredScore(here, scoreKey);
+      if (official == null) continue;
       const perTeam = teams.map((team) => {
-        const here = subs.filter((s) => s.summary?.team === team && levelOf(s) === m.level && s.summary?.match === m.number);
-        if (!here.length) return null;
+        const mine = here.filter((s) => s.summary?.team === team);
+        if (!mine.length) return null;
         // Two Scouts on one robot: their average.
-        return here.reduce((sum, s) => sum + estimatePoints(config, s.values ?? {}), 0) / here.length;
+        return mine.reduce((sum, s) => sum + estimatePoints(config, s.values ?? {}), 0) / mine.length;
       });
       if (!teams.length || perTeam.some((p) => p == null)) continue; // not every robot scouted
       const scouted = Math.round(perTeam.reduce((a, b) => a + b, 0));
       const allowed = Math.max(limits.score.points, Math.round(official * limits.score.share));
       if (Math.abs(scouted - official) <= allowed) continue;
       const code = matchCode({ level: m.level, match: m.number });
+      const what = fromField ? 'on the field screen' : 'official';
       out.push({
         kind: 'score', level: m.level, number: m.number, alliance: side, teams,
-        title: `${code} · ${side === 'red' ? 'Red' : 'Blue'} alliance: ${scouted} scouted, ${official} official`,
-        text: `Your scouts’ estimates for ${teams.join(' and ')} add up to ${scouted}; the official score was ${official}. `
+        title: `${code} · ${side === 'red' ? 'Red' : 'Blue'} alliance: ${scouted} scouted, ${official} ${what}`,
+        text: `Your scouts’ estimates for ${teams.join(' and ')} add up to ${scouted}; the ${fromField
+          ? 'final score your scouts read off the field screen' : 'official score'} was ${official}. `
           + 'Fouls and alliance bonuses aren’t scouted, so some gap is normal. This one is big: a tap may be missing or extra.',
-        subs: subs.filter((s) => teams.includes(s.summary?.team) && levelOf(s) === m.level && s.summary?.match === m.number).map((s) => s.id),
+        subs: here.map((s) => s.id),
       });
     }
   }
   return out;
+}
+
+// The final alliance score Scouts typed in (the middle one, if they differ).
+function enteredScore(subs, key) {
+  if (!key) return null;
+  const seen = subs.map((s) => s.values?.[key]).filter((v) => typeof v === 'number').sort((a, b) => a - b);
+  return seen.length ? seen[Math.floor((seen.length - 1) / 2)] : null;
 }
 
 // Values that can't be right, checked against the Event's teams and schedule

@@ -64,3 +64,8 @@ test('every question belongs to a Game config', async () => {
   await assert.rejects(as(lead, `insert into public.custom_questions (group_id, section, type, label, created_by)
     values ($1, 'auto', 'toggle', 'No game', $2)`, [groupId, lead.id]), /null value|not-null/);
 });
+
+test('a question can take a Number answer; unknown kinds are refused', async () => {
+  await add(lead, { type: 'number', label: 'Cycle time (seconds)' });
+  await assert.rejects(add(lead, { type: 'slider', label: 'Speed' }), /custom_questions_type_check/);
+});

@@ -25,7 +25,8 @@ export async function myPlan() {
   if (!ev || !profile?.id) return { assigned: false, todo: [] };
   const plan = await cachedPlan(group.id, ev.id);
   const mine = assignmentsFor({ scoutId: profile.id, shifts: plan.shifts, watches: plan.watches, matches: eventData?.matches ?? [] });
-  const mySubs = all.filter((s) => s.scoutId === profile.id || !s.scoutId);
+  // Only this event's matches count (Q1 Red 1 at the last event isn't this one).
+  const mySubs = all.filter((s) => (s.scoutId === profile.id || !s.scoutId) && s.eventId === ev.id);
   const todo = byMatch(upcoming(mine, mySubs)).map((g) => ({
     ...g,
     code: matchCode({ level: g.level, match: g.number }),
@@ -84,7 +85,9 @@ export async function whatsNext() {
     }, carry.level, carry.match);
   }
   // No carry-over (e.g. a new phone): continue from the last saved match.
-  const [last] = await listSubmissions();
+  // (Your own, in this group: on a Lead's phone the newest is often someone else's.)
+  const [me, grp] = await Promise.all([cachedProfile(), currentGroup()]);
+  const [last] = (await listSubmissions()).filter((s) => (!s.scoutId || s.scoutId === me?.id) && (!s.groupId || s.groupId === grp?.id));
   if (last?.summary?.match) {
     return withSchedule({
       kind: 'next',

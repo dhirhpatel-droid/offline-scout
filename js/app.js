@@ -6,7 +6,8 @@
 // Hash routing needs no server setup, so it works on GitHub Pages and offline.
 
 import { getSetting, setSetting, requestPersistentStorage } from './db.js';
-import { setThemeColor, applyTheme, h, topbar } from './ui.js';
+import { setThemeColor, applyTheme, h, topbar, tabBar } from './ui.js';
+import { isLead } from './group-rules.js';
 import { sb } from './supabase.js';
 import { currentUser, currentGroup, refreshAccount } from './account.js';
 import { startAutoSync } from './sync.js';
@@ -75,6 +76,7 @@ async function route(opts = {}) {
   const scrollY = window.scrollY;
   try {
     const view = await render({ param });
+    await addTabBar(view.el, name || 'home');
     root.replaceChildren(view.el);
     cleanup = view.cleanup ?? null;
     if (quiet) {
@@ -107,6 +109,31 @@ async function notFound() {
     h('main', { class: 'content' },
       h('p', { class: 'plain' }, 'That link doesn’t go anywhere in Offline Scout. Your matches are safe on this phone.'),
       h('div', { class: 'actions crash-actions' }, h('a', { class: 'pill block', href: '#home' }, 'Back to home')))) };
+}
+
+// Which tab each screen belongs to. Screens not listed (a match being
+// scouted, sign-in, choosing a group) have no tab bar: a match keeps the
+// whole bottom of the screen for its own footer.
+const TAB_OF = {
+  home: 'home', saved: 'matches', qr: 'matches',
+  teams: 'teams', team: 'teams', checks: 'teams',
+  assign: 'plan',
+  group: 'group', event: 'group', questions: 'group', announcements: 'group', scan: 'group', settings: 'group',
+};
+
+// The tab bar goes in a dock at the bottom of the screen, under the screen's
+// own footer (save status, "Resume your match"), so both stay in reach.
+async function addTabBar(screen, name) {
+  const tab = TAB_OF[name];
+  const group = tab && await currentGroup();
+  if (!group || !screen.classList.contains('screen')) return;
+  const lead = isLead(group);
+  const dock = h('div', { class: 'dock' });
+  for (const el of [...screen.children]) {
+    if (el.matches('.bottombar, .now-bar')) dock.append(el);
+  }
+  dock.append(tabBar(tab, { lead, teams: lead || group.settings?.scoutsSeeAll === true }));
+  screen.append(dock);
 }
 
 function redirect(hash) {

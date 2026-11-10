@@ -57,6 +57,16 @@ test('an alliance total far from the official score is flagged, only when every 
   assert.equal(scoreGaps(config, near, event.matches).length, 0);
 });
 
+test('with no official score yet, the final score Scouts typed in is used instead', () => {
+  const unplayed = [{ level: 'qual', number: 1, red: [1, 2], blue: [3, 4], played: false }];
+  // Scouts read 60 (and one 64) off the field screen; their taps add up to 20.
+  const red = [sub(1, 1, { 'auto.hiveTips': 1, 'post.allianceScore': 60 }), sub(2, 1, { 'post.allianceScore': 64 })];
+  const [c] = scoreGaps(config, red, unplayed);
+  assert.match(c.title, /20 scouted, 60 on the field screen/);
+  // Nobody typed a score: nothing to compare with.
+  assert.equal(scoreGaps(config, [sub(1, 1, { 'auto.hiveTips': 1 }), sub(2, 1, {})], unplayed).length, 0);
+});
+
 test('impossible values: not at the event, not in the schedule, not in the match, wrong position', () => {
   const checks = impossible(config, [
     sub(9, 1), sub(1, 7), sub(3, 1, {}, { position: 'red1' }), sub(4, 1, {}, { position: 'blue1' }),

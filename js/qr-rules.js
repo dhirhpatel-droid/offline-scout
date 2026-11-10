@@ -20,6 +20,11 @@ const FORMAT = 1;
 
 const toTime = (iso) => (iso ? Date.parse(iso).toString(36) : 0);
 const fromTime = (t) => (t ? new Date(parseInt(t, 36)).toISOString() : null);
+// A time in a scanned code: base 36, and a real date (else the code is bad).
+const goodTime = (t) => t === 0 || (typeof t === 'string' && /^[0-9a-z]{1,12}$/.test(t) && Number.isFinite(parseInt(t, 36)));
+// What an answer can be. Anything else in a code is left out.
+const plainValue = (v) => typeof v === 'boolean' || typeof v === 'number' || (typeof v === 'string' && v.length <= 2000);
+const CUSTOM_KEY = /^[a-z][a-z0-9_]*\.custom-[0-9a-f-]{36}$/;
 const configKeys = (config) => config.sections.flatMap((s) => s.fields.map((f) => fieldKey(s.id, f.id)));
 
 // One Submission → the text for one QR code. part = [i, n] when the Scout is
@@ -49,27 +54,33 @@ export function unpack(text, configs) {
   try { a = JSON.parse(text.slice(PREFIX.length)); } catch { return { error: 'That code didn’t read fully. Hold steady and try again.' }; }
   if (!Array.isArray(a) || a[0] !== FORMAT) return { error: 'That code comes from a newer version of Offline Scout. Update this phone.' };
   const [, id, groupId, eventId, scoutId, scoutName, event, configId, configVersion, created, updated, submitted, deleted, answers, extra, part] = a;
-  if (!UUID.test(id ?? '')) return { error: 'That code didn’t read fully. Hold steady and try again.' };
+  const bad = { error: 'That code didn’t read fully. Hold steady and try again.' };
+  if (!UUID.test(id ?? '') || ![created, updated, submitted, deleted].every(goodTime)) return bad;
+  if ([groupId, eventId, scoutId].some((x) => x != null && !UUID.test(x))) return bad;
   // Whose match it is must be in the code, or it would become the Lead's.
   if (!scoutId) return { error: 'That match doesn’t say which Scout made it. It stays on their phone and sends when it has signal.' };
-  const config = configs[configId];
+  const config = Object.hasOwn(configs, configId) ? configs[configId] : null;
   if (!config) return { error: 'That match is for a game this phone doesn’t have.' };
   if (config.version !== configVersion) {
     // Can't be fixed with no signal: say so, and that nothing is lost.
     return { error: `The Scout’s phone has version ${configVersion} of the game and this one has ${config.version}, so this match can’t be copied. It stays on the Scout’s phone and sends when it has signal.` };
   }
   const values = {};
-  configKeys(config).forEach((k, i) => { if (answers?.[i] != null) values[k] = answers[i]; });
-  Object.assign(values, extra ?? {});
+  const list = Array.isArray(answers) ? answers : [];
+  configKeys(config).forEach((k, i) => { if (list[i] != null && plainValue(list[i])) values[k] = list[i]; });
+  // Answers outside the config: only Custom questions, only plain values.
+  for (const [k, v] of Object.entries(extra && typeof extra === 'object' ? extra : {})) {
+    if (CUSTOM_KEY.test(k) && plainValue(v)) values[k] = v;
+  }
   const sub = {
-    id, groupId, eventId, scoutId, event, configId, configVersion, values,
+    id, groupId, eventId, scoutId, event: String(event ?? '').slice(0, 120), configId, configVersion, values,
     createdAt: fromTime(created), updatedAt: fromTime(updated), submittedAt: fromTime(submitted), deletedAt: fromTime(deleted),
     syncedAt: null, // the Lead's phone uploads it when it has signal
     viaQr: true,
   };
   refresh(config, sub, new Date(sub.updatedAt));
   sub.updatedAt = fromTime(updated); // refresh() stamps the time; keep the Scout's
-  if (scoutName && !sub.summary.scout) sub.summary.scout = scoutName;
+  if (typeof scoutName === 'string' && scoutName && !sub.summary.scout) sub.summary.scout = scoutName.slice(0, 60);
   return { sub, part: Array.isArray(part) ? { i: part[0], n: part[1] } : null };
 }
 

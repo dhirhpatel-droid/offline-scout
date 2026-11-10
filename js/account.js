@@ -7,7 +7,8 @@
 //   currentGroupId – the group the phone is scouting for
 
 import { sb, APP_URL, isOnline } from './supabase.js';
-import { getSetting, setSetting } from './db.js';
+import { getSetting, setSetting, forgetAccountData } from './db.js';
+import { hasUnsentChanges } from './sync-rules.js';
 import { normalizeEmail, DEFAULT_GAME_CONFIG } from './group-rules.js';
 
 // Throws the Supabase error if there is one, otherwise returns the data.
@@ -40,7 +41,9 @@ export async function signIn({ email, password }) {
 
 export async function signOut() {
   await sb.auth.signOut({ scope: 'local' }); // works offline too
-  for (const key of ['profile', 'groups', 'currentGroupId']) await setSetting(key, null);
+  // Everything about this account and its groups leaves the phone, except
+  // matches still to send (and the match being scouted, kept in Drafts).
+  await forgetAccountData(hasUnsentChanges);
 }
 
 export const sendPasswordReset = (email) =>
@@ -160,7 +163,7 @@ export const listGroupInvites = (groupId) =>
 export const cancelInvite = (id) => sb.from('invites').delete().eq('id', id).then(must);
 
 // Sends an Invite through the server function (supabase/functions/send-invite).
-// Returns { emailed, hasAccount, emailError? }.
+// The reply is the same whether or not they have an account (privacy).
 export async function sendInvite(groupId, email) {
   const { data, error } = await sb.functions.invoke('send-invite', {
     body: { groupId, email: normalizeEmail(email), redirectTo: APP_URL },

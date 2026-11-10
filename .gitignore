@@ -6,3 +6,6 @@ node_modules/
 .impeccable/*.local.json
 .impeccable/questions/
 .impeccable/hook.cache.json
+# Secrets never go in the repo
+.env
+.env.*
