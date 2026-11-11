@@ -13,6 +13,9 @@ import { groupLabel, isLead, isLastLead, sortMembers, isEmail } from '../group-r
 import { friendlyError, isOnline } from '../supabase.js';
 import { nowScoutingBar } from '../now-scouting.js';
 import { cachedQuestions } from '../custom.js';
+import { currentEventData } from '../events.js';
+import { timeOf } from '../schedule.js';
+import { cachedAnnouncements } from '../announcements.js';
 
 export async function renderGroup() {
   const group = await currentGroup();
@@ -234,16 +237,22 @@ export async function renderGroup() {
       }))
       : h('p', { class: 'setting-value' }, LEVELS.find(([k]) => k === level)?.[1])) : null;
 
-  // Custom questions live on their own screen (Leads).
+  // The group's other screens, in one list near the top (the Group tab is
+  // where they live): the event, announcements, QR scanning, questions.
   const questions = lead ? await cachedQuestions(group.id) : [];
   const shown = questions.filter((q) => !q.hidden_at).length;
-  const questionsLink = lead ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#questions' },
-    h('div', {}, h('div', { class: 'title' }, 'Custom questions'),
-      h('div', { class: 'sub' }, [
-        shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'}` : 'Add your own, or hide the game’s',
-        group.settings?.hiddenFields?.length ? `${group.settings.hiddenFields.length} from the game hidden` : null,
-      ].filter(Boolean).join(' · '))),
-    icon('next', 20)))) : null;
+  const [eventData, news] = await Promise.all([currentEventData(), cachedAnnouncements(group.id)]);
+  const link = (href, title, sub) => h('li', {}, h('a', { class: 'row', href },
+    h('div', {}, h('div', { class: 'title' }, title), h('div', { class: 'sub' }, sub)), icon('next', 20)));
+  const groupLinks = h('ul', { class: 'rows group-links' },
+    h('li', {}, eventRow(group, lead, eventData)),
+    news.length || lead ? link('#announcements', 'Announcements',
+      news.length ? `Latest: ${news[0].body}` : 'Post a message to everyone in your group') : null,
+    lead && group.settings?.qrBackup ? link('#scan', 'Scan Scouts’ matches', 'QR backup: copy matches from phones with no signal') : null,
+    lead ? link('#questions', 'Custom questions', [
+      shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'}` : 'Add your own, or hide the game’s',
+      group.settings?.hiddenFields?.length ? `${group.settings.hiddenFields.length} from the game hidden` : null,
+    ].filter(Boolean).join(' · ')) : null);
 
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');
   leave.addEventListener('click', async () => {
@@ -271,6 +280,7 @@ export async function renderGroup() {
     h('main', { class: 'content' },
       lead && !isOnline() ? offlineNote('Your group is saved on this phone; scouting works as usual. Invites and settings change with signal.') : null,
       message.el,
+      groupLinks,
       inviteForm,
       invitesSection,
       h('h2', { class: 'section-h' }, 'Members'),
@@ -279,7 +289,6 @@ export async function renderGroup() {
       settingsSection,
       sortSetting,
       sensitivitySetting,
-      questionsLink,
       h('div', { class: 'danger-zone group-footer' },
         h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),
@@ -287,4 +296,18 @@ export async function renderGroup() {
   );
   load();
   return { el };
+}
+
+// The Current event, with what's next in its schedule.
+function eventRow(group, lead, data) {
+  const ev = group.currentEvent;
+  const upcoming = data?.matches.filter((m) => m.level === 'qual' && !m.played) ?? [];
+  const sub = !ev ? (lead ? 'Pick your event to load its schedule' : 'Your Lead picks the event')
+    : !data ? 'Schedule downloads when you have signal'
+      : !data.matches.length ? `${data.teams.length} teams · schedule not out yet`
+        : upcoming.length ? `${data.teams.length} teams · next match ${timeOf(upcoming[0]) ?? `Q${upcoming[0].number}`}`
+          : `${data.teams.length} teams · qualifications done`;
+  return h('a', { class: 'row', href: '#event' },
+    h('div', {}, h('div', { class: 'title' }, ev ? ev.name : 'No event yet'), h('div', { class: 'sub' }, sub)),
+    icon('next', 20));
 }

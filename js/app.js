@@ -135,7 +135,13 @@ async function addTabBar(screen, name) {
   }
   dock.append(tabBar(tab, { lead, teams: lead || group.settings?.scoutsSeeAll === true }));
   screen.append(dock);
+  // A tab's own screen has nothing to go back to: the tab bar is the way
+  // around. (Screens inside a tab, like a Team page, keep their Back.)
+  if (ROOTS.includes(location.hash || '#home')) {
+    screen.querySelector(':is(.topbar, .now-top) > a.icon-btn[aria-label="Back"]')?.remove();
+  }
 }
+const ROOTS = ['#home', '#saved', '#teams', '#assign', '#group'];
 
 function redirect(hash) {
   // Replaced, not added, so the back button doesn't bounce between screens.

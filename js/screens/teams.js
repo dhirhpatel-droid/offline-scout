@@ -109,10 +109,24 @@ export async function renderTeams() {
   // The team column gets a stronger edge once the table is scrolled sideways.
   const wrap = h('div', { class: 'teams-wrap', onscroll: (e) => e.currentTarget.classList.toggle('scrolled', e.currentTarget.scrollLeft > 0) }, table);
 
+  // Data checks live with the Teams (Leads): how many need a look.
+  let checksRow = null;
+  if (isLead(group)) {
+    const byId = new Map(subs.map((s) => [s.id, s]));
+    const open = openChecks(dataChecks(config, subs, data ?? {}, group.settings?.checkSensitivity ?? 'normal'),
+      (await getSetting(`checksOk:${group.id}`)) ?? [], byId);
+    checksRow = h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#checks' },
+      h('div', {}, h('div', { class: 'title' }, 'Data checks'),
+        h('div', { class: 'sub' }, open.length ? `First: ${open[0].title}` : 'Nothing looks off')),
+      open.length ? h('span', { class: 'row-end' }, h('span', { class: 'num row-count', 'aria-label': `${open.length} to look at` }, open.length), icon('next', 20))
+        : icon('next', 20))));
+  }
+
   const el = h('div', { class: 'screen' },
     bar('Teams'),
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, `${ev.name} · ${scouted} of ${rows.length} teams scouted`),
+      checksRow,
       h('p', { class: 'plain teams-note' }, [
         'Avg = estimated points per match, no-shows left out.',
         lastSyncAt ? ` As of ${timeAgo(lastSyncAt)}.` : ' Not synced yet: only what’s on this phone.',

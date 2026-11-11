@@ -318,7 +318,10 @@ short label, at least 56px tall, all sharing the width equally. The chosen tab f
 Selected Rule: its icon sits in a filled pill (Primary Pill colours) and its label goes bold;
 the others are Text 2. It sits in a dock with the screen's own footer (save status, Resume),
 so both stay under the thumb. Nested screens (a Team page, Event, Custom questions) keep
-their Back button and light up the tab they belong to.
+their Back button and light up the tab they belong to; a tab's own screen has no Back.
+Home holds only what's about you now (next match, unread announcement, your Assignments,
+a prompt when something needs doing); every other screen is reached through its tab:
+Data checks from Teams; Event, Announcements, Scan and Custom questions from Group.
 
 ### Bottom Sheet (confirm dialog)
 Surface fill, 20px corners, 24px padding, sits at the bottom of the screen so the buttons land under the thumb. Stacked full-width pills.
