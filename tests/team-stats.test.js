@@ -26,7 +26,7 @@ test('scoring sections come from the config', () => {
 test('teamRows: averages skip no-shows, unscouted Teams are listed', () => {
   const subs = [
     sub(23810, { 'auto.leave': true, 'auto.hiveTips': 1 }), // 3 + 20 = 23
-    sub(23810, { 'teleop.flower': 2, 'end.park': true }), // 4 + 5 = 9
+    sub(23810, { 'end.flower': 2, 'end.park': true }), // 4 + 5 = 9
     sub(23810, { 'pre.noShow': true }),
   ];
   const rows = teamRows(config, subs, [{ team_number: 23810, team_name: 'A' }, { team_number: 16012 }]);
@@ -36,7 +36,7 @@ test('teamRows: averages skip no-shows, unscouted Teams are listed', () => {
   assert.equal(a.matches, 1); // both played Submissions are for match 1
   assert.equal(a.noShows, 1);
   assert.equal(a.avg, 16);
-  assert.deepEqual(a.bySection, { auto: 11.5, teleop: 2, end: 2.5 });
+  assert.deepEqual(a.bySection, { auto: 11.5, teleop: 0, end: 4.5 });
   const b = rows.find((r) => r.team === 16012);
   assert.equal(b.scouted, 0);
   assert.equal(b.avg, null);
@@ -71,7 +71,7 @@ test('fieldSummary sums each field by its type', () => {
   assert.equal(by('LEAVE').answered, 2);
   assert.equal(s.find((x) => x.label === 'HIVE TIPs' && x.section === 'Auto').value, 1.5);
   assert.deepEqual(by('Driver skill').counts, [{ label: 'Good', count: 2 }]);
-  assert.equal(s.find((x) => x.kind === 'texts').texts.length, 1);
+  assert.equal(s.find((x) => x.kind === 'texts' && x.label === 'Notes').texts.length, 1);
   // Fields that only describe the Submission are not summed.
   assert.ok(!s.some((x) => x.label === 'Match number'));
 });

@@ -149,6 +149,12 @@ form would not even open, so we lost scouting data when we needed it most.
   official scores arrive), Leads can hide the game's own questions (`hiddenFields`), Home lists
   every Assignment as To do / Saved (tap any to scout it; nothing assumed from results), bottom tab bar
   (DESIGN.md "Tab Bar"). Not yet tested by Dhir on phones.
+- **BIOBUZZ config v7 (Nov 11, 2026), from the manual (TU05, Table 10-2):** FLOWERS score only
+  in the last minute (G410), so FLOWER moved from Teleop to Endgame, now 1:00: "Into an owned
+  FLOWER" (2 each, per robot, only pieces in a FLOWER its alliance owns) and "Bottom NECTAR"
+  (5 each, max 4). Auto notes and Teleop notes added. Counters accept a config `max`. Test matches
+  saved before v7 keep their FLOWER count under the old key (teleop.flower), so it no longer
+  shows; no real event data existed yet.
 - **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

@@ -44,7 +44,8 @@ function pointsForField(field, value) {
       return value === true ? field.points ?? 0 : 0;
     case 'counter':
       // "points" on a counter = points for each one counted.
-      return Math.max(0, Number(value) || 0) * (field.points ?? 0);
+      // A config "max" caps it (e.g. at most 4 FLOWERS).
+      return Math.min(field.max ?? Infinity, Math.max(0, Number(value) || 0)) * (field.points ?? 0);
     case 'choice': {
       // A choice can give points per option (FRC climbs will need this).
       const option = field.options.find((o) => o.value === value);

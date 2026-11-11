@@ -1,6 +1,6 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 6,
+  "version": 7,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
@@ -11,7 +11,7 @@
     ],
     "robotsPerAlliance": 2
   },
-  "notes": "Flower ownership and the bottom-nectar bonus are scored per alliance, not per robot, so they are not scouted here.",
+  "notes": "FLOWERS score only in the last minute (G410), so FLOWER scoring is on the Endgame tab (1:00). FLOWER ownership is alliance-level: scouts count only this robot's pieces that ended in a FLOWER its alliance owns, and its Bottom NECTAR bonuses. Fouls give points to the other alliance, so they are recorded but not taken off.",
   "sections": [
     {
       "id": "pre",
@@ -99,6 +99,12 @@
           "label": "PARK in loading zone",
           "points": 5,
           "hint": "At the end of Auto"
+        },
+        {
+          "id": "notes",
+          "type": "notes",
+          "label": "Auto notes",
+          "hint": "What they tried, where they scored, anything odd."
         }
       ]
     },
@@ -114,12 +120,6 @@
           "type": "counter",
           "label": "HIVE TIPs",
           "points": 20
-        },
-        {
-          "id": "flower",
-          "type": "counter",
-          "label": "Into a FLOWER",
-          "points": 2
         },
         {
           "id": "garden",
@@ -151,6 +151,12 @@
               "label": "A lot"
             }
           ]
+        },
+        {
+          "id": "notes",
+          "type": "notes",
+          "label": "Teleop notes",
+          "hint": "What they tried, where they scored, anything odd."
         }
       ]
     },
@@ -160,6 +166,21 @@
       "title": "Endgame",
       "fields": [
         {
+          "id": "flower",
+          "type": "counter",
+          "label": "Into an owned FLOWER",
+          "points": 2,
+          "hint": "POLLEN or NECTAR, where your NECTAR ends on top"
+        },
+        {
+          "id": "bottomNectar",
+          "type": "counter",
+          "label": "Bottom NECTAR",
+          "points": 5,
+          "max": 4,
+          "hint": "Its NECTAR is the lowest in a FLOWER"
+        },
+        {
           "id": "park",
           "type": "toggle",
           "label": "PARK at the end",
@@ -167,9 +188,9 @@
           "hint": "In the loading zone when the match ends"
         }
       ],
-      "durationSec": 30,
+      "durationSec": 60,
       "shortLabel": "End",
-      "note": "The last 30 seconds of Teleop (part of its 2:00)."
+      "note": "The last minute of Teleop (part of its 2:00). FLOWERS only score now."
     },
     {
       "id": "post",

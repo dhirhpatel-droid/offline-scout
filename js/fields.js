@@ -49,10 +49,13 @@ const RENDERERS = {
     const row = h('div', { class: 'field counter', role: 'group', 'aria-labelledby': labelId },
       labelBlock(field, labelId), minus, valueEl, plus);
 
+    // A config may cap a counter ("max": 4 FLOWERS), so a mis-tap can't go past it.
+    const top = Number.isFinite(field.max) ? field.max : Infinity;
     function set(next, flash) {
-      count = Math.max(0, next);
+      count = Math.min(top, Math.max(0, next));
       valueEl.textContent = count;
       minus.disabled = count === 0;
+      plus.disabled = count >= top;
       if (flash) {
         // Restart the flash animation even on fast repeated taps.
         row.classList.remove('flash');
@@ -63,6 +66,7 @@ const RENDERERS = {
       onChange(count);
     }
     minus.disabled = count === 0;
+    plus.disabled = count >= top;
     minus.addEventListener('click', () => set(count - 1, false));
     plus.addEventListener('click', () => set(count + 1, true));
     return row;

@@ -1424,3 +1424,5 @@ h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; } /* focused f
 .now-top > .now-top-title:first-child { padding-left: var(--s3); }
 /* A short note, then its button: breathing room between them */
 .content > p.plain + .pill.block { margin-top: var(--s4); }
+/* A counter at its most (a config "max"): the plus goes quiet */
+.round.add:disabled { background: var(--surface-2); color: var(--text-3); }

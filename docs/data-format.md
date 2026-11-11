@@ -29,7 +29,7 @@ Two kinds of JSON: **Game configs** (what to scout) and **Submissions** (one Sco
 
 | type | looks like | stored value | `points` means |
 |---|---|---|---|
-| `counter` | − number + | whole number ≥ 0 | points for each one |
+| `counter` | − number + | whole number ≥ 0 (and ≤ `max`, if the config gives one) | points for each one |
 | `toggle` | No / Yes | `true` / `false` | points when Yes |
 | `choice` | row of buttons from `options` | the option's `value` | per-option `points` (optional) |
 | `rating` | buttons `min`…`max` | number | — |

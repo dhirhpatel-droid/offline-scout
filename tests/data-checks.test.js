@@ -39,7 +39,7 @@ test('a scoring Yes/No or a no-show disagreement is flagged even when points are
 });
 
 test('sensitivity changes how far apart is too far', () => {
-  const pair = [sub(1, 1, { 'teleop.flower': 0 }), sub(1, 1, { 'teleop.flower': 5 })]; // 0 vs 10
+  const pair = [sub(1, 1, { 'end.flower': 0 }), sub(1, 1, { 'end.flower': 5 })]; // 0 vs 10
   assert.equal(disagreements(config, pair, { points: 12 }).length, 0);
   assert.equal(disagreements(config, pair, { points: 6 }).length, 1);
 });
@@ -53,7 +53,7 @@ test('an alliance total far from the official score is flagged, only when every 
   assert.deepEqual(c.teams, [1, 2]);
   assert.equal(scoreGaps(config, [red[0]], event.matches).length, 0, 'one robot missing: no check');
   // Close enough: 50 vs 60.
-  const near = [sub(1, 1, { 'auto.hiveTips': 2 }), sub(2, 1, { 'teleop.flower': 5 })];
+  const near = [sub(1, 1, { 'auto.hiveTips': 2 }), sub(2, 1, { 'end.flower': 5 })];
   assert.equal(scoreGaps(config, near, event.matches).length, 0);
 });
 

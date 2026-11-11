@@ -15,7 +15,7 @@ test('a full BIOBUZZ match adds up every point value', () => {
     'auto.hiveTips': 1, //           20
     'auto.park': true, //             5
     'teleop.hiveTips': 2, //         40
-    'teleop.flower': 5, //           10
+    'end.flower': 5, //           10
     'teleop.garden': 3, //            3
     'teleop.cell': 4, //              8
     'teleop.defense': 'heavy', //     0
@@ -36,7 +36,7 @@ test('a no-show robot scores 0 even if buttons were tapped', () => {
 });
 
 test('negative or broken counter values never subtract points', () => {
-  assert.equal(estimatePoints(biobuzz, { 'teleop.flower': -4, 'teleop.cell': 'abc' }), 0);
+  assert.equal(estimatePoints(biobuzz, { 'end.flower': -4, 'teleop.cell': 'abc' }), 0);
 });
 
 test('choice options can carry points (for future games)', () => {
@@ -53,9 +53,13 @@ test('choice options can carry points (for future games)', () => {
 });
 
 test('points are broken down by section and add up to the total', () => {
-  const values = { 'auto.leave': true, 'auto.hiveTips': 1, 'teleop.flower': 3, 'end.park': true };
+  const values = { 'auto.leave': true, 'auto.hiveTips': 1, 'end.flower': 3, 'end.park': true };
   const parts = pointsBySection(biobuzz, values);
-  assert.deepEqual(parts, { pre: 0, auto: 23, teleop: 6, end: 5, post: 0 });
+  assert.deepEqual(parts, { pre: 0, auto: 23, teleop: 0, end: 11, post: 0 }); // FLOWERS score in the last minute
   assert.equal(Object.values(parts).reduce((a, b) => a + b, 0), estimatePoints(biobuzz, values));
   assert.equal(pointsBySection(biobuzz, { ...values, 'pre.noShow': true }).auto, 0);
+});
+
+test('a counter with a "max" never counts past it (4 FLOWERS, 4 Bottom NECTAR bonuses)', () => {
+  assert.equal(estimatePoints(biobuzz, { 'end.bottomNectar': 9 }), 20);
 });

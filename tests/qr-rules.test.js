@@ -13,7 +13,7 @@ function scoutsSub() {
     id: '1f2e3d4c-5b6a-4789-8abc-def012345678', groupId: 'aaaaaaaa-0000-4000-8000-000000000001', eventId: 'aaaaaaaa-0000-4000-8000-000000000002', scoutId: 'aaaaaaaa-0000-4000-8000-000000000003', event: 'Sudbury Qualifier',
     configId: config.id, configVersion: config.version,
     values: { 'pre.scout': 'Maya', 'pre.level': 'qual', 'pre.match': 18, 'pre.team': 23810, 'pre.position': 'red2',
-      'auto.leave': true, 'auto.hiveTips': 1, 'teleop.flower': 3, 'post.notes': 'Fast cycles', 'teleop.custom-1f2e3d4c-0000-4000-8000-000000000001': 'Far side' },
+      'auto.leave': true, 'auto.hiveTips': 1, 'end.flower': 3, 'post.notes': 'Fast cycles', 'teleop.custom-1f2e3d4c-0000-4000-8000-000000000001': 'Far side' },
     createdAt: '2026-11-21T15:00:00.000Z', submittedAt: '2026-11-21T15:03:00.000Z', deletedAt: null, syncedAt: null,
   };
   refresh(config, sub, new Date('2026-11-21T15:03:00.000Z'));

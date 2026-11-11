@@ -58,7 +58,7 @@ test('Custom answers never add to Estimated points', () => {
 test('a Lead can hide the game\'s own questions, but never the ones the app needs', () => {
   const game = JSON.parse(readFileSync(new URL('../configs/ftc-2026-biobuzz.json', import.meta.url)));
   const keys = (c) => c.sections.flatMap((s) => s.fields.map((f) => `${s.id}.${f.id}`));
-  const hidden = withoutHidden(game, ['teleop.defense', 'pre.team', 'end.park']);
+  const hidden = withoutHidden(game, ['teleop.defense', 'pre.team', 'end.flower', 'end.bottomNectar', 'end.park']);
   assert.ok(!keys(hidden).includes('teleop.defense'));
   assert.ok(keys(hidden).includes('pre.team'), 'the team number always stays');
   assert.ok(!hidden.sections.some((s) => s.id === 'end'), 'a period with nothing left goes too');
