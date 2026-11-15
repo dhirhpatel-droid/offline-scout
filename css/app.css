@@ -1,13 +1,35 @@
-/* Layout and components. Colours and sizes come from tokens.css. */
+/* Offline Scout styles. Colours and sizes come from tokens.css.
 
+   Contents (search for the number):
+   1. Reset and base
+   2. Screen frame
+   3. Bands: top bar, covers, match header, bottom bar, tab bar
+   4. Headings and text
+   5. Buttons
+   6. Form controls
+   7. Lists and rows
+   8. Tables
+   9. Event pieces: bumper, station sign, line-up
+   10. Notices and feedback
+   11. Folds and the confirm sheet
+   12. Screen pieces
+   13. Pressed states
+   14. Motion
+
+   Rules for one component live together. Add new rules to the section they
+   belong to; never add a block of fixes at the end. */
+
+
+/* ==================== 1. Reset and base ==================== */
+
+/* Layout and components. Colours and sizes come from tokens.css. */
 *, *::before, *::after { box-sizing: border-box; }
+
 * { margin: 0; }
+
 [hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; }
-/* Keep a focused field visible below the sticky match header and above the
-   bottom bar (WCAG 2.4.11 Focus Not Obscured). */
-html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px; }
 
 body {
   min-height: 100dvh;
@@ -22,12 +44,17 @@ body {
 }
 
 button, input, textarea, select { font: inherit; color: inherit; }
+
 button { cursor: pointer; border: 0; background: none; touch-action: manipulation; }
+
 a { color: inherit; text-decoration: none; touch-action: manipulation; }
+
 svg { display: block; flex: none; }
 
 ::selection { background: var(--alliance); color: var(--on-alliance); }
+
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 input, textarea { caret-color: var(--text); }
 
 .num {
@@ -42,8 +69,22 @@ input, textarea { caret-color: var(--text); }
   clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-/* ---------- Screen frame ---------- */
+.assign-what .num { font-weight: 800; font-stretch: 75%; font-size: var(--fs-xl); }
 
+/* Browser surfaces carry the design too */
+html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; caret-color: var(--text); }
+
+/* Phones show scrollbars only while scrolling; never a stray bar over the header */
+@media (pointer: coarse) { html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; } }
+
+h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; }
+
+.how-result .num { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
+
+/* ==================== 2. Screen frame ==================== */
+
+/* ---------- Screen frame ---------- */
 .screen {
   display: flex;
   flex-direction: column;
@@ -52,6 +93,39 @@ input, textarea { caret-color: var(--text); }
   margin: 0 auto;
 }
 
+.content { flex: 1; padding: 0 var(--s4) var(--s5); }
+
+.screen[data-first-tab='true'] .match-head .points { visibility: hidden; }
+
+/* Outside the match screen there's no alliance colour: selections use the
+   strong main colour so they're easy to tell apart. */
+.screen:not([data-alliance]) .segmented button:not([data-color])[aria-pressed='true'],
+[data-alliance='none'] .segmented button:not([data-color])[aria-pressed='true'] {
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+  color: var(--primary-text);
+}
+
+/* Off the match screen (no alliance), a ticked tile uses the main colour. */
+.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+
+.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) .tile-check { background: var(--primary-text); border-color: var(--primary-text); color: var(--primary-bg); }
+
+.screen[data-first-tab='true'] .head-lineup { display: block; margin: calc(-1 * var(--s2)) 0 var(--s3); }
+
+/* The last row on Home never hides behind the bottom bar */
+.home-screen .content { padding-bottom: var(--s6); }
+
+/* A short note, then its button: breathing room between them */
+.content > p.plain + .pill.block { margin-top: var(--s4); }
+
+
+/* ==================== 3. Bands: top bar, covers, match header, bottom bar, tab bar ==================== */
+
+/* Keep a focused field visible below the sticky match header and above the
+   bottom bar (WCAG 2.4.11 Focus Not Obscured). */
+html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px; }
+
 .topbar {
   display: flex;
   align-items: center;
@@ -59,7 +133,9 @@ input, textarea { caret-color: var(--text); }
   min-height: 60px;
   padding: max(env(safe-area-inset-top), var(--s2)) var(--s2) var(--s2);
 }
+
 .topbar > h1:first-child, .topbar > .wordmark:first-child { padding-left: var(--s2); }
+
 .topbar h1 {
   font-size: var(--fs-2xl);
   font-weight: 800;
@@ -69,6 +145,7 @@ input, textarea { caret-color: var(--text); }
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
+
 .topbar .wordmark {
   font-stretch: 75%;
   font-weight: 900;
@@ -76,16 +153,6 @@ input, textarea { caret-color: var(--text); }
   letter-spacing: -0.01em;
   padding-left: var(--s2);
 }
-
-.icon-btn {
-  width: var(--tap); height: var(--tap);
-  display: grid; place-items: center;
-  border-radius: 50%;
-  color: inherit;
-}
-.icon-btn:active { background: color-mix(in srgb, currentColor 14%, transparent); }
-
-.content { flex: 1; padding: 0 var(--s4) var(--s5); }
 
 /* Bottom bar: save status + main action. Sticks to the bottom of the screen. */
 .bottombar {
@@ -109,10 +176,419 @@ input, textarea { caret-color: var(--text); }
   font-size: var(--fs-sm);
   color: var(--text-2);
 }
+
 .status svg { color: var(--text-2); }
 
-/* ---------- Buttons ---------- */
+/* ---------- Match header (the alliance-coloured block) ---------- */
+.match-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--alliance);
+  color: var(--on-alliance);
+  padding: max(env(safe-area-inset-top), var(--s1)) var(--s4) var(--s3);
+  /* No colour transition: fading red to blue passes through purple. */
+}
 
+.match-head .row1 {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  margin-left: calc(-1 * var(--s3)); /* the back arrow's icon lines up with the text below */
+  min-height: 48px;
+}
+
+.match-head .meta { flex: 1; font-size: var(--fs-sm); font-weight: 600; }
+
+.match-head .points { text-align: right; padding-right: var(--s1); }
+
+.match-head .points .value { font-size: var(--fs-2xl); line-height: 1; }
+
+.match-head .points .label { font-size: var(--fs-xs); font-weight: 600; }
+
+.match-head .team {
+  font-size: var(--fs-hero);
+  line-height: 0.95;
+  padding: 0 0 var(--s3);
+  margin-left: -0.04em; /* the digits' own side space: line them up with the text */
+}
+
+/* nothing scored yet on Setup */
+/* Section tabs: Pre / Auto / Teleop / End / Post */
+.tabs {
+  display: flex;
+  gap: var(--s1);
+  padding: var(--s1);
+  border-radius: 999px;
+  background: var(--tab-track);
+}
+
+.tabs button {
+  flex: 1;
+  min-height: var(--tap);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--on-alliance);
+}
+
+.tabs button[aria-selected='true'] {
+  background: var(--on-alliance);
+  color: var(--alliance);
+}
+
+.match-head .points .value { display: inline-block; transform-origin: right center; }
+
+.match-head .points .value.jump { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* ---------- Finish ("Q18 saved") ---------- */
+/* The alliance colour carries on from the header into the result. */
+.finished .match-head { padding-bottom: 0; }
+
+.finished .match-head .points { visibility: hidden; }
+
+/* the result below shows the points */
+.finished .content { padding: 0; }
+
+/* ---------- Home: "Now scouting" ---------- */
+/* The top block is the "cover art": the match you're on, in its alliance
+   colour, big enough to read from arm's length. */
+.now {
+  display: grid;
+  gap: var(--s2);
+  background: var(--alliance);
+  color: var(--on-alliance);
+  padding: max(env(safe-area-inset-top), var(--s2)) var(--s4) var(--s5);
+}
+
+.now[data-alliance='none'] { background: var(--surface); color: var(--text); }
+
+.now-top { display: flex; align-items: center; justify-content: space-between; margin: 0 calc(-1 * var(--s2)) var(--s4) 0; }
+
+.now-top .wordmark { font-stretch: 75%; font-weight: 900; font-size: var(--fs-xl); }
+
+
+.now-hero { font-size: var(--fs-display); font-weight: 800; font-stretch: 75%; line-height: 0.9; letter-spacing: -0.02em; }
+
+.now-hero:not(.num) { font-size: var(--fs-display-words); line-height: 1; }
+
+.now-sub { font-weight: 600; max-width: 34ch; }
+
+.now-go { margin-top: var(--s4); }
+
+.now:not([data-alliance='none']) .now-go { background: var(--on-alliance); color: var(--alliance); }
+
+/* ---------- Now-scouting bar (other screens, while a match is unfinished) ---------- */
+.now-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: var(--tap-lg);
+  margin: 0 var(--s4) var(--s2);
+  padding: var(--s2) var(--s2) var(--s2) var(--s4);
+  border-radius: var(--radius);
+  background: var(--alliance);
+  color: var(--on-alliance);
+}
+
+.now-bar[data-alliance='none'] { background: var(--primary-bg); color: var(--primary-text); }
+
+.now-bar-text { display: grid; }
+
+.now-bar-label { font-size: var(--fs-xs); font-weight: 700; }
+
+.now-bar-where { font-size: var(--fs-lg); }
+
+.now-bar-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  min-height: var(--tap);
+  padding: 0 var(--s3);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* ---------- Joining a group ---------- */
+
+.join-email {
+  margin: var(--s2) 0;
+  font-size: var(--fs-2xl);
+  font-stretch: 75%;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.auth-hero + .content { padding-top: var(--s3); }
+
+.now-bar-go { background: var(--on-alliance); color: var(--alliance); }
+
+.now-bar[data-alliance='none'] .now-bar-go { background: var(--primary-text); color: var(--primary-bg); }
+
+.now-discard {
+  justify-self: start;
+  min-height: var(--tap);
+  font-weight: 700;
+  color: inherit;
+}
+
+.status.failed { color: var(--danger); font-weight: 700; }
+
+/* ---------- Event ---------- */
+.event-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+
+.event-title { font-size: var(--fs-display-words); line-height: 1; }
+
+.event-facts { font-weight: 700; }
+
+/* Two Teams in one match: the two team numbers are a switch */
+.team-switch { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin: var(--s2) 0 var(--s3); }
+
+.team-switch button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: var(--tap-lg);
+  padding: var(--s2) var(--s4);
+  border-radius: var(--radius);
+  border: 2px solid var(--on-alliance);
+  color: var(--on-alliance);
+  text-align: left;
+}
+
+.switch-team { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
+.switch-pos { font-size: var(--fs-sm); font-weight: 600; }
+
+.team-switch button[aria-current='true'] { background: var(--on-alliance); color: var(--alliance); }
+
+/* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
+.now-hero.two { font-size: var(--fs-hero); }
+
+/* Grey block (light theme is near-white): edges and "mine" in Text colour */
+.now[data-alliance='none'] { --focus: var(--text); }
+
+.now[data-alliance='none'] .lineup-team { border-color: var(--text); }
+
+.now[data-alliance='none'] .lineup-team.mine { background: var(--text); color: var(--bg); }
+
+/* Focus on alliance-coloured blocks: white ring (≥ 5:1 on every alliance fill) */
+.match-head, .now, .now-bar, .finish { --focus: var(--on-alliance); }
+
+/* Match periods carry the field clock's time under the name */
+.tabs button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+
+.tab-clock { font-size: var(--fs-xs); font-weight: 700; font-stretch: 75%; }
+
+/* Match header: the line-up shows on Setup only (scouting periods keep the room) */
+.head-lineup { display: none; }
+
+.head-lineup .lineup { margin-top: 0; }
+
+/* Two Teams in one match: the switch plates are printed signs too */
+.team-switch button { border-radius: var(--plate-radius); }
+
+/* Group: the team number is the cover */
+.group-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+
+.group-name { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin-top: var(--s2); }
+
+/* No group yet: the steps on the cover */
+.join-cover .now-hero { font-size: var(--fs-display-words); line-height: 1; }
+
+.join-steps { margin: var(--s4) 0 var(--s2); padding-left: 1.4em; display: grid; gap: var(--s3); font-size: var(--fs-md); font-weight: 600; }
+
+.join-steps li::marker { font-weight: 800; }
+
+.join-steps .join-email { display: block; margin: var(--s1) 0 0; }
+
+/* One Team: number as the cover, averages like the results screen */
+.team-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
+
+.team-cover-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; margin-top: var(--s2); }
+
+/* ---------- Announcements ---------- */
+/* Home: the newest unread one, right under the cover. A plain band in the
+   Surface colour (not a card), the message in big bold words. */
+.announce-strip {
+  display: grid;
+  gap: var(--s1);
+  margin: 0 var(--s4);
+  padding: var(--s3) var(--s4);
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+}
+
+.announce-strip-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
+
+.announce-strip-body { font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; }
+
+/* Announcements: long messages stay short on Home (the whole thing is a tap away) */
+.announce-strip-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+.announce-strip-head > svg:last-child { margin-left: auto; }
+
+/* Cover screens (Event, Group, Team): the screen's name next to Back */
+.now-top { align-items: center; }
+
+.now-top-title { margin-right: auto; font-size: var(--fs-md); font-weight: 700; }
+
+/* Sign-in cover: a bigger, balanced headline over the field's red | blue split */
+.auth-hero { position: relative; padding-bottom: calc(var(--s5) + 6px); }
+
+.auth-hero .now-hero { font-size: var(--fs-display-words); text-wrap: balance; }
+
+.auth-band { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; height: 6px; }
+
+.auth-band .red { background: var(--red); }
+
+.auth-band .blue { background: var(--blue); }
+
+/* When a period is taller than the screen, a fade above the bottom bar says "more below" */
+.bottombar::before { content: ''; position: absolute; left: 0; right: 0; top: -24px; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
+
+/* Cover screens (Event, Group, Team): the crumb is the same voice as other top-bar titles */
+.now-top-title { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+
+/* "Discard this match" is red everywhere */
+/* The cover's own text colour (white on an alliance colour, dark on a light surface) */
+.now .now-discard { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Two Teams: say which one you're scoring, right above the counters */
+.scoring-for { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); font-weight: 700; color: var(--text-2); }
+
+.status-two { display: grid; line-height: 1.2; }
+
+.status-two strong { color: var(--text); font-weight: 800; }
+
+.status-two > span { font-size: var(--fs-xs); white-space: nowrap; }
+
+/* Round 4: help where it's needed, and saves said where you tapped */
+/* The header's points open a short "what is this?" sheet */
+.match-head button.points { min-width: var(--tap); min-height: var(--tap); color: inherit; }
+
+.match-head button.points .label { text-decoration: underline dotted; text-underline-offset: 3px; }
+
+/* "Still needed: team number" in the match footer: tap it to go back and fill it */
+.status-missing { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; min-height: var(--tap); text-align: left; font-size: var(--fs-sm); font-weight: 700; color: var(--danger); }
+
+.status-missing svg { color: var(--danger); flex: none; }
+
+/* "Scout a different match" under an Assignment's big button: the plan never locks a Scout in */
+.now-other { display: flex; align-items: center; margin-top: var(--s2); }
+
+/* ---------- Tab bar ----------
+   Along the bottom of every screen except a match being scouted. It sits in
+   a dock with the screen's own footer (save status, "Resume"), so both stay
+   under the thumb. The chosen tab is filled, like every chosen thing. */
+.dock { position: sticky; bottom: 0; z-index: 5; background: var(--bg); }
+
+.dock .bottombar { position: relative; padding-bottom: var(--s3); }
+
+.dock .now-bar { margin-top: var(--s2); }
+
+.tabbar {
+  display: flex;
+  padding: var(--s1) var(--s2) max(env(safe-area-inset-bottom), var(--s1));
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.tab {
+  flex: 1 1 0;
+  min-width: 0; /* five tabs always share the width, even on a small phone */
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: var(--tap);
+  padding: var(--s1) 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.tab-mark { display: grid; place-items: center; width: min(56px, 100%); height: 32px; border-radius: 999px; }
+
+.tab[aria-current='page'] { color: var(--text); font-weight: 800; }
+
+.tab[aria-current='page'] .tab-mark { background: var(--primary-bg); color: var(--primary-text); }
+
+.tab:focus-visible { outline: none; }
+
+.tab:focus-visible .tab-mark { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Sign in / Create account: what the app is ----------
+   The hero says it; "How it works" shows it with the app's own pieces
+   (station sign, bumper, the save line, a results row), drawn small. */
+.auth-hero + .content > .form:first-child > .section-h:first-child,
+.auth-hero + .content > .you-get + .form > .section-h:first-child { margin-top: var(--s5); }
+
+/* A tab's own screen has no Back: its title lines up with the content */
+.now-top > .now-top-title:first-child { padding-left: var(--s3); }
+
+
+/* ==================== 4. Headings and text ==================== */
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  padding: var(--s4) 0 var(--s2);
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+}
+
+.section-note { margin-top: calc(-1 * var(--s1)); font-size: var(--fs-sm); color: var(--text-2); }
+
+.setting-value { font-size: var(--fs-lg); font-weight: 700; }
+
+.plain { color: var(--text-2); font-size: var(--fs-sm); }
+
+.screen-title { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; padding: var(--s4) 0 var(--s2); }
+
+.lede { color: var(--text-2); margin-bottom: var(--s3); max-width: 36ch; }
+
+.group-lede { color: var(--text-2); font-weight: 600; margin: var(--s1) 0 var(--s3); }
+
+.section-h { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin: var(--s6) 0 var(--s2); }
+
+/* ---------- Teams (Lead views) ---------- */
+.teams-note { font-size: var(--fs-sm); margin-bottom: var(--s3); }
+
+.team-fields-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin-bottom: var(--s1); }
+
+.qr-show .group-lede { justify-self: stretch; text-align: left; }
+
+/* ---------- Whole-app consistency ---------- */
+/* Links inside text look like links (not just by where they sit) */
+.plain a, .teams-note a, .field-hint a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
+
+.assign-form-h { font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--s3); }
+
+.form-note { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Why it exists */
+.origin { margin: var(--s6) 0 var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-2); max-width: 46ch; }
+
+.install-tip > h2:not(.section-h) { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-md); font-weight: 800; }
+
+
+/* ==================== 5. Buttons ==================== */
+
+.icon-btn {
+  width: var(--tap); height: var(--tap);
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: inherit;
+}
+
+/* ---------- Buttons ---------- */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -127,9 +603,12 @@ input, textarea { caret-color: var(--text); }
   color: var(--primary-text);
   transition: transform 120ms ease-out;
 }
-.pill:active { transform: scale(0.97); }
-.pill.secondary { background: var(--bg); color: var(--text); border: 2px solid var(--control-line); } /* edge 3:1 */
+
+.pill.secondary { background: var(--bg); color: var(--text); border: 2px solid var(--control-line); }
+
+/* edge 3:1 */
 .pill.block { display: flex; width: 100%; }
+
 .pill.big { min-height: var(--tap-lg); font-size: var(--fs-lg); }
 
 .text-btn {
@@ -138,98 +617,9 @@ input, textarea { caret-color: var(--text); }
   font-weight: 600;
   color: var(--text-2);
 }
+
 .text-btn.danger { color: var(--danger); }
 
-/* ---------- Match header (the alliance-coloured block) ---------- */
-
-.match-head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--alliance);
-  color: var(--on-alliance);
-  padding: max(env(safe-area-inset-top), var(--s1)) var(--s4) var(--s3);
-  /* No colour transition: fading red to blue passes through purple. */
-}
-.match-head .row1 {
-  display: flex;
-  align-items: center;
-  gap: var(--s1);
-  margin-left: calc(-1 * var(--s3)); /* the back arrow's icon lines up with the text below */
-  min-height: 48px;
-}
-.match-head .meta { flex: 1; font-size: var(--fs-sm); font-weight: 600; }
-.match-head .points { text-align: right; padding-right: var(--s1); }
-.match-head .points .value { font-size: var(--fs-2xl); line-height: 1; }
-.match-head .points .label { font-size: var(--fs-xs); font-weight: 600; }
-.match-head .team {
-  font-size: var(--fs-hero);
-  line-height: 0.95;
-  padding: 0 0 var(--s3);
-  margin-left: -0.04em; /* the digits' own side space: line them up with the text */
-}
-.screen[data-first-tab='true'] .match-head .points { visibility: hidden; } /* nothing scored yet on Setup */
-
-/* Section tabs: Pre / Auto / Teleop / End / Post */
-.tabs {
-  display: flex;
-  gap: var(--s1);
-  padding: var(--s1);
-  border-radius: 999px;
-  background: var(--tab-track);
-}
-.tabs button {
-  flex: 1;
-  min-height: var(--tap);
-  border-radius: 999px;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--on-alliance);
-}
-.tabs button[aria-selected='true'] {
-  background: var(--on-alliance);
-  color: var(--alliance);
-}
-
-.section-title {
-  display: flex;
-  align-items: baseline;
-  gap: var(--s2);
-  padding: var(--s4) 0 var(--s2);
-  font-size: var(--fs-2xl);
-  font-weight: 800;
-  font-stretch: 75%;
-  line-height: 1;
-}
-.section-note { margin-top: calc(-1 * var(--s1)); font-size: var(--fs-sm); color: var(--text-2); }
-
-/* ---------- Fields ---------- */
-
-.field {
-  padding: var(--s3) 0;
-  border-bottom: 1px solid var(--line);
-}
-.field:last-child { border-bottom: 0; }
-/* The period panel is a 2-column grid: most fields span both columns,
-   short ones (.half) take one, so match # and team # share a row. */
-.period { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--s3); align-content: start; }
-.period > * { grid-column: 1 / -1; }
-.period > .field.half { grid-column: auto; }
-.field-label { font-weight: 650; font-size: var(--fs-md); }
-.field-hint { font-size: var(--fs-sm); color: var(--text-3); }
-
-/* Counter: label | − value + */
-.counter {
-  display: grid;
-  grid-template-columns: 1fr var(--tap) 4.5rem var(--tap-lg);
-  align-items: center;
-  gap: var(--s2);
-}
-.counter .value {
-  font-size: var(--fs-num);
-  line-height: 1;
-  text-align: center;
-}
 .round {
   display: grid;
   place-items: center;
@@ -240,6 +630,7 @@ input, textarea { caret-color: var(--text); }
   color: var(--text);
   transition: transform 100ms ease-out;
 }
+
 .round.add {
   width: var(--tap-lg);
   height: var(--tap-lg);
@@ -247,31 +638,133 @@ input, textarea { caret-color: var(--text); }
   background: var(--alliance);
   color: var(--on-alliance);
 }
-.round:active { transform: scale(0.92); }
-.round:disabled { color: var(--text-3); } /* zero: nothing to undo yet (a quieter minus, not 'disabled') */
 
-/* Signature moment: adding flashes the row in the alliance colour and the
-   number jumps. Skipped for people who turn off motion in their phone settings. */
-@keyframes row-flash {
-  from { background: color-mix(in srgb, var(--alliance) 38%, transparent); }
-  to { background: transparent; }
-}
-@keyframes value-jump {
-  from { transform: scale(1.25); }
-  to { transform: scale(1); }
-}
-.field.flash { animation: row-flash 420ms cubic-bezier(0.16, 1, 0.3, 1); }
-.field.flash .value { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
-.match-head .points .value { display: inline-block; transform-origin: right center; }
-.match-head .points .value.jump { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+.round:disabled { color: var(--text-3); }
 
-/* Segmented buttons (toggles, choices, ratings) */
-.toggle-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.pill.danger { background: var(--danger); color: var(--on-danger); }
+
+.reveal {
+  position: absolute;
+  right: var(--s1);
+  top: 0;
+  bottom: 0; /* exactly as tall as the box, so the label sits in its middle */
+  min-height: var(--tap);
+  min-width: 72px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.link-btn {
+  min-height: var(--tap);
+  padding: 0;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pill:disabled,
+.pill[aria-disabled='true'] {
+  /* Clearly not pressable: no primary colour, quiet text. Solid edge
+     (dashed means "Open" in the Coverage grid). */
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 2px solid var(--control-line-strong);
+  cursor: not-allowed;
+}
+
+.small-btn {
+  min-height: var(--tap);
+  padding: 0 var(--s3);
+  border-radius: 999px;
+  border: 2px solid var(--control-line-strong); /* ≥ 3:1 on its own grey fill */
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.small-btn.danger { color: var(--danger); background: transparent; border-color: transparent; }
+
+.small-btn:disabled { color: var(--text-3); cursor: not-allowed; }
+
+.small-btn.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
+
+.icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
+
+.guest-link {
+  display: inline-flex;
   align-items: center;
-  gap: var(--s3);
+  gap: var(--s1);
+  min-height: var(--tap);
+  margin-top: var(--s1);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-2);
 }
+
+.assign-member > .pill { margin-top: var(--s3); }
+
+.small-btn.plain-remove { color: var(--text); background: transparent; border-color: transparent; }
+
+.qr-controls .pill { min-height: var(--tap); display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+
+.qr-camera .pill { margin: 0; }
+
+/* "Type the team instead": a text button on the alliance colour */
+.link-btn.on-alliance { color: var(--on-alliance); min-height: var(--tap); margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+/* "Looks right": its own row under the Open buttons, a real (secondary) button with a check, not grey text */
+.check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
+
+.install-actions .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+
+/* A counter at its most (a config "max"): the plus goes quiet */
+.round.add:disabled { background: var(--surface-2); color: var(--text-3); }
+
+
+/* ==================== 6. Form controls ==================== */
+
+/* ---------- Fields ---------- */
+.field {
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field:last-child { border-bottom: 0; }
+
+/* The period panel is a 2-column grid: most fields span both columns,
+   short ones (.half) take one, so match # and team # share a row. */
+.period { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--s3); align-content: start; }
+
+.period > * { grid-column: 1 / -1; }
+
+.period > .field.half { grid-column: auto; }
+
+.field-label { font-weight: 650; font-size: var(--fs-md); }
+
+.field-hint { font-size: var(--fs-sm); color: var(--text-3); }
+
+/* Counter: label | − value + */
+.counter {
+  display: grid;
+  grid-template-columns: 1fr var(--tap) 4.5rem var(--tap-lg);
+  align-items: center;
+  gap: var(--s2);
+}
+
+.counter .value {
+  font-size: var(--fs-num);
+  line-height: 1;
+  text-align: center;
+}
+
+.field.flash { animation: row-flash 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+.field.flash .value { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+
 /* Every pick-one choice is ONE control: an outlined track with the chosen
    part filled (like the period tabs and Mine/Everyone). Each part stays ≥ 56px. */
 .segmented {
@@ -281,8 +774,11 @@ input, textarea { caret-color: var(--text); }
   border: 2px solid var(--control-line);
   border-radius: var(--radius);
 }
+
 .segmented.wide { margin-top: var(--s2); }
+
 .field.half .segmented button { min-width: 0; }
+
 .segmented button {
   flex: 1;
   border: 2px solid transparent; /* the track gives the edge */
@@ -292,24 +788,22 @@ input, textarea { caret-color: var(--text); }
   border-radius: var(--radius-sm);
   font-weight: 700;
 }
+
 .segmented button[aria-pressed='true'] {
   background: var(--alliance);
   border-color: var(--alliance);
   color: var(--on-alliance);
 }
-/* Outside the match screen there's no alliance colour: selections use the
-   strong main colour so they're easy to tell apart. */
-.screen:not([data-alliance]) .segmented button:not([data-color])[aria-pressed='true'],
-[data-alliance='none'] .segmented button:not([data-color])[aria-pressed='true'] {
-  background: var(--primary-bg);
-  border-color: var(--primary-bg);
-  color: var(--primary-text);
-}
+
 /* Alliance position: one row of buttons per alliance, each in its own colour. */
 .position-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s4); margin-top: var(--s2); }
+
 .position-grid .segmented button { min-width: 0; padding: 0 var(--s1); }
+
 .segmented button[data-color='red'][aria-pressed='true'] { background: var(--red); border-color: var(--red); color: var(--on-alliance); }
+
 .segmented button[data-color='blue'][aria-pressed='true'] { background: var(--blue); border-color: var(--blue); color: var(--on-alliance); }
+
 .segmented button[data-color='yellow'][aria-pressed='true'] { background: var(--card-yellow); border-color: var(--card-yellow-edge); color: var(--on-card-yellow); }
 
 /* Text inputs */
@@ -325,59 +819,21 @@ input, textarea { caret-color: var(--text); }
   font-size: var(--fs-lg);
   font-weight: 600;
 }
+
 .input:focus { border-color: var(--text); }
+
 .input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 .input::placeholder { color: var(--text-3); font-weight: 500; }
+
 textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertical; line-height: 1.4; }
+
 .input.num-input { font-size: var(--fs-2xl); font-stretch: 75%; font-weight: 800; }
+
 .field.invalid .input { border-color: var(--danger); }
-.error-text { margin-top: var(--s2); color: var(--danger); font-size: var(--fs-sm); font-weight: 600; }
 
 /* ---------- Home ---------- */
 
-.home .field { border-bottom: 0; }
-.home-actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
-.home-actions .resume-note { font-size: var(--fs-sm); color: var(--text-2); }
-
-/* ---------- My matches ---------- */
-
-.submission-list { list-style: none; padding: 0; }
-.submission-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--s3);
-  width: 100%;
-  min-height: 80px;
-  padding: var(--s2) 0;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-}
-.submission-team .bumper { font-size: var(--fs-lg); min-width: 4.4em; height: 2.2em; }
-.submission-main { display: grid; min-width: 0; }
-.submission-title { font-size: var(--fs-xl); line-height: 1.15; }
-.submission-row .sub { font-size: var(--fs-sm); color: var(--text-2); }
-.submission-row .pts { display: grid; justify-items: end; gap: 2px; }
-.submission-row .pts .value { font-size: var(--fs-2xl); line-height: 1; }
-.sync-chip {
-  padding: 2px var(--s2);
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  background: var(--surface-2);
-  color: var(--text-2);
-}
-.sync-chip.sent { background: var(--primary-bg); color: var(--primary-text); }
-
-.empty-state { padding: var(--s6) 0; }
-.empty-state h2 { font-size: var(--fs-xl); font-weight: 800; }
-.empty-state p { color: var(--text-2); margin: var(--s2) 0 var(--s5); max-width: 34ch; }
-
-/* ---------- Settings ---------- */
-
-.group { margin-top: var(--s5); }
-.group h2 { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; color: var(--text); margin-bottom: var(--s2); }
-.setting-value { font-size: var(--fs-lg); font-weight: 700; }
 .radio-row {
   display: flex;
   align-items: center;
@@ -388,137 +844,24 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
   background: var(--surface);
   font-weight: 600;
 }
+
 .radio-row + .radio-row { margin-top: var(--s2); }
+
 .radio-row input { width: 22px; height: 22px; accent-color: var(--text); }
-.plain { color: var(--text-2); font-size: var(--fs-sm); }
-
-/* ---------- Confirm dialog ---------- */
-
-/* Shown as a bottom sheet: the buttons land where the thumb already is. */
-dialog {
-  margin: auto auto max(env(safe-area-inset-bottom), var(--s4));
-  width: min(100% - 32px, 420px);
-  border: 0;
-  border-radius: var(--radius-lg);
-  padding: var(--s5);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-sheet);
-}
-dialog::backdrop { background: var(--scrim); }
-dialog h2 { font-size: var(--fs-xl); font-weight: 800; }
-dialog p { color: var(--text-2); margin-top: var(--s2); }
-dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
-.pill.danger { background: var(--danger); color: var(--on-danger); }
-
-/* Reduced motion: keep the colour flash (it confirms the tap) but drop
-   everything that moves or scales. */
-@media (prefers-reduced-motion: reduce) {
-  .field.flash .value, .match-head .points .value.jump { animation: none; }
-  .pill:active, .round:active { transform: none; }
-  .pill, .round { transition: none; }
-  .field.tile, .field.tile:active { transition: none; transform: none; }
-  .team-list summary svg { transition: none; }
-}
 
 /* ---------- Forms: sign in, groups, invites ---------- */
-
 .form { display: grid; gap: var(--s1); }
+
 .form .field { border-bottom: 0; padding: var(--s2) 0; }
+
 .form .actions { display: grid; gap: var(--s3); margin-top: var(--s4); }
-.screen-title { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; padding: var(--s4) 0 var(--s2); }
-.lede { color: var(--text-2); margin-bottom: var(--s3); max-width: 36ch; }
 
 /* Show/Hide sits inside the password box, on the right. */
 .input-wrap { position: relative; margin-top: var(--s2); }
+
 .input-wrap .input { margin-top: 0; padding-right: 88px; }
-.reveal {
-  position: absolute;
-  right: var(--s1);
-  top: 0;
-  bottom: 0; /* exactly as tall as the box, so the label sits in its middle */
-  min-height: var(--tap);
-  min-width: 72px;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-  color: var(--text-2);
-}
-
-.form-message {
-  padding: var(--s3) var(--s4);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 600;
-}
-.form-message[data-kind='error'] { color: var(--danger); }
-
-.link-btn {
-  min-height: var(--tap);
-  padding: 0;
-  font-weight: 600;
-  color: var(--text-2);
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.pill:disabled,
-.pill[aria-disabled='true'] {
-  /* Clearly not pressable: no primary colour, quiet text. Solid edge
-     (dashed means "Open" in the Coverage grid). */
-  background: var(--surface-2);
-  color: var(--text-3);
-  border: 2px solid var(--control-line-strong);
-  cursor: not-allowed;
-}
-
-/* ---------- Groups and members ---------- */
-
-
-.rows { list-style: none; padding: 0; }
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: var(--s3);
-  min-height: 64px;
-  padding: var(--s2) 0;
-  border-bottom: 1px solid var(--line);
-}
-.row .title { font-weight: 700; }
-.row .sub { font-size: var(--fs-sm); color: var(--text-2); }
-.row .row-actions { display: flex; gap: var(--s2); }
-a.row { color: inherit; }
-.role-tag {
-  display: inline-block;
-  margin-left: var(--s2);
-  padding: 2px var(--s2);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  vertical-align: 2px;
-}
-.small-btn {
-  min-height: var(--tap);
-  padding: 0 var(--s3);
-  border-radius: 999px;
-  border: 2px solid var(--control-line-strong); /* ≥ 3:1 on its own grey fill */
-  background: var(--surface-2);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-}
-.small-btn.danger { color: var(--danger); background: transparent; border-color: transparent; }
-.small-btn:disabled { color: var(--text-3); cursor: not-allowed; }
-.small-btn.primary { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
-.group-footer { display: grid; gap: var(--s3); }
-.group-footer .text-btn { justify-self: start; padding-left: 0; }
-.group-lede { color: var(--text-2); font-weight: 600; margin: var(--s1) 0 var(--s3); }
-.section-h { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin: var(--s6) 0 var(--s2); }
 
 /* ---------- Tap tiles (Yes/No questions) ---------- */
-
 /* The whole row is one button: off = hollow with an empty check box,
    on = filled with the alliance colour and a check. */
 .field.tile {
@@ -535,8 +878,11 @@ a.row { color: inherit; }
   text-align: left;
   transition: background-color 120ms ease-out, transform 100ms ease-out;
 }
+
 .field.tile + .field.tile { margin-top: 0; }
+
 .tile-text { display: grid; }
+
 .tile-check {
   display: grid;
   place-items: center;
@@ -546,35 +892,225 @@ a.row { color: inherit; }
   border: 2px solid var(--control-line);
   color: transparent;
 }
+
 .field.tile[aria-pressed='true'] {
   background: var(--alliance);
   border-color: var(--alliance);
   color: var(--on-alliance);
 }
-.field.tile[aria-pressed='true'] .field-hint { color: inherit; } /* full colour: 5:1 on the alliance fill */
+
+.field.tile[aria-pressed='true'] .field-hint { color: inherit; }
+
+/* full colour: 5:1 on the alliance fill */
 .field.tile[aria-pressed='true'] .tile-check { background: var(--on-alliance); border-color: var(--on-alliance); color: var(--alliance); }
+
 [data-alliance='none'] .field.tile[aria-pressed='true'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+
 [data-alliance='none'] .field.tile[aria-pressed='true'] .tile-check { color: var(--primary-bg); background: var(--primary-text); border-color: var(--primary-text); }
-.field.tile:active { transform: scale(0.99); }
 
 .scouting-as { margin-top: var(--s4); }
+
+/* A choice nobody has answered yet says so (so "None" and "skipped" differ). */
+.answer-state { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
+
+.answer-state[data-answered='true'] { display: none; }
+
+/* Alliance position options carry their alliance colour on the edge, even before they're picked. */
+.position-grid .segmented button[data-color='red'] { border-color: var(--red); }
+
+.position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
+
+/* Mine / Everyone on the matches list */
+.list-switch { margin: var(--s2) 0 var(--s3); }
+
+.seg-link {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: var(--tap);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--control-line);
+  font-weight: 700;
+}
+
+.seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
+
+.field.tile:disabled { border-color: var(--line); cursor: not-allowed; }
+
+/* readable, just not changeable */
+.field.tile[aria-pressed='true']:disabled { background: transparent; border-color: var(--control-line); color: var(--text); }
+
+.field.tile[aria-pressed='true']:disabled .tile-check { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+/* Someone else's match, view only */
+.read-only .round { display: none; }
+
+/* view only: just the numbers */
+.read-only .counter { grid-template-columns: 1fr 4.5rem; }
+
+.assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+
+.setting-state { font-weight: 800; }
+
+/* Filling an open station: pick a member */
+.pick-people { display: grid; gap: var(--s2); margin: var(--s3) 0; }
+
+/* A person to choose in the Open-position sheet (a label holding a radio) */
+.pick-person {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s3);
+  cursor: pointer;
+  min-height: var(--tap);
+  padding: 0 var(--s4);
+  border-radius: var(--radius);
+  border: 2px solid var(--control-line);
+  font-weight: 700;
+  text-align: left;
+}
+
+.pick-people { border: 0; padding: 0; }
+
+.pick-person:has(input:checked) { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
+
+.pick-person:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Full (can't take it): solid edge, quieter text. Dashed means "Open" elsewhere. */
+.pick-person.full { border-color: var(--line); color: var(--text-2); cursor: not-allowed; }
+
+/* Custom questions (Leads) */
+.segmented.wrap { flex-wrap: wrap; }
+
+.segmented.wrap button { flex: 1 1 auto; }
+
+/* ---------- Round 3 polish ---------- */
+/* Position buttons stay separate: each is its own alliance colour. */
+.segmented .seg-link { border-color: transparent; border-radius: var(--radius-sm); }
+
+.position-grid .segmented { gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
+
+.position-grid .segmented button { border-color: var(--control-line); border-radius: var(--radius-md); }
+
+/* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
+.field.counter { padding: var(--s1) 0; }
+
+/* Setup: halves sit in one row without their own short dividers; space before the next card */
+.period > .field.half { border-bottom: 0; }
+
+.period > .field.half + .field.half + * { border-top: 1px solid var(--line); }
+
+.period > .field.tile { margin: var(--s2) 0; }
+
+/* Offline Group settings: the tile, greyed, with its state and why */
+.field.tile[aria-disabled='true'] { opacity: 1; cursor: not-allowed; border-style: solid; border-color: var(--line); }
+
+/* A Group setting's own line: "Saved for the group" or what went wrong */
+.tile-saved { display: block; margin-top: var(--s1); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+
+.tile-saved.error { color: var(--danger); }
+
+.install-tip.first + .form > .section-h:first-child, .install-tip.first + .you-get { margin-top: var(--s6); }
+
+
+/* ==================== 7. Lists and rows ==================== */
+
+.home-actions { display: grid; gap: var(--s3); margin-top: var(--s6); }
+
+
+/* ---------- My matches ---------- */
+.submission-list { list-style: none; padding: 0; }
+
+.submission-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: 80px;
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.submission-team .bumper { font-size: var(--fs-lg); min-width: 4.4em; height: 2.2em; }
+
+.submission-main { display: grid; min-width: 0; }
+
+.submission-title { font-size: var(--fs-xl); line-height: 1.15; }
+
+.submission-row .sub { font-size: var(--fs-sm); color: var(--text-2); }
+
+.submission-row .pts { display: grid; justify-items: end; gap: 2px; }
+
+.submission-row .pts .value { font-size: var(--fs-2xl); line-height: 1; }
+
+.sync-chip {
+  padding: 2px var(--s2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.sync-chip.sent { background: var(--primary-bg); color: var(--primary-text); }
+
+/* ---------- Settings ---------- */
+.group { margin-top: var(--s5); }
+
+.group h2 { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; color: var(--text); margin-bottom: var(--s2); }
+
+/* ---------- Groups and members ---------- */
+.rows { list-style: none; padding: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 64px;
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.row .title { font-weight: 700; }
+
+.row .sub { font-size: var(--fs-sm); color: var(--text-2); }
+
+.row .row-actions { display: flex; gap: var(--s2); }
+
+a.row { color: inherit; }
+
+.role-tag {
+  display: inline-block;
+  margin-left: var(--s2);
+  padding: 2px var(--s2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.group-footer { display: grid; gap: var(--s3); }
+
+.group-footer .text-btn { justify-self: start; padding-left: 0; }
+
 .danger-zone { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
-.icon-label { display: inline-flex; gap: var(--s2); align-items: center; }
+
 .danger-zone .text-btn { padding-left: 0; }
 
-/* ---------- Finish ("Q18 saved") ---------- */
-
-/* The alliance colour carries on from the header into the result. */
-.finished .match-head { padding-bottom: 0; }
-.finished .match-head .points { visibility: hidden; } /* the result below shows the points */
-.finished .content { padding: 0; }
 .finish {
   background: var(--alliance);
   color: var(--on-alliance);
   padding: var(--s2) var(--s4) var(--s5);
 }
+
 .finish-title { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
 .parts { margin: var(--s4) 0 0; }
+
 .part {
   display: flex;
   align-items: baseline;
@@ -583,10 +1119,15 @@ a.row { color: inherit; }
   padding: var(--s1) 0;
   border-bottom: 1px solid var(--on-alliance-rule);
 }
+
 .part-label { font-size: var(--fs-md); font-weight: 700; }
+
 .part-value { margin: 0; font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
 .part.total { border-bottom: 0; border-top: 3px solid var(--on-alliance); margin-top: var(--s1); padding-top: var(--s2); }
+
 .part.total .part-value { font-size: var(--fs-hero); line-height: 0.9; }
+
 .finish-status {
   display: inline-flex;
   align-items: center;
@@ -598,214 +1139,27 @@ a.row { color: inherit; }
   font-size: var(--fs-sm);
   font-weight: 700;
 }
+
 .finish-actions { display: grid; gap: var(--s3); padding: var(--s5) var(--s4); }
+
 .finish-actions .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
 
-/* ---------- Home: "Now scouting" ---------- */
-
-/* The top block is the "cover art": the match you're on, in its alliance
-   colour, big enough to read from arm's length. */
-.now {
-  display: grid;
-  gap: var(--s2);
-  background: var(--alliance);
-  color: var(--on-alliance);
-  padding: max(env(safe-area-inset-top), var(--s2)) var(--s4) var(--s5);
-}
-.now[data-alliance='none'] { background: var(--surface); color: var(--text); }
-.now-top { display: flex; align-items: center; justify-content: space-between; margin: 0 calc(-1 * var(--s2)) var(--s4) 0; }
-.now-top .wordmark { font-stretch: 75%; font-weight: 900; font-size: var(--fs-xl); }
-.now-meta { font-size: var(--fs-lg); font-weight: 700; }
-.now-hero { font-size: var(--fs-display); font-weight: 800; font-stretch: 75%; line-height: 0.9; letter-spacing: -0.02em; }
-.now-hero:not(.num) { font-size: var(--fs-display-words); line-height: 1; }
-.now-sub { font-weight: 600; max-width: 34ch; }
-.now-go { margin-top: var(--s4); }
-.now:not([data-alliance='none']) .now-go { background: var(--on-alliance); color: var(--alliance); }
-
 .home-rows .row { min-height: 76px; }
+
 .row-end { display: inline-flex; align-items: center; gap: var(--s2); }
+
 .row-count { font-size: var(--fs-2xl); line-height: 1; }
 
-/* ---------- Now-scouting bar (other screens, while a match is unfinished) ---------- */
-
-.now-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-  min-height: var(--tap-lg);
-  margin: 0 var(--s4) var(--s2);
-  padding: var(--s2) var(--s2) var(--s2) var(--s4);
-  border-radius: var(--radius);
-  background: var(--alliance);
-  color: var(--on-alliance);
-}
-.now-bar[data-alliance='none'] { background: var(--primary-bg); color: var(--primary-text); }
-.now-bar-text { display: grid; }
-.now-bar-label { font-size: var(--fs-xs); font-weight: 700; }
-.now-bar-where { font-size: var(--fs-lg); }
-.now-bar-go {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s1);
-  min-height: var(--tap);
-  padding: 0 var(--s3);
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-/* ---------- Joining a group ---------- */
-.join-hero { padding: var(--s4) 0 var(--s2); }
-.join-email {
-  margin: var(--s2) 0;
-  font-size: var(--fs-2xl);
-  font-stretch: 75%;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.auth-hero + .content { padding-top: var(--s3); }
-
 .finish-note { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; }
-.now-bar-go { background: var(--on-alliance); color: var(--alliance); }
-.now-bar[data-alliance='none'] .now-bar-go { background: var(--primary-text); color: var(--primary-bg); }
 
-.now-discard {
-  justify-self: start;
-  min-height: var(--tap);
-  font-weight: 700;
-  color: inherit;
-}
-.notice {
-  margin-top: var(--s3);
-  padding: var(--s3) var(--s4);
-  border: 2px solid var(--control-line);
-  border-radius: var(--radius);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-}
-
-/* A choice nobody has answered yet says so (so "None" and "skipped" differ). */
-.answer-state { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
-.answer-state[data-answered='true'] { display: none; }
-
-/* Alliance position options carry their alliance colour on the edge, even before they're picked. */
-.position-grid .segmented button[data-color='red'] { border-color: var(--red); }
-.position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
-
-.guest-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s1);
-  min-height: var(--tap);
-  margin-top: var(--s1);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--text-2);
-}
-
-/* Mine / Everyone on the matches list */
-.list-switch { margin: var(--s2) 0 var(--s3); }
-.seg-link {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  min-height: var(--tap);
-  border-radius: var(--radius-md);
-  border: 2px solid var(--control-line);
-  font-weight: 700;
-}
-.seg-link[aria-current='page'] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
-.field.tile:disabled { border-color: var(--line); cursor: not-allowed; } /* readable, just not changeable */
-.field.tile[aria-pressed='true']:disabled { background: transparent; border-color: var(--control-line); color: var(--text); }
-.field.tile[aria-pressed='true']:disabled .tile-check { background: var(--text); border-color: var(--text); color: var(--bg); }
-/* Off the match screen (no alliance), a ticked tile uses the main colour. */
-.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-text); }
-.screen:not([data-alliance]) .field.tile[aria-pressed='true']:not(:disabled) .tile-check { background: var(--primary-text); border-color: var(--primary-text); color: var(--primary-bg); }
-/* Someone else's match, view only */
-.read-only .round { display: none; } /* view only: just the numbers */
-.read-only .counter { grid-template-columns: 1fr 4.5rem; }
-
-.status.failed { color: var(--danger); font-weight: 700; }
 .finish-status.just-sent { background: var(--on-alliance); color: var(--alliance); }
-@media (prefers-reduced-motion: no-preference) {
-  .finish-status.just-sent { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
-}
-
-/* ---------- Event ---------- */
-.event-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
-.event-title { font-size: var(--fs-display-words); line-height: 1; }
-.event-facts { font-weight: 700; }
-.schedule { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.schedule th, .schedule td { padding: var(--s2) 3px; border-bottom: 1px solid var(--line); text-align: center; }
-.schedule thead th { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); padding-bottom: var(--s1); }
-.schedule thead th:first-child, .schedule tbody th { text-align: left; width: 4.75rem; }
-/* The station headings get the alliance colour as a bar, plus their words */
-.schedule thead th.st { box-shadow: inset 0 -3px 0 var(--neutral-alliance); }
-.schedule thead th.st.red { box-shadow: inset 0 -3px 0 var(--red); }
-.schedule thead th.st.blue { box-shadow: inset 0 -3px 0 var(--blue); }
-.schedule tbody th > span { display: block; } /* stacked; the th stays a table cell for screen readers */
-.schedule-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
-.schedule-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; white-space: nowrap; }
-.schedule[style*='--stations: 6'] .bumper { padding-inline: 0.1em; }
-.schedule[style*='--stations: 6'] thead th:first-child, .schedule[style*='--stations: 6'] tbody th { width: 3.75rem; }
-.schedule .bumper { width: 100%; min-width: 0; font-size: min(var(--fs-lg), calc(var(--fs-lg) * 4 / var(--stations, 4))); }
-/* Played: outlined, so the matches still to come stand out (text stays ≥ 4.5:1) */
-.schedule tr.played .bumper:not(.mine) { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
-.schedule tr.played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
-.schedule tr.played .schedule-code { color: var(--text-2); }
-.schedule tr.next-up th, .schedule tr.next-up td { background: var(--surface); }
-.schedule tr.next-up .schedule-time.next { color: var(--text); font-weight: 800; }
-.nowrap { white-space: nowrap; }
-.team-list { margin: var(--s4) 0; }
-.team-list summary { min-height: var(--tap); display: flex; align-items: center; gap: var(--s2); font-weight: 700; cursor: pointer; list-style: none; }
-.team-list summary::-webkit-details-marker { display: none; }
-.team-list summary svg { transform: rotate(90deg); transition: transform 150ms ease-out; } /* points down: tap to open */
-.team-list[open] summary svg { transform: rotate(-90deg); }
-.team-list ul { list-style: none; padding: 0; columns: 2; font-size: var(--fs-sm); }
-.team-list li { padding: 2px 0; break-inside: avoid; }
-.event-result { width: 100%; text-align: left; }
-
-.team-note { display: flex; align-items: center; gap: var(--s1); margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
-/* A warning is a bordered box (not just red text, which blends into a red
-   alliance screen), with the fix as a button. */
-.team-note.warn {
-  display: grid;
-  gap: var(--s2);
-  padding: var(--s3) var(--s4);
-  border: 2px solid var(--danger);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font-size: var(--fs-md);
-}
-.team-note.warn strong { color: var(--danger); }
-.team-note.warn .small-btn { justify-self: start; }
-
-/* Two Teams in one match: the two team numbers are a switch */
-.team-switch { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin: var(--s2) 0 var(--s3); }
-.team-switch button {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-height: var(--tap-lg);
-  padding: var(--s2) var(--s4);
-  border-radius: var(--radius);
-  border: 2px solid var(--on-alliance);
-  color: var(--on-alliance);
-  text-align: left;
-}
-.switch-team { font-size: var(--fs-num); font-weight: 800; font-stretch: 75%; line-height: 1; }
-.switch-pos { font-size: var(--fs-sm); font-weight: 600; }
-.team-switch button[aria-current='true'] { background: var(--on-alliance); color: var(--alliance); }
-
-/* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
-.now-hero.two { font-size: var(--fs-hero); }
 
 /* Home: "Your assignments", read like the queuing screen at an event: match
    and time, then station and team, then To do / Saved. Each row is a button. */
 .coming-up { list-style: none; margin: 0; padding: 0; }
+
 .coming-up li { border-bottom: 1px solid var(--line); }
+
 .coming-row {
   display: grid;
   grid-template-columns: 5.5rem 1fr auto;
@@ -816,22 +1170,254 @@ a.row { color: inherit; }
   padding: var(--s2) 0;
   text-align: left;
 }
-.coming-row:active { background-image: linear-gradient(var(--press), var(--press)); }
+
 .coming-state { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--fs-sm); font-weight: 800; color: var(--text); }
+
 .coming-state.saved { font-weight: 700; color: var(--text-2); }
+
 .coming-state svg:last-child { color: var(--text-2); }
+
 .coming-when { display: grid; }
+
 .coming-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
 .coming-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
+
 .coming-what { display: grid; gap: var(--s1); }
+
 .coming-item { display: flex; align-items: center; gap: var(--s2); }
+
 .coming-item .station { min-width: 4.25rem; justify-content: center; }
+
 .coming-item .bumper { font-size: var(--fs-lg); }
+
 .coming-tbd { font-size: var(--fs-sm); color: var(--text-2); }
+
+.assign-member .rows li:last-child { border-bottom: 0; }
+
+.finish-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+
+.team-parts .part { border-bottom-color: var(--line); }
+
+.team-parts .part.total { border-top-color: var(--text); }
+
+.team-fields { margin-top: var(--s3); }
+
+.team-field { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); min-height: 44px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+
+.team-field dt { font-weight: 650; }
+
+.team-field dd { margin: 0; text-align: right; font-weight: 700; }
+
+.team-field dd.num { font-size: var(--fs-lg); font-stretch: 75%; }
+
+.team-field.texts { display: block; }
+
+.team-matches { list-style: none; padding: 0; }
+
+.team-matches li {
+  display: grid;
+  grid-template-columns: 3.5rem auto 1fr auto;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 56px;
+  border-bottom: 1px solid var(--line);
+}
+
+.team-match-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+
+.team-match-when { font-size: var(--fs-sm); color: var(--text-2); }
+
+.team-match-scouted { font-size: var(--fs-sm); font-weight: 700; }
+
+.team-match-scouted.none { color: var(--text-2); font-weight: 600; }
+
+.team-match-pts { font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
+
+.team-match-games { display: block; font-size: var(--fs-xs); font-weight: 600; font-stretch: 100%; color: var(--text-2); }
+
+.team-matches li.off-schedule { grid-template-columns: 3.5rem 1fr auto; }
+
+.team-match-when.off { color: var(--text); font-weight: 600; }
+
+.question-row.hidden-q .title { color: var(--text-2); }
+
+/* The list */
+.announce-list { list-style: none; padding: 0; }
+
+.announce-item { padding: var(--s4) 0; border-bottom: 1px solid var(--line); }
+
+.announce-item .small-btn { margin-top: var(--s2); padding-left: 0; }
+
+/* Per Scout: "Maya · 3 of 4", then "all 4" with a check */
+.qr-tally { list-style: none; padding: 0; margin: var(--s3) 0; display: grid; gap: var(--s1); }
+
+.qr-tally li { display: flex; align-items: center; gap: var(--s2); min-height: 44px; border-bottom: 1px solid var(--line); }
+
+.qr-tally-name { font-weight: 700; }
+
+.qr-tally-count { margin-left: auto; font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
+
+/* My matches: the number says what it is */
+.submission-row .pts-unit { font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); line-height: 1; }
+
+/* Focus rings only from the keyboard, not after a tap */
+.announce-item:focus-visible, .assign-note:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.finish-actions .link-btn { justify-self: start; }
+
+
+/* ==================== 8. Tables ==================== */
+
+.schedule { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+.schedule th, .schedule td { padding: var(--s2) 3px; border-bottom: 1px solid var(--line); text-align: center; }
+
+.schedule thead th { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); padding-bottom: var(--s1); }
+
+.schedule thead th:first-child, .schedule tbody th { text-align: left; width: 4.75rem; }
+
+/* The station headings get the alliance colour as a bar, plus their words */
+.schedule thead th.st { box-shadow: inset 0 -3px 0 var(--neutral-alliance); }
+
+.schedule thead th.st.red { box-shadow: inset 0 -3px 0 var(--red); }
+
+.schedule thead th.st.blue { box-shadow: inset 0 -3px 0 var(--blue); }
+
+.schedule tbody th > span { display: block; }
+
+/* stacked; the th stays a table cell for screen readers */
+.schedule-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
+.schedule-time { font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; white-space: nowrap; }
+
+.schedule[style*='--stations: 6'] .bumper { padding-inline: 0.1em; }
+
+.schedule[style*='--stations: 6'] thead th:first-child, .schedule[style*='--stations: 6'] tbody th { width: 3.75rem; }
+
+.schedule .bumper { width: 100%; min-width: 0; font-size: min(var(--fs-lg), calc(var(--fs-lg) * 4 / var(--stations, 4))); }
+
+/* Played: outlined, so the matches still to come stand out (text stays ≥ 4.5:1) */
+.schedule tr.played .bumper:not(.mine) { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--line); }
+
+.schedule tr.played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
+
+.schedule tr.played .schedule-code { color: var(--text-2); }
+
+.schedule tr.next-up th, .schedule tr.next-up td { background: var(--surface); }
+
+.schedule tr.next-up .schedule-time.next { color: var(--text); font-weight: 800; }
+
+.coverage { margin: var(--s5) 0 var(--s2); }
+
+.coverage .assign-gaps { margin: 0 0 var(--s2); }
+
+.coverage > .pill { margin-top: var(--s3); }
+
+.coverage-key { margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Coverage is read, not tapped: flat, shorter plates (no bumper edge) so
+   they don't look like buttons. */
+.coverage-grid .bumper { height: 1.6em; box-shadow: none; }
+
+/* Schedule: a team in a match still to play is a button (tap to scout it) */
+.schedule-pick { padding: 0; display: flex; width: 100%; min-height: 48px; align-items: center; border-radius: var(--plate-radius); }
+
+.schedule-hint { margin: calc(-1 * var(--s1)) 0 var(--s2); font-size: var(--fs-sm); }
+
+.schedule-key { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
+
+.schedule-key .bumper { font-size: var(--fs-sm); min-width: 3.4em; }
+
+.teams-wrap { overflow-x: auto; margin: 0 calc(-1 * var(--s4)); padding: 0 var(--s4); }
+
+.teams-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums lining-nums; }
+
+.teams-table th, .teams-table td { padding: var(--s1) 2px; border-bottom: 1px solid var(--line); text-align: right; }
+
+.teams-table thead th { padding: 0; border-bottom: 2px solid var(--text); }
+
+.teams-table th:first-child, .teams-table td:first-child { text-align: left; }
+
+.teams-table .sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 0 var(--s1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.teams-table th:not(:first-child) .sort { justify-content: flex-end; width: 100%; }
+
+.teams-table .sort.on { color: var(--text); font-weight: 800; }
+
+.teams-table td.num { font-size: var(--fs-md); font-weight: 700; font-stretch: 75%; padding-inline: var(--s2) 0; }
+
+.teams-table td.strong { font-size: var(--fs-xl); font-weight: 800; }
+
+.teams-table .team-link { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 52px; }
+
+.teams-table .team-link .bumper { font-size: var(--fs-lg); }
+
+.teams-table tr.unscouted .bumper { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--control-line); }
+
+/* Teams table: the team column stays put when the table scrolls sideways,
+   the whole row opens the Team page (a click handler on the row). */
+.teams-table thead th:first-child, .teams-table tbody th { position: sticky; left: 0; z-index: 1; background: var(--bg); }
+
+.teams-table .team-link-name { max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
+
+.teams-table th:first-child .sort { width: 100%; }
+
+/* Teams: rows are tappable; the sticky team column keeps an edge when scrolled */
+.teams-table .team-row { cursor: pointer; }
+
+.teams-table tbody th, .teams-table thead th:first-child { box-shadow: 1px 0 0 var(--line); }
+
+.teams-wrap.scrolled tbody th, .teams-wrap.scrolled thead th:first-child { box-shadow: 2px 0 0 var(--control-line); }
+
+.schedule-key { flex-wrap: wrap; }
+
+.schedule-key-played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
+
+.schedule-key-played { margin-left: var(--s2); }
+
+/* ---------- Round 2 polish ---------- */
+/* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
+.schedule-score { white-space: nowrap; }
+
+.schedule-score .red, .schedule-score .blue { font-weight: 600; }
+
+.schedule-score .won { font-weight: 800; color: var(--text); }
+
+/* Scouts disagree: what each scout saw, side by side (numbers right-aligned so they line up) */
+.check-table { margin-top: var(--s2); border-collapse: collapse; font-size: var(--fs-sm); }
+
+.check-table th, .check-table td { padding: var(--s1) 0; text-align: left; }
+
+.check-table th:not(:first-child), .check-table td { padding-left: var(--s5); text-align: right; }
+
+.check-table thead th { font-weight: 800; color: var(--text); }
+
+.check-table tbody th { font-weight: 600; color: var(--text-2); }
+
+.check-table td { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.check-table tbody tr { border-top: 1px solid var(--line); }
+
+.check-table tr.total td { font-size: var(--fs-md); font-weight: 800; }
+
+
+/* ==================== 9. Event pieces: bumper, station sign, line-up ==================== */
 
 /* Home: the match line-up inside the alliance block */
 .lineup { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+
 .lineup-side { display: flex; gap: var(--s1); }
+
 .lineup-team {
   display: inline-flex;
   align-items: center;
@@ -843,40 +1429,21 @@ a.row { color: inherit; }
   font-weight: 800;
   font-stretch: 75%;
 }
+
 .lineup-team.red { background: var(--red); color: var(--on-alliance); }
+
 .lineup-team.blue { background: var(--blue); color: var(--on-alliance); }
+
 /* each plate keeps a white edge so it shows on a block of its own colour */
 .lineup-team { border-color: var(--on-alliance); }
+
 .lineup-team.mine.red { background: var(--on-alliance); color: var(--red); }
+
 .lineup-team.mine.blue { background: var(--on-alliance); color: var(--blue); }
-/* Grey block (light theme is near-white): edges and "mine" in Text colour */
-.now[data-alliance='none'] { --focus: var(--text); }
-.now[data-alliance='none'] .lineup-team { border-color: var(--text); }
-.now[data-alliance='none'] .lineup-team.mine { background: var(--text); color: var(--bg); }
+
 .lineup-vs { font-size: var(--fs-sm); font-weight: 700; }
 
-
-/* Assignments (Leads): one section per member */
-.assign-member { padding: var(--s5) 0; border-bottom: 1px solid var(--line); }
-.assign-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
-.assign-summary { color: var(--text-2); margin: var(--s1) 0 var(--s3); }
-.assign-what { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); }
-.assign-what .num { font-weight: 800; font-stretch: 75%; font-size: var(--fs-xl); }
-.assign-member > .pill { margin-top: var(--s3); }
-.assign-form { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
-.assign-form .two, .assign-shift .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
-.assign-gaps { color: var(--text-2); margin-top: var(--s2); }
-.assign-member .form-message { margin: 0 0 var(--s3); }
-.coverage { margin: var(--s5) 0 var(--s2); }
-.coverage .assign-gaps { margin: 0 0 var(--s2); }
-.coverage > .pill { margin-top: var(--s3); }
-.coverage-key { margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
-/* Coverage is read, not tapped: flat, shorter plates (no bumper edge) so
-   they don't look like buttons. */
-.coverage-grid .bumper { height: 1.6em; box-shadow: none; }
-
 /* ---------- Event pieces (DESIGN.md: "Like the event itself") ---------- */
-
 /* Bumper: a team number the way it's printed on a robot's bumper. */
 .bumper {
   display: inline-flex;
@@ -895,8 +1462,11 @@ a.row { color: inherit; }
   /* the fabric rolls over the noodle: a darker lower edge */
   box-shadow: inset 0 -0.16em 0 var(--bumper-shade);
 }
+
 .bumper.red { background: var(--red); }
+
 .bumper.blue { background: var(--blue); }
+
 .bumper.mine {
   /* white plate, alliance-coloured digits and edge: the same as "mine" in the
      line-up, and readable in both themes (≥ 5:1) */
@@ -905,8 +1475,11 @@ a.row { color: inherit; }
   box-shadow: inset 0 0 0 3px var(--neutral-alliance);
   padding-inline: calc(0.1em + 3px);
 }
+
 .bumper.mine.red { color: var(--red); box-shadow: inset 0 0 0 3px var(--red); }
+
 .bumper.mine.blue { color: var(--blue); box-shadow: inset 0 0 0 3px var(--blue); }
+
 .bumper.big { font-size: var(--fs-xl); }
 
 /* Station plate: "Red 1" over a driver station. */
@@ -922,33 +1495,177 @@ a.row { color: inherit; }
   font-size: var(--fs-sm);
   white-space: nowrap;
 }
+
 .station.red { background: var(--red); }
+
 .station.blue { background: var(--blue); }
 
-/* Browser surfaces carry the design too */
-html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; caret-color: var(--text); }
-
-/* Focus on alliance-coloured blocks: white ring (≥ 5:1 on every alliance fill) */
-.match-head, .now, .now-bar, .finish { --focus: var(--on-alliance); }
-
-/* Match periods carry the field clock's time under the name */
-.tabs button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-.tab-clock { font-size: var(--fs-xs); font-weight: 700; font-stretch: 75%; }
-
-/* Match header: the line-up shows on Setup only (scouting periods keep the room) */
-.head-lineup { display: none; }
-.screen[data-first-tab='true'] .head-lineup { display: block; margin: calc(-1 * var(--s2)) 0 var(--s3); }
-.head-lineup .lineup { margin-top: 0; }
-.assign-member .rows li:last-child { border-bottom: 0; }
-/* Two Teams in one match: the switch plates are printed signs too */
-.team-switch button { border-radius: var(--plate-radius); }
-.finish-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
 /* a station sign on the alliance block: white plate, alliance-coloured words */
 .station.on { background: var(--on-alliance); color: var(--alliance); font-size: var(--fs-md); }
-.small-btn.plain-remove { color: var(--text); background: transparent; border-color: transparent; }
+
+/* Setup with no team yet: the line-up plates become buttons (one tap picks
+   the team and its station). The one place a printed plate is tappable, so
+   it grows to the 56px in-match target. */
+.lineup-hint { font-size: var(--fs-md); font-weight: 600; margin-bottom: var(--s2); }
+
+.lineup.pick { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s2); }
+
+.lineup.pick .lineup-side { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s2); }
+
+.lineup-team.pick { height: auto; min-height: var(--tap); justify-content: center; padding: 0 var(--s1); font-size: var(--fs-xl); }
+
+/* FRC: three a side doesn't fit one line on a phone, so red above blue */
+.lineup.pick:has(.lineup-side > :nth-child(3)) { grid-template-columns: 1fr; }
+
+.lineup.pick:has(.lineup-side > :nth-child(3)) .lineup-vs { display: none; }
+
+/* Coverage grid: an open station is an empty dashed plate that says "Open"
+   (the word, not only the missing colour). */
+.bumper.open { background: transparent; color: var(--text-2); box-shadow: none; border: 2px dashed var(--control-line); font-weight: 700; }
+
+.bumper.open.can-fill { gap: 2px; border-style: solid; color: var(--text); }
+
+.how-art .bumper { font-size: var(--fs-lg); }
+
+
+/* ==================== 10. Notices and feedback ==================== */
+
+.error-text { margin-top: var(--s2); color: var(--danger); font-size: var(--fs-sm); font-weight: 600; }
+
+.empty-state { padding: var(--s6) 0; }
+
+.empty-state h2 { font-size: var(--fs-xl); font-weight: 800; }
+
+.empty-state p { color: var(--text-2); margin: var(--s2) 0 var(--s5); max-width: 34ch; }
+
+.form-message {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.form-message[data-kind='error'] { color: var(--danger); }
+
+.notice {
+  margin-top: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.team-note { display: flex; align-items: center; gap: var(--s1); margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
+
+/* A warning is a bordered box (not just red text, which blends into a red
+   alliance screen), with the fix as a button. */
+.team-note.warn {
+  display: grid;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+
+.team-note.warn strong { color: var(--danger); }
+
+.team-note.warn .small-btn { justify-self: start; }
+
+.assign-member .form-message { margin: 0 0 var(--s3); }
+
+.team-notes { list-style: none; padding: 0; margin: var(--s2) 0 0; display: grid; gap: var(--s2); }
+
+.team-notes .num { font-weight: 800; font-stretch: 75%; }
+
+.team-note-by { color: var(--text-2); font-size: var(--fs-sm); }
+
+.undo-later { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Data checks: each one a plain block with what looks off and buttons to open
+   the Submissions. Not red: a check is something to look at, not an error. */
+.checks { list-style: none; padding: 0; display: grid; gap: var(--s3); }
+
+.check { padding: var(--s3) var(--s4); border-radius: var(--radius); background: var(--surface); }
+
+.check-title { font-weight: 800; font-size: var(--fs-md); }
+
+.check-text { color: var(--text-2); font-size: var(--fs-sm); margin-top: var(--s1); }
+
+.check-actions { display: grid; gap: var(--s1); margin-top: var(--s2); }
+
+/* links styled as small buttons: centre the words like a <button> does */
+.check-actions .small-btn { display: inline-flex; align-items: center; text-decoration: none; background: var(--bg); }
+
+.checks-about { font-size: var(--fs-sm); margin: calc(-1 * var(--s1)) 0 var(--s3); }
+
+/* A code that can't be used: its own line, with a warning icon, kept a few seconds */
+.qr-problem { display: flex; align-items: flex-start; gap: var(--s2); margin-top: var(--s2); padding: var(--s3); border-radius: var(--radius); background: var(--surface); color: var(--text); font-weight: 700; }
+
+.qr-problem svg { flex: none; color: var(--danger); margin-top: 2px; }
+
+/* Buttons on a raised grey surface keep a 3:1 edge */
+.check .small-btn, .assign-form .segmented button, .check-actions .small-btn { border-color: var(--control-line-strong); }
+
+/* One offline note, the same everywhere */
+.offline-note { display: flex; align-items: flex-start; gap: var(--s2); margin: var(--s3) 0; color: var(--text-2); font-size: var(--fs-sm); }
+
+.offline-note svg { flex: none; margin-top: 1px; }
+
+/* Check cards: the Open buttons together, then "Looks right" */
+.check-open { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
+/* Outlines on raised grey cards use the stronger line (≥ 3:1 there) */
+:is(.check, .assign-form, .qr-problem, .help-item, .announce-strip) :is(.pill.secondary, .small-btn, .input, .segmented) { border-color: var(--control-line-strong); }
+
+.check .check-actions { margin-top: var(--s3); }
+
+
+/* ==================== 11. Folds and the confirm sheet ==================== */
+
+/* ---------- Confirm dialog ---------- */
+/* Shown as a bottom sheet: the buttons land where the thumb already is. */
+dialog {
+  margin: auto auto max(env(safe-area-inset-bottom), var(--s4));
+  width: min(100% - 32px, 420px);
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: var(--s5);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sheet);
+}
+
+dialog::backdrop { background: var(--scrim); }
+
+dialog h2 { font-size: var(--fs-xl); font-weight: 800; }
+
+dialog p { color: var(--text-2); margin-top: var(--s2); }
+
+dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
+
+.team-list { margin: var(--s4) 0; }
+
+.team-list summary { min-height: var(--tap); display: flex; align-items: center; gap: var(--s2); font-weight: 700; cursor: pointer; list-style: none; }
+
+.team-list summary::-webkit-details-marker { display: none; }
+
+.team-list summary svg { transform: rotate(90deg); transition: transform 150ms ease-out; }
+
+/* points down: tap to open */
+.team-list[open] summary svg { transform: rotate(-90deg); }
+
+.team-list ul { list-style: none; padding: 0; columns: 2; font-size: var(--fs-sm); }
+
+.team-list li { padding: 2px 0; break-inside: avoid; }
 
 /* Settings: "How it works", answers that open in place */
 .help-item { border-bottom: 1px solid var(--line); }
+
 .help-item summary {
   display: flex;
   align-items: center;
@@ -959,211 +1676,87 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
   cursor: pointer;
   list-style: none;
 }
+
 .help-item summary::-webkit-details-marker { display: none; }
+
 .help-item summary svg { flex: none; transform: rotate(90deg); transition: transform 150ms ease-out; }
+
 .help-item[open] summary svg { transform: rotate(-90deg); }
+
 .help-item p { padding: 0 0 var(--s4); color: var(--text-2); max-width: 60ch; }
-@media (prefers-reduced-motion: reduce) { .help-item summary svg { transition: none; } }
 
-/* Setup with no team yet: the line-up plates become buttons (one tap picks
-   the team and its station). The one place a printed plate is tappable, so
-   it grows to the 56px in-match target. */
-.lineup-hint { font-size: var(--fs-md); font-weight: 600; margin-bottom: var(--s2); }
-.lineup.pick { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s2); }
-.lineup.pick .lineup-side { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--s2); }
-.lineup-team.pick { height: auto; min-height: var(--tap); justify-content: center; padding: 0 var(--s1); font-size: var(--fs-xl); }
-.lineup-team.pick.red:active { background: var(--on-alliance); color: var(--red); } /* pressed: like "mine" */
-.lineup-team.pick.blue:active { background: var(--on-alliance); color: var(--blue); }
-/* FRC: three a side doesn't fit one line on a phone, so red above blue */
-.lineup.pick:has(.lineup-side > :nth-child(3)) { grid-template-columns: 1fr; }
-.lineup.pick:has(.lineup-side > :nth-child(3)) .lineup-vs { display: none; }
+/* Teams: the column help */
+.teams-help { margin-top: var(--s3); }
 
-/* Group: the team number is the cover */
-.group-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
-.group-name { font-size: var(--fs-2xl); font-weight: 800; font-stretch: 75%; line-height: 1; margin-top: var(--s2); }
+.teams-help dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); padding-bottom: var(--s3); font-size: var(--fs-sm); }
+
+.teams-help dt { font-weight: 800; }
+
+.teams-help dd { margin: 0; color: var(--text-2); }
+
+
+/* ==================== 12. Screen pieces ==================== */
+
+/* Segmented buttons (toggles, choices, ratings) */
+
+.nowrap { white-space: nowrap; }
+
+.event-result { width: 100%; text-align: left; }
+
+/* Assignments (Leads): one section per member */
+.assign-member { padding: var(--s5) 0; border-bottom: 1px solid var(--line); }
+
+.assign-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+
+.assign-summary { color: var(--text-2); margin: var(--s1) 0 var(--s3); }
+
+.assign-what { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); }
+
+.assign-form { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
+
+.assign-gaps { color: var(--text-2); margin-top: var(--s2); }
+
 /* Group settings without signal: read-only, the state written out */
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-  min-height: var(--tap-lg);
-  padding: var(--s2) 0;
-  border-bottom: 1px solid var(--line);
-}
-.setting-state { font-weight: 800; }
 
-/* No group yet: the steps on the cover */
-.join-cover .now-hero { font-size: var(--fs-display-words); line-height: 1; }
-.join-steps { margin: var(--s4) 0 var(--s2); padding-left: 1.4em; display: grid; gap: var(--s3); font-size: var(--fs-md); font-weight: 600; }
-.join-steps li::marker { font-weight: 800; }
-.join-steps .join-email { display: block; margin: var(--s1) 0 0; }
 .team-preview:not(:empty) { margin: calc(-1 * var(--s2)) 0 var(--s4); }
-/* Schedule: a team in a match still to play is a button (tap to scout it) */
-.schedule-pick { padding: 0; display: flex; width: 100%; min-height: 48px; align-items: center; border-radius: var(--plate-radius); }
-.schedule-pick:active .bumper { transform: scale(0.95); }
-@media (prefers-reduced-motion: reduce) { .schedule-pick:active .bumper { transform: none; } }
-.schedule-hint { margin: calc(-1 * var(--s1)) 0 var(--s2); font-size: var(--fs-sm); }
 
-/* Coverage grid: an open station is an empty dashed plate that says "Open"
-   (the word, not only the missing colour). */
-.bumper.open { background: transparent; color: var(--text-2); box-shadow: none; border: 2px dashed var(--control-line); font-weight: 700; }
-.schedule-key { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
-.schedule-key .bumper { font-size: var(--fs-sm); min-width: 3.4em; }
-.group-offline { margin-top: var(--s4); }
 
 /* Assignments: the note after a change, with Undo */
 .assign-note { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-/* Filling an open station: pick a member */
-.pick-people { display: grid; gap: var(--s2); margin: var(--s3) 0; }
-/* A person to choose in the Open-position sheet (a label holding a radio) */
-.pick-person {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--s3);
-  cursor: pointer;
-  min-height: var(--tap);
-  padding: 0 var(--s4);
-  border-radius: var(--radius);
-  border: 2px solid var(--control-line);
-  font-weight: 700;
-  text-align: left;
-}
 
-/* ---------- Teams (Lead views) ---------- */
-.teams-note { font-size: var(--fs-sm); margin-bottom: var(--s3); }
 .teams-empty { margin-top: var(--s4); }
-.teams-wrap { overflow-x: auto; margin: 0 calc(-1 * var(--s4)); padding: 0 var(--s4); }
-.teams-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums lining-nums; }
-.teams-table th, .teams-table td { padding: var(--s1) 2px; border-bottom: 1px solid var(--line); text-align: right; }
-.teams-table thead th { padding: 0; border-bottom: 2px solid var(--text); }
-.teams-table th:first-child, .teams-table td:first-child { text-align: left; }
-.teams-table .sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 48px;
-  padding: 0 var(--s1);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--text-2);
-}
-.teams-table th:not(:first-child) .sort { justify-content: flex-end; width: 100%; }
-.teams-table .sort.on { color: var(--text); font-weight: 800; }
-.teams-table td.num { font-size: var(--fs-md); font-weight: 700; font-stretch: 75%; padding-inline: var(--s2) 0; }
-.teams-table td.strong { font-size: var(--fs-xl); font-weight: 800; }
-.teams-table .team-link { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 52px; }
-.teams-table .team-link .bumper { font-size: var(--fs-lg); }
-.teams-table tr.unscouted .bumper { background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 2px var(--control-line); }
-.not-yet { font-size: var(--fs-sm); font-stretch: 100%; font-weight: 600; color: var(--text-2); }
 
-/* One Team: number as the cover, averages like the results screen */
-.team-cover .now-top { margin-left: calc(-1 * var(--s3)); margin-bottom: var(--s2); }
-.team-cover-name { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; margin-top: var(--s2); }
-.team-parts .part { border-bottom-color: var(--line); }
-.team-parts .part.total { border-top-color: var(--text); }
-.team-fields { margin-top: var(--s3); }
-.team-fields-h { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); margin-bottom: var(--s1); }
-.team-field { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); min-height: 44px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
-.team-field dt { font-weight: 650; }
-.team-field dd { margin: 0; text-align: right; font-weight: 700; }
-.team-field dd.num { font-size: var(--fs-lg); font-stretch: 75%; }
-.team-field.texts { display: block; }
-.team-notes { list-style: none; padding: 0; margin: var(--s2) 0 0; display: grid; gap: var(--s2); }
-.team-notes .num { font-weight: 800; font-stretch: 75%; }
-.team-note-by { color: var(--text-2); font-size: var(--fs-sm); }
-.team-matches { list-style: none; padding: 0; }
-.team-matches li {
-  display: grid;
-  grid-template-columns: 3.5rem auto 1fr auto;
-  align-items: center;
-  gap: var(--s3);
-  min-height: 56px;
-  border-bottom: 1px solid var(--line);
-}
-.team-match-code { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
-.team-match-when { font-size: var(--fs-sm); color: var(--text-2); }
-.team-match-scouted { font-size: var(--fs-sm); font-weight: 700; }
-.team-match-scouted.none { color: var(--text-2); font-weight: 600; }
-/* Teams table: the team column stays put when the table scrolls sideways,
-   the whole row opens the Team page (a click handler on the row). */
-.teams-table thead th:first-child, .teams-table tbody th { position: sticky; left: 0; z-index: 1; background: var(--bg); }
-.teams-table .team-link-name { max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); color: var(--text-2); font-weight: 600; }
-.teams-table th:first-child .sort { width: 100%; }
-.teams-table tbody tr:active, .teams-table tbody tr:active th { background: var(--surface); }
+
 .pick-why { font-size: var(--fs-xs); font-weight: 600; }
-.bumper.open.can-fill { gap: 2px; border-style: solid; color: var(--text); }
-/* Teams: rows are tappable; the sticky team column keeps an edge when scrolled */
-.teams-table .team-row { cursor: pointer; }
-.teams-table tbody th, .teams-table thead th:first-child { box-shadow: 1px 0 0 var(--line); }
-.teams-wrap.scrolled tbody th, .teams-wrap.scrolled thead th:first-child { box-shadow: 2px 0 0 var(--control-line); }
-.team-match-pts { font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
-.team-plan { margin-top: var(--s5); }
-.pick-people { border: 0; padding: 0; }
-.pick-person:has(input:checked) { background: var(--primary-bg); color: var(--primary-text); border-color: var(--primary-bg); }
-.pick-person:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
-/* Full (can't take it): solid edge, quieter text. Dashed means "Open" elsewhere. */
-.pick-person.full { border-color: var(--line); color: var(--text-2); cursor: not-allowed; }
-.undo-later { font-size: var(--fs-sm); color: var(--text-2); }
-.team-match-games { display: block; font-size: var(--fs-xs); font-weight: 600; font-stretch: 100%; color: var(--text-2); }
-.team-matches li.off-schedule { grid-template-columns: 3.5rem 1fr auto; }
-.team-match-when.off { color: var(--text); font-weight: 600; }
 
-/* Custom questions (Leads) */
-.segmented.wrap { flex-wrap: wrap; }
-.segmented.wrap button { flex: 1 1 auto; }
-.question-row.hidden-q .title { color: var(--text-2); }
+.team-plan { margin-top: var(--s5); }
+
 .question-form { margin-top: var(--s5); }
 
-/* Data checks: each one a plain block with what looks off and buttons to open
-   the Submissions. Not red: a check is something to look at, not an error. */
-.checks { list-style: none; padding: 0; display: grid; gap: var(--s3); }
-.check { padding: var(--s3) var(--s4); border-radius: var(--radius); background: var(--surface); }
-.check-title { font-weight: 800; font-size: var(--fs-md); }
-.check-text { color: var(--text-2); font-size: var(--fs-sm); margin-top: var(--s1); }
-.check-actions { display: grid; gap: var(--s1); margin-top: var(--s2); }
-/* links styled as small buttons: centre the words like a <button> does */
-.check-actions .small-btn { display: inline-flex; align-items: center; text-decoration: none; background: var(--bg); }
-.checks-about { font-size: var(--fs-sm); margin: calc(-1 * var(--s1)) 0 var(--s3); }
 .team-checks { margin-bottom: var(--s4); }
-.questions-offline { margin-top: var(--s4); }
 
-/* ---------- Announcements ---------- */
-/* Home: the newest unread one, right under the cover. A plain band in the
-   Surface colour (not a card), the message in big bold words. */
-.announce-strip {
-  display: grid;
-  gap: var(--s1);
-  margin: 0 var(--s4);
-  padding: var(--s3) var(--s4);
-  border-radius: 0 0 var(--radius) var(--radius);
-  background: var(--surface);
-  text-decoration: none;
-}
-.announce-strip-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
-.announce-strip-body { font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; }
-/* The list */
-.announce-list { list-style: none; padding: 0; }
-.announce-item { padding: var(--s4) 0; border-bottom: 1px solid var(--line); }
+
 .announce-meta { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); font-weight: 600; }
+
 .announce-new { padding: 0 var(--s2); border-radius: var(--plate-radius); background: var(--text); color: var(--bg); font-weight: 800; font-size: var(--fs-xs); line-height: 1.6; }
+
 .announce-body { margin-top: var(--s1); font-size: var(--fs-lg); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-.announce-item .small-btn { margin-top: var(--s2); padding-left: 0; }
+
 .announce-form { margin: var(--s4) 0 var(--s2); }
+
 .announce-input { min-height: 96px; padding: var(--s3) var(--s4); font-size: var(--fs-lg); resize: vertical; }
+
 .announce-count { text-align: right; margin-top: var(--s1); }
+
 .announce-count.over { color: var(--danger); font-weight: 700; }
-.announce-offline { margin-top: var(--s4); }
-/* Announcements: long messages stay short on Home (the whole thing is a tap away) */
-.announce-strip-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.announce-strip-head > svg:last-child { margin-left: auto; }
+
+
 .announce-removed { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap-lg); border-bottom: 1px solid var(--line); color: var(--text-2); font-weight: 600; }
 
 /* ---------- QR backup ---------- */
 /* The code always sits on white, even in dark mode: scanners need dark on light. */
 .qr-show { display: grid; justify-items: center; text-align: center; }
-.qr-show .group-lede { justify-self: stretch; text-align: left; }
+
 .qr-frame {
   width: min(100%, 360px);
   aspect-ratio: 1;
@@ -1172,190 +1765,48 @@ html { scrollbar-color: var(--control-line) transparent; scrollbar-width: thin; 
   border-radius: var(--radius);
   background: var(--qr-light);
 }
+
 .qr-frame svg { display: block; width: 100%; height: 100%; }
+
 .qr-caption { margin-top: var(--s3); font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
+
 .qr-count { color: var(--text-2); font-size: var(--fs-sm); min-height: 1.4em; }
+
 .qr-controls { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s3); width: min(100%, 360px); margin-top: var(--s3); }
-.qr-controls .pill { min-height: var(--tap); display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
+
 .qr-help { margin-top: var(--s4); max-width: 40ch; text-align: left; justify-self: stretch; }
+
 .qr-camera { position: relative; margin: var(--s3) 0; border-radius: var(--radius); overflow: hidden; background: var(--surface); }
-.qr-camera .pill { margin: 0; }
+
 .qr-video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+
 .qr-aim { position: absolute; inset: 18%; border: 3px solid var(--on-alliance); border-radius: var(--radius); box-shadow: 0 0 0 999px var(--aim-dim); }
+
 .qr-status { font-weight: 700; min-height: 1.4em; }
+
 /* Before the camera starts: the square it will fill, with the button centred */
 .qr-camera.waiting { display: grid; place-items: center; aspect-ratio: 1; border: 2px dashed var(--control-line); background: transparent; }
-/* A code that can't be used: its own line, with a warning icon, kept a few seconds */
-.qr-problem { display: flex; align-items: flex-start; gap: var(--s2); margin-top: var(--s2); padding: var(--s3); border-radius: var(--radius); background: var(--surface); color: var(--text); font-weight: 700; }
-.qr-problem svg { flex: none; color: var(--danger); margin-top: 2px; }
-/* Per Scout: "Maya · 3 of 4", then "all 4" with a check */
-.qr-tally { list-style: none; padding: 0; margin: var(--s3) 0; display: grid; gap: var(--s1); }
-.qr-tally li { display: flex; align-items: center; gap: var(--s2); min-height: 44px; border-bottom: 1px solid var(--line); }
-.qr-tally-name { font-weight: 700; }
-.qr-tally-count { margin-left: auto; font-weight: 800; font-stretch: 75%; font-size: var(--fs-lg); }
 
-/* ---------- Whole-app consistency ---------- */
-/* Links inside text look like links (not just by where they sit) */
-.plain a, .teams-note a, .field-hint a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
-/* Buttons on a raised grey surface keep a 3:1 edge */
-.check .small-btn, .assign-form .segmented button, .check-actions .small-btn { border-color: var(--control-line-strong); }
-/* One offline note, the same everywhere */
-.offline-note { display: flex; align-items: flex-start; gap: var(--s2); margin: var(--s3) 0; color: var(--text-2); font-size: var(--fs-sm); }
-.offline-note svg { flex: none; margin-top: 1px; }
 .crash-detail { margin-top: var(--s2); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+
 .crash-actions { display: grid; gap: var(--s3); margin-top: var(--s5); }
-/* The last row on Home never hides behind the bottom bar */
-.home-screen .content { padding-bottom: var(--s6); }
-/* Cover screens (Event, Group, Team): the screen's name next to Back */
-.now-top { align-items: center; }
-.now-top-title { margin-right: auto; font-size: var(--fs-md); font-weight: 700; }
-/* My matches: the number says what it is */
-.submission-row .pts-unit { font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); line-height: 1; }
+
 .team-checks-all { margin-top: var(--s3); }
+
 .team-checks-all a { display: inline-flex; align-items: center; min-height: 48px; }
+
 /* Scan: the instructions sit in the camera square until it starts */
 .qr-camera.waiting { gap: var(--s3); align-content: center; }
+
 .qr-waiting-hint { max-width: 26ch; text-align: center; color: var(--text-2); font-size: var(--fs-sm); }
-.schedule-key { flex-wrap: wrap; }
-.schedule-key-played .bumper.mine { background: transparent; color: var(--text); box-shadow: inset 0 0 0 3px var(--text); }
-.schedule-key-played { margin-left: var(--s2); }
 
-/* ---------- Pressed (every tappable thing answers a tap) ----------
-   A shade change, never a size change, so nothing around it moves. */
-.row:active, .small-btn:active, .segmented button:active, .tabs button:active,
-.pick-person:active, .announce-strip:active, .now-bar:active, .help-item summary:active,
-.team-list summary:active, .submission-row:active, .link-btn:active {
-  background-image: linear-gradient(var(--press), var(--press));
-}
-@media (prefers-reduced-motion: no-preference) {
-  .row, .small-btn, .segmented button, .tabs button, .pick-person, .submission-row { transition: background-color 120ms ease-out, color 120ms ease-out; }
-}
-/* "Type the team instead": a text button on the alliance colour */
-.link-btn.on-alliance { color: var(--on-alliance); min-height: var(--tap); margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
-/* Sign-in cover: a bigger, balanced headline over the field's red | blue split */
-.auth-hero { position: relative; padding-bottom: calc(var(--s5) + 6px); }
-.auth-hero .now-hero { font-size: var(--fs-display-words); text-wrap: balance; }
-.auth-band { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; height: 6px; }
-.auth-band .red { background: var(--red); }
-.auth-band .blue { background: var(--blue); }
-
-/* ---------- Round 2 polish ---------- */
-/* Schedule scores: R 102 · B 84 (letters, not colour: small coloured text fails contrast), winner bold */
-.schedule-score { white-space: nowrap; }
-.schedule-score .red, .schedule-score .blue { font-weight: 600; }
-.schedule-score .won { font-weight: 800; color: var(--text); }
-/* Check cards: the Open buttons together, then "Looks right" */
-.check-open { display: flex; flex-wrap: wrap; gap: var(--s2); }
-/* Teams: the column help */
-.teams-help { margin-top: var(--s3); }
-.teams-help dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); padding-bottom: var(--s3); font-size: var(--fs-sm); }
-.teams-help dt { font-weight: 800; }
-.teams-help dd { margin: 0; color: var(--text-2); }
-
-/* ---------- Round 3 polish ---------- */
-/* Position buttons stay separate: each is its own alliance colour. */
-.segmented .seg-link { border-color: transparent; border-radius: var(--radius-sm); }
-.position-grid .segmented { gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
-.position-grid .segmented button { border-color: var(--control-line); border-radius: var(--radius-md); }
-/* Counter rows a little tighter, so a period fits on one screen (buttons unchanged) */
-.field.counter { padding: var(--s1) 0; }
-/* When a period is taller than the screen, a fade above the bottom bar says "more below" */
-.bottombar::before { content: ''; position: absolute; left: 0; right: 0; top: -24px; height: 24px; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
-/* Phones show scrollbars only while scrolling; never a stray bar over the header */
-@media (pointer: coarse) { html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; } }
-/* Setup: halves sit in one row without their own short dividers; space before the next card */
-.period > .field.half { border-bottom: 0; }
-.period > .field.half + .field.half + * { border-top: 1px solid var(--line); }
-.period > .field.tile { margin: var(--s2) 0; }
-/* Cover screens (Event, Group, Team): the crumb is the same voice as other top-bar titles */
-.now-top-title { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; }
-/* "Discard this match" is red everywhere */
-.now .now-discard { color: var(--on-alliance); text-decoration: underline; text-underline-offset: 3px; }
-/* Focus rings only from the keyboard, not after a tap */
-.announce-item:focus-visible, .assign-note:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-/* Outlines on raised grey cards use the stronger line (≥ 3:1 there) */
-:is(.check, .assign-form, .qr-problem, .help-item, .announce-strip) :is(.pill.secondary, .small-btn, .input, .segmented) { border-color: var(--control-line-strong); }
-/* "Looks right": its own row under the Open buttons, a real (secondary) button with a check, not grey text */
-.check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
-/* Two Teams: say which one you're scoring, right above the counters */
-.scoring-for { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); font-weight: 700; color: var(--text-2); }
-/* Offline Group settings: the tile, greyed, with its state and why */
-.field.tile[aria-disabled='true'] { opacity: 1; cursor: not-allowed; border-style: solid; border-color: var(--line); }
-.assign-form-h { font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--s3); }
-.status-two { display: grid; line-height: 1.2; }
-.status-two strong { color: var(--text); font-weight: 800; }
-.status-two > span { font-size: var(--fs-xs); white-space: nowrap; }
-/* Round 4: help where it's needed, and saves said where you tapped */
-/* The header's points open a short "what is this?" sheet */
-.match-head button.points { min-width: var(--tap); min-height: var(--tap); color: inherit; }
-.match-head button.points .label { text-decoration: underline dotted; text-underline-offset: 3px; }
-/* "Still needed: team number" in the match footer: tap it to go back and fill it */
-.status-missing { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; min-height: var(--tap); text-align: left; font-size: var(--fs-sm); font-weight: 700; color: var(--danger); }
-.status-missing svg { color: var(--danger); flex: none; }
-/* A Group setting's own line: "Saved for the group" or what went wrong */
-.tile-saved { display: block; margin-top: var(--s1); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
-.tile-saved.error { color: var(--danger); }
 .crash-detail summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--text-2); }
-/* "Scout a different match" under an Assignment's big button: the plan never locks a Scout in */
-.now-other { display: flex; align-items: center; margin-top: var(--s2); }
-.finish-actions .link-btn { justify-self: start; }
-/* Scouts disagree: what each scout saw, side by side (numbers right-aligned so they line up) */
-.check-table { margin-top: var(--s2); border-collapse: collapse; font-size: var(--fs-sm); }
-.check-table th, .check-table td { padding: var(--s1) 0; text-align: left; }
-.check-table th:not(:first-child), .check-table td { padding-left: var(--s5); text-align: right; }
-.check-table thead th { font-weight: 800; color: var(--text); }
-.check-table tbody th { font-weight: 600; color: var(--text-2); }
-.check-table td { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
-.check-table tbody tr { border-top: 1px solid var(--line); }
-.check-table tr.total td { font-size: var(--fs-md); font-weight: 800; }
-.check .check-actions { margin-top: var(--s3); }
 
-/* ---------- Tab bar ----------
-   Along the bottom of every screen except a match being scouted. It sits in
-   a dock with the screen's own footer (save status, "Resume"), so both stay
-   under the thumb. The chosen tab is filled, like every chosen thing. */
-.dock { position: sticky; bottom: 0; z-index: 5; background: var(--bg); }
-.dock .bottombar { position: relative; padding-bottom: var(--s3); }
-.dock .now-bar { margin-top: var(--s2); }
-.tabbar {
-  display: flex;
-  padding: var(--s1) var(--s2) max(env(safe-area-inset-bottom), var(--s1));
-  border-top: 1px solid var(--line);
-  background: var(--bg);
-}
-.tab {
-  flex: 1 1 0;
-  min-width: 0; /* five tabs always share the width, even on a small phone */
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 2px;
-  min-height: var(--tap);
-  padding: var(--s1) 0;
-  color: var(--text-2);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  text-decoration: none;
-}
-.tab-mark { display: grid; place-items: center; width: min(56px, 100%); height: 32px; border-radius: 999px; }
-.tab[aria-current='page'] { color: var(--text); font-weight: 800; }
-.tab[aria-current='page'] .tab-mark { background: var(--primary-bg); color: var(--primary-text); }
-.tab:active .tab-mark { background-image: linear-gradient(var(--press), var(--press)); }
-.tab:focus-visible { outline: none; }
-.tab:focus-visible .tab-mark { outline: 3px solid var(--focus); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) {
-  .tab-mark { transition: background-color 120ms ease-out; }
-}
-
-/* ---------- Sign in / Create account: what the app is ----------
-   The hero says it; "How it works" shows it with the app's own pieces
-   (station sign, bumper, the save line, a results row), drawn small. */
-.auth-hero + .content > .form:first-child > .section-h:first-child,
-.auth-hero + .content > .you-get + .form > .section-h:first-child { margin-top: var(--s5); }
-h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; } /* focused for screen readers, not a visible ring */
-
+/* focused for screen readers, not a visible ring */
 .how { margin-top: var(--s6); }
+
 .how-steps { list-style: none; margin: 0; padding: 0; }
+
 .how-step {
   display: grid;
   grid-template-columns: 7.5rem 1fr;
@@ -1364,65 +1815,153 @@ h1[tabindex='-1']:focus, h2[tabindex='-1']:focus { outline: none; } /* focused f
   padding: var(--s4) 0;
   border-bottom: 1px solid var(--line);
 }
+
 .how-step:last-child { border-bottom: 0; }
+
 .how-art { display: grid; justify-items: start; gap: var(--s1); }
-.how-art .bumper { font-size: var(--fs-lg); }
+
 .how-words { display: grid; gap: 2px; }
+
 .how-words strong { font-size: var(--fs-md); font-weight: 800; }
+
 .how-words span { font-size: var(--fs-sm); color: var(--text-2); max-width: 40ch; }
+
 /* A counter, small: − 3 + with the alliance-red plus */
 .how-tap { display: inline-flex; align-items: center; gap: var(--s2); }
+
 .how-minus, .how-plus { display: grid; place-items: center; border-radius: 50%; }
+
 .how-minus { width: 30px; height: 30px; border: 2px solid var(--control-line); color: var(--text); }
+
 .how-plus { width: 40px; height: 40px; background: var(--red); color: var(--on-alliance); }
+
 .how-count { font-size: var(--fs-2xl); line-height: 1; min-width: 1ch; text-align: center; }
+
 /* The save line, as a chip */
 .how-saved { display: inline-flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s3) var(--s1) var(--s2); border-radius: 999px; background: var(--surface); font-weight: 800; }
+
 /* A results row */
 .how-result { display: grid; gap: 2px; }
-.how-result .num { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1; }
+
 .how-result span:last-child { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
 
 /* Create account: what you get, three lines with icons */
 .you-get { list-style: none; margin: var(--s4) 0 0; padding: 0; display: grid; gap: var(--s3); }
-.you-get li { display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: var(--s3); font-weight: 700; }
-.you-get svg { color: var(--text-2); }
-.form-note { font-size: var(--fs-sm); color: var(--text-2); }
 
-/* Why it exists */
-.origin { margin: var(--s6) 0 var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-2); max-width: 46ch; }
+.you-get li { display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: var(--s3); font-weight: 700; }
+
+.you-get svg { color: var(--text-2); }
 
 /* ---------- Install tip ----------
    How to put Offline Scout on the home screen, free, from the browser. The
    small one is a quiet raised block (Home, Settings); the first one opens the
    sign-in screen with numbered steps. Gone once the app is installed. */
 .install-tip { margin-top: var(--s4); padding: var(--s4); border-radius: var(--radius); background: var(--surface); }
-.install-tip > h2:not(.section-h) { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-md); font-weight: 800; }
+
 .install-lede { margin-top: var(--s1); font-size: var(--fs-sm); color: var(--text-2); }
+
 .install-tip.first { margin-top: 0; padding: 0; background: none; border-radius: 0; }
+
 .install-tip.first .install-lede { font-size: var(--fs-md); }
+
 /* Numbered steps: the number in a circle, because the order matters */
 .install-steps { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: var(--s3); counter-reset: step; }
+
 .install-steps li { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: var(--s3); counter-increment: step; font-size: var(--fs-md); }
+
 .install-steps li::before {
   content: counter(step);
   display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
   background: var(--primary-bg); color: var(--primary-text);
   font-weight: 800; font-size: var(--fs-sm);
 }
+
 .install-tip:not(.first) .install-steps li { font-size: var(--fs-sm); grid-template-columns: 26px 1fr; }
+
 .install-tip:not(.first) .install-steps li::before { width: 26px; height: 26px; font-size: var(--fs-xs); }
+
 .install-glyph { display: inline-flex; align-items: center; gap: 2px; font-weight: 800; vertical-align: -3px; }
+
 .install-both { display: grid; gap: var(--s4); margin-top: var(--s2); }
+
 .install-both h3 { font-size: var(--fs-sm); font-weight: 800; color: var(--text-2); margin-top: var(--s2); }
+
 .install-actions { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s3); }
+
 .install-actions:empty { display: none; }
-.install-actions .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
-.install-tip.first + .form > .section-h:first-child, .install-tip.first + .you-get { margin-top: var(--s6); }
+
 .install-tip.first { padding-bottom: var(--s5); border-bottom: 1px solid var(--line); }
-/* A tab's own screen has no Back: its title lines up with the content */
-.now-top > .now-top-title:first-child { padding-left: var(--s3); }
-/* A short note, then its button: breathing room between them */
-.content > p.plain + .pill.block { margin-top: var(--s4); }
-/* A counter at its most (a config "max"): the plus goes quiet */
-.round.add:disabled { background: var(--surface-2); color: var(--text-3); }
+
+
+/* ==================== 13. Pressed states ==================== */
+
+.icon-btn:active { background-image: linear-gradient(var(--press), var(--press)); }
+
+.pill:active { transform: scale(0.97); }
+
+.round:active { transform: scale(0.92); }
+
+.field.tile:active { transform: scale(0.99); }
+
+.coming-row:active { background-image: linear-gradient(var(--press), var(--press)); }
+
+.lineup-team.pick.red:active { background: var(--on-alliance); color: var(--red); }
+
+/* pressed: like "mine" */
+.lineup-team.pick.blue:active { background: var(--on-alliance); color: var(--blue); }
+
+.schedule-pick:active .bumper { transform: scale(0.95); }
+
+.teams-table tbody tr:active, .teams-table tbody tr:active th { background: var(--surface); }
+
+/* ---------- Pressed (every tappable thing answers a tap) ----------
+   A shade change, never a size change, so nothing around it moves. */
+.row:active, .small-btn:active, .segmented button:active, .tabs button:active,
+.pick-person:active, .announce-strip:active, .now-bar:active, .help-item summary:active,
+.team-list summary:active, .submission-row:active, .link-btn:active {
+  background-image: linear-gradient(var(--press), var(--press));
+}
+
+.tab:active .tab-mark { background-image: linear-gradient(var(--press), var(--press)); }
+
+
+/* ==================== 14. Motion ==================== */
+
+/* zero: nothing to undo yet (a quieter minus, not 'disabled') */
+/* Signature moment: adding flashes the row in the alliance colour and the
+   number jumps. Skipped for people who turn off motion in their phone settings. */
+@keyframes row-flash {
+  from { background: color-mix(in srgb, var(--alliance) 38%, transparent); }
+  to { background: transparent; }
+}
+
+@keyframes value-jump {
+  from { transform: scale(1.25); }
+  to { transform: scale(1); }
+}
+
+/* Reduced motion: keep the colour flash (it confirms the tap) but drop
+   everything that moves or scales. */
+@media (prefers-reduced-motion: reduce) {
+  .field.flash .value, .match-head .points .value.jump { animation: none; }
+  .pill:active, .round:active { transform: none; }
+  .pill, .round { transition: none; }
+  .field.tile, .field.tile:active { transition: none; transform: none; }
+  .team-list summary svg { transition: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finish-status.just-sent { animation: value-jump 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) { .help-item summary svg { transition: none; } }
+
+@media (prefers-reduced-motion: reduce) { .schedule-pick:active .bumper { transform: none; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .row, .small-btn, .segmented button, .tabs button, .pick-person, .submission-row { transition: background-color 120ms ease-out, color 120ms ease-out; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab-mark { transition: background-color 120ms ease-out; }
+}

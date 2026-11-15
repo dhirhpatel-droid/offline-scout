@@ -10,7 +10,7 @@
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
 import { backHref, returnTo } from '../nav.js';
-import { h, icon, savedStatus, confirmDialog, infoDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, infoDialog, scrollBehavior, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -372,7 +372,7 @@ export async function renderMatch({ param }) {
     if (guests.length) {
       const pointer = h('a', { class: 'guest-link', href: `#guest-${guests[0].id}`, onclick: (e) => {
         e.preventDefault();
-        panel.querySelector(`#guest-${guests[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.querySelector(`#guest-${guests[0].id}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
       } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
       host.splice(section.note ? 2 : 1, 0, pointer);
     }
@@ -444,7 +444,7 @@ export async function renderMatch({ param }) {
     } else if (guest) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => {
         seenGuests.add(`guest-${guest.id}`);
-        panel.querySelector(`#guest-${guest.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.querySelector(`#guest-${guest.id}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
         renderBottombar();
       } }, `Next: ${guest.label}`, icon('next', 20));
     } else {

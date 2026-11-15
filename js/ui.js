@@ -201,6 +201,9 @@ export function tabBar(active, { lead = false, teams = false } = {}) {
       h('span', { class: 'tab-mark' }, icon(id, 24)), h('span', { class: 'tab-label' }, label))));
 }
 
+// 'smooth', or 'auto' when the phone asks for less motion.
+export const scrollBehavior = () => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
 // A short explanation in the same sheet, with one button to close it.
 export function infoDialog({ title, body }) {
   const dialog = h('dialog', { 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-body' },
