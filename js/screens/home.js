@@ -1,6 +1,6 @@
 // Home: "Now scouting". The top of the screen is the match you're on (or the
 // next one) in your alliance colour, the way a music app shows what's playing.
-// Below it: your matches, your Scouting group, and the event.
+// Below it: the event at a glance, then your Assignments.
 
 import { h, icon, setThemeColor, confirmDialog, bumper, station, lineup } from '../ui.js';
 import { getSetting, listSubmissions, finishDraft } from '../db.js';
@@ -13,6 +13,10 @@ import { cachedAnnouncements, lastSeen } from '../announcements.js';
 import { unread, whenLabel } from '../announcement-rules.js';
 import { sendStatus, lastResult } from '../sync.js';
 import { installTip } from '../install.js';
+import { currentEventData } from '../events.js';
+import { forEvent, teamRows } from '../team-stats.js';
+import { loadConfig } from '../config.js';
+import { timeOf } from '../schedule.js';
 
 export async function renderHome() {
   const [all, group, next, me, lastSyncAt] = await Promise.all([
@@ -40,6 +44,8 @@ export async function renderHome() {
     h('main', { class: 'content' },
       // Still in a browser tab? How to install it (until they say Not now).
       await installTip({ dismissible: true }),
+      // The event at a glance: where it is, and how your group is doing.
+      await glance(group, all, lead, unsent, lastSyncAt),
       // What's next for you: your Assignments.
       myAssignments(await myPlan(), next),
       // Everything else is one tap away in the tab bar. Home only adds what
@@ -53,8 +59,6 @@ export async function renderHome() {
           h('div', { class: 'sub' }, `${unsent} waiting · for your Lead to scan`)),
         icon('next', 20)))) : null,
     ),
-    h('footer', { class: 'bottombar' },
-      footerStatus(unsent, lastSyncAt)),
   );
 
   // The phone's status bar matches the block's colour.
@@ -183,4 +187,34 @@ function footerStatus(unsent, lastSyncAt) {
   const st = sendStatus({ unsent, lastSyncAt, result: lastResult });
   return h('p', { class: `status ${st.state}`, role: 'status' }, icon(st.state === 'sent' ? 'check' : 'device', 18),
     h('span', {}, st.text));
+}
+
+// The event at a glance, under the cover: the event, the match it's on, how
+// many teams your group has scouted (for people who see everyone's data),
+// and where your own matches are. Short, and it changes through the day.
+async function glance(group, all, lead, unsent, lastSyncAt) {
+  const ev = group.currentEvent;
+  if (!ev) return h('section', { class: 'glance' }, footerStatus(unsent, lastSyncAt));
+  const data = await currentEventData();
+  const quals = (data?.matches ?? []).filter((m) => m.level === 'qual');
+  const nextUp = quals.find((m) => !m.played);
+  const onNow = !quals.length ? 'Schedule not out yet'
+    : nextUp ? `Next on the field: Q${nextUp.number}${timeOf(nextUp) ? ` · ${timeOf(nextUp)}` : ''}`
+      : 'Qualifications done';
+  let progress = null;
+  if (lead || group.settings?.scoutsSeeAll === true) {
+    const config = await loadConfig(group.game_config_id);
+    const rows = teamRows(config, forEvent(all, { groupId: group.id, eventId: ev.id }), data?.teams ?? []);
+    const done = rows.filter((r) => r.scouted).length;
+    if (rows.length) {
+      progress = h('a', { class: 'glance-progress', href: '#teams' },
+        h('span', { class: 'glance-count' }, h('span', { class: 'num' }, `${done}`), ` of ${rows.length} teams scouted`),
+        h('span', { class: 'glance-bar', 'aria-hidden': 'true' }, h('span', { style: `width: ${Math.round((100 * done) / rows.length)}%` })));
+    }
+  }
+  return h('section', { class: 'glance', 'aria-label': 'The event at a glance' },
+    h('p', { class: 'glance-event' }, ev.name),
+    h('p', { class: 'glance-now' }, onNow),
+    progress,
+    footerStatus(unsent, lastSyncAt));
 }

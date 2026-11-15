@@ -132,7 +132,7 @@ export async function renderQuestions() {
   const el = h('div', { class: 'screen' },
     topbar('Custom questions', backHref('#group')),
     h('main', { class: 'content' },
-      h('p', { class: 'group-lede' }, 'Your own questions, shown in the match. They never add to points. You can also hide the game’s questions your group doesn’t use.'),
+      h('p', { class: 'group-lede' }, 'Extra questions in the match. They never add to points.'),
       message.el,
       visible.length ? lists : h('p', { class: 'plain' }, 'No questions yet.'),
       hidden.length ? h('details', { class: 'team-list' },

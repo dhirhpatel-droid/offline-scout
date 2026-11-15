@@ -62,9 +62,26 @@
   /* Spacing on a 4px grid */
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
 
+  /* The grid: every band of a screen (top bar, cover, content, bottom bar)
+     has this much room at the sides, so all text starts on one line. */
+  --gutter: 16px;
+
   /* Touch targets: 56px minimum for anything tapped during a match */
   --tap: 56px;
   --tap-lg: 64px;
+  --tap-sm: 48px;      /* small controls outside a match (never under 44px) */
+
+  /* Rows in lists, and the columns they share so things line up */
+  --row: 64px;
+  --row-sm: 48px;
+  --col-code: 4.5rem;  /* a match code: Q18 */
+  --col-plate: 4.25rem; /* a station sign: Red 1 */
+
+  /* Lines and shapes */
+  --rule: 1px;         /* dividers between rows */
+  --border: 2px;       /* the edge of a control */
+  --ring: 3px;         /* focus rings and "yours" edges */
+  --pill: 999px;
   --radius: 14px;
   --plate-radius: 6px; /* bumpers and station signs: printed, square-ish */
   --radius-sm: 10px;   /* small chips and badges */

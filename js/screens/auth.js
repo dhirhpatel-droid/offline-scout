@@ -81,16 +81,16 @@ function howItWorks() {
     h('ol', { class: 'how-steps' },
       step([station('Red 1', 'red'), bumper(16415, 'red', { mine: true })],
         'Your Lead plans who watches what',
-        'Pick the event and the schedule comes in from FIRST. Each Scout gets their matches and the robot to watch.'),
+        'The schedule comes from FIRST; each Scout knows who to watch.'),
       step(h('span', { class: 'how-tap' }, h('span', { class: 'how-minus' }, icon('minus', 18)), h('span', { class: 'num how-count' }, '3'), h('span', { class: 'how-plus' }, icon('plus', 22))),
         'Tap as it happens',
-        'Big buttons, one period at a time, almost no typing. Eyes stay on the field.'),
+        'Big buttons, almost no typing. Eyes stay on the field.'),
       step(h('span', { class: 'how-saved' }, icon('device', 22), h('span', {}, 'Saved')),
         'Saved on your phone, always',
-        'No signal in the gym? Nothing changes. Matches go to your group when the phone has signal again, or by QR code.'),
+        'No signal needed. Matches send when there is, or by QR.'),
       step(h('span', { class: 'how-result' }, h('span', { class: 'num' }, 'Won 45–30'), h('span', {}, '38.5 avg')),
         'Your Lead sees every team',
-        'Averages for every team, each match, and Data checks when two scouts disagree. The numbers you pick alliances with.')));
+        'Averages, every match, and checks when scouts disagree.')));
 }
 
 // On Create account: what you get, short, above the form.
@@ -105,7 +105,7 @@ function youGet() {
 // Why it exists: a true story, the best reason to trust it.
 function origin() {
   return h('p', { class: 'origin' },
-    'Built by a student on Lo-Ellen Park’s robotics teams after our online scouting form wouldn’t even open on the venue wifi at provincials, and we lost the data when it mattered most.');
+    'Built by a Lo-Ellen Park robotics student after our scouting form failed on the venue wifi at provincials.');
 }
 
 function offlineCheck(message) {

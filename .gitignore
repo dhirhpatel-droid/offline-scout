@@ -9,3 +9,4 @@ node_modules/
 # Secrets never go in the repo
 .env
 .env.*
+.impeccable/critique/

@@ -7,8 +7,8 @@
 //   4. reload again and check the match is still in Saved matches
 //
 // To test the live site instead of a local copy:
-//   APP_URL=https://dhirhpatel-droid.github.io/offline-scout/ npm run test:offline
-// (GitHub can't be switched off, so Chrome's own offline mode is used instead.)
+//   APP_URL=https://offline-scout.vercel.app/ npm run test:offline
+// (The live site can't be switched off, so Chrome's own offline mode is used instead.)
 //
 // Chrome is driven through the DevTools Protocol (the same thing Chrome's
 // developer tools use) over a WebSocket. Node 22+ has WebSocket built in.
@@ -87,6 +87,9 @@ try {
   // ---- 1. first visit, online ----
   step('Opening the app online (first visit)');
   await load(APP);
+  // Seed only once the app has made its own database (version 2). Opening it
+  // earlier would create an empty one and break the app's upgrade step.
+  await waitFor(`return (await indexedDB.databases()).some((d) => d.name === 'offline-scout' && d.version >= 2)`, 'the app database');
   // The app needs a signed-in person with a Scouting group. A test can't create
   // real accounts, so it saves a pretend login and group on this "phone",
   // exactly where supabase-js and js/account.js keep them. Nothing here talks to

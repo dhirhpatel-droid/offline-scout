@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:offline": "node scripts/offline-test.mjs",
-    "screenshots": "node scripts/screenshots.mjs",
+    "shots": "node scripts/shots.mjs",
     "start": "python3 scripts/serve.py"
   },
   "devDependencies": {

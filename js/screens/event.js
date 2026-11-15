@@ -4,7 +4,7 @@
 // the one the group is at.
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, confirmDialog, bumper } from '../ui.js';
+import { h, icon, formField, formMessage, busy, confirmDialog, bumper, fill } from '../ui.js';
 import { currentGroup, cachedProfile } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -75,6 +75,16 @@ export async function renderEvent() {
   const positions = alliancePositions(config);
   const all = [...quals, ...playoffs];
   const nextMatch = all.find((x) => !x.played);
+  // The next 8 matches to start with (the whole day is a tap away), so the
+  // screen doesn't open with 60 rows.
+  const SHOWN = 8;
+  const from = Math.max(0, all.indexOf(nextMatch) - 1);
+  const first = nextMatch ? all.slice(from, from + SHOWN) : all.slice(-SHOWN);
+  const tbody = h('tbody', {}, first.map((m) => matchRow(m, m === nextMatch, positions, mine)));
+  const showAll = all.length > first.length ? h('button', { class: 'pill secondary block', type: 'button', onclick: () => {
+    fill(tbody, ...all.map((m) => matchRow(m, m === nextMatch, positions, mine)));
+    showAll.remove();
+  } }, `Show all ${all.length} matches`) : null;
   const schedule = data && all.length
     ? h('section', {},
         h('h2', { class: 'section-h' }, 'Schedule'),
@@ -90,8 +100,9 @@ export async function renderEvent() {
             // FRC has 6 stations: short headings (R1) with the full name for screen readers.
             positions.map((p) => h('th', { scope: 'col', class: `st ${p.replace(/\d/, '')}` },
               positions.length > 4 ? h('abbr', { title: positionLabel(p) }, positionLabel(p).replace(/[a-z ]/g, '')) : positionLabel(p))))),
-          h('tbody', {}, all.map((m) => matchRow(m, m === nextMatch, positions, mine)))))
-    : data ? h('p', { class: 'notice' }, 'The qualification schedule isn’t out yet. It usually comes the night before or the morning of the event, and downloads by itself when it does.') : null;
+          tbody),
+        showAll)
+    : data ? h('p', { class: 'notice' }, 'The schedule isn’t out yet. It downloads by itself when FIRST posts it.') : null;
 
   const teams = data?.teams.length ? h('details', { class: 'team-list' },
     h('summary', {}, `All ${data.teams.length} teams`, icon('next', 18)),
@@ -170,8 +181,11 @@ export async function renderEvent() {
   const el = h('div', { class: 'screen' },
     cover,
     h('main', { class: 'content' }, message.el,
+      // Leads' things to do come first, as rows; then the schedule.
+      lead && ev ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#assign' },
+        h('span', { class: 'row-main' }, h('span', { class: 'title' }, 'Plan who watches what'),
+          h('span', { class: 'sub' }, 'Position shifts and Team watches')), icon('next', 20)))) : null,
       schedule,
-      lead && ev ? h('a', { class: 'pill block', href: '#assign' }, 'Plan assignments', icon('next', 20)) : null,
       teams, refreshBtn, picker),
   );
   return { el };

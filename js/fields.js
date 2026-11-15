@@ -46,8 +46,11 @@ const RENDERERS = {
     const valueEl = h('output', { class: 'value num', 'aria-live': 'polite' }, count);
     const minus = h('button', { class: 'round', type: 'button', 'aria-label': `Remove one ${field.label}` }, icon('minus', 28));
     const plus = h('button', { class: 'round add', type: 'button', 'aria-label': `Add one ${field.label}` }, icon('plus', 30));
+    // The hint sits on its own line under the controls (full width).
+    const hint = pointsHint(field);
     const row = h('div', { class: 'field counter', role: 'group', 'aria-labelledby': labelId },
-      labelBlock(field, labelId), minus, valueEl, plus);
+      h('div', {}, h('div', { class: 'field-label', id: labelId }, field.label)), minus, valueEl, plus,
+      hint && h('div', { class: 'field-hint' }, hint));
 
     // A config may cap a counter ("max": 4 FLOWERS), so a mis-tap can't go past it.
     const top = Number.isFinite(field.max) ? field.max : Infinity;

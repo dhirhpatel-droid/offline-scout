@@ -83,7 +83,7 @@ export async function renderAssign({ param } = {}) {
     return btn;
   }
 
-  const header = topbar('Assignments', backHref('#home'));
+  const header = topbar('Plan', backHref('#home'));
 
   if (!ev) {
     return { el: h('div', { class: 'screen' }, header, h('main', { class: 'content' },
@@ -305,9 +305,10 @@ export async function renderAssign({ param } = {}) {
       const ids = row.scouts[p];
       const color = p.replace(/\d/, '');
       if (!ids.length) {
-        if (!online) return h('td', {}, h('span', { class: 'bumper open' }, 'Open'));
+        if (!online) return h('td', {}, h('span', { class: 'bumper open', 'aria-label': 'Open' }, '–'));
         // With signal it's a button, so it says so: "+ Open".
-        const plate = h('span', { class: 'bumper open can-fill' }, icon('plus', 14), 'Open');
+        // Just a +, so it fits the narrow cell (the button's label says the rest).
+        const plate = h('span', { class: 'bumper open can-fill' }, icon('plus', 18));
         // Tap an open station to choose who watches it (the Lead decides).
         return h('td', {}, h('button', { class: 'schedule-pick', type: 'button',
           'aria-label': `Q${row.number} ${positionLabel(p)} is open. Choose who watches it.`,
@@ -342,11 +343,6 @@ export async function renderAssign({ param } = {}) {
         ].filter(Boolean);
         return explain.length ? h('p', { class: 'coverage-key' }, explain.join(' · ')) : null;
       })(),
-      h('details', { class: 'help-item' },
-        h('summary', {}, h('span', {}, 'How Coverage works'), icon('next', 18)),
-        h('p', {}, 'Each row is a match still to play, each column an Alliance position. A name means that Scout watches it, '
-          + 'from a Position shift or a Team watch. Open means nobody does: tap it to choose someone. '
-          + 'The app shows the gaps but never assigns anyone by itself.')),
       h('table', { class: 'schedule coverage-grid', style: `--stations: ${positions.length}` },
         h('caption', { class: 'visually-hidden' }, 'Who watches each Alliance position, in the matches still to play.'),
         h('thead', {}, h('tr', {},
@@ -364,6 +360,9 @@ export async function renderAssign({ param } = {}) {
             i === 0 && timeOf(r) ? h('span', { class: 'schedule-time' }, timeOf(r)) : null),
           positions.map((p) => cell(r, p)))))),
       showAllBtn,
+      h('details', { class: 'help-item' },
+        h('summary', {}, h('span', {}, 'How Coverage works'), icon('next', 18)),
+        h('p', {}, 'Rows are matches still to play, columns are Alliance positions. A + is open: tap it to choose who watches. The app never assigns anyone by itself.')),
     ].filter(Boolean));
   }
 

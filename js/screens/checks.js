@@ -94,7 +94,7 @@ export async function renderChecks() {
         : `${ev.name} · nothing looks off`),
       // One line before the checks: how picky they are, and where to change it.
       h('p', { class: 'plain teams-note' }, 'Sensitivity ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change')),
-      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'Something shows up here when two scouts disagree, when an alliance’s estimated points are far from its official score, or when a team doesn’t fit the schedule. Checks never change anything: you open the match and decide.'),
+      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'Nothing looks off. Checks never change your data.'),
       marked.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Marked right on this phone (${marked.length})`, icon('next', 18)),
         h('ul', { class: 'checks' }, marked.map((c) => item(c, false, false)))) : null),

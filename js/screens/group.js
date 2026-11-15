@@ -4,7 +4,7 @@
 // Needs signal: members and settings changes only load or save with it.
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, confirmDialog, offlineNote } from '../ui.js';
+import { h, icon, formField, formMessage, busy, confirmDialog, offlineNote, topbar } from '../ui.js';
 import {
   currentGroup, currentUser, listMembers, cachedMembers, setRole, removeMember, listGroupInvites, cancelInvite, sendInvite,
   setGroupSetting,
@@ -17,7 +17,7 @@ import { currentEventData } from '../events.js';
 import { timeOf } from '../schedule.js';
 import { cachedAnnouncements } from '../announcements.js';
 
-export async function renderGroup() {
+export async function renderGroup({ param } = {}) {
   const group = await currentGroup();
   if (!group) {
     location.hash = '#groups';
@@ -158,8 +158,7 @@ export async function renderGroup() {
     ['twoTeams', true, 'Scouts can watch two teams at once', 'Lets a Lead assign one Scout two teams in the same match.'],
     ['qrBackup', false, 'QR backup', 'For gyms where nobody has signal: scouts show their matches as QR codes, and a Lead scans them.'],
   ];
-  const settingsSection = lead ? h('section', {},
-    h('h2', { class: 'section-h' }, 'Group settings'),
+  const settingsSection = lead ? h('section', { class: 'settings-first' },
     ...SETTINGS.map(([key, fallback, label, hint]) => {
       let on = group.settings?.[key] ?? fallback;
       // Offline: show each setting as it is, with nothing to tap.
@@ -252,7 +251,22 @@ export async function renderGroup() {
     lead ? link('#questions', 'Custom questions', [
       shown ? `${shown} extra ${shown === 1 ? 'question' : 'questions'}` : 'Add your own, or hide the game’s',
       group.settings?.hiddenFields?.length ? `${group.settings.hiddenFields.length} from the game hidden` : null,
-    ].filter(Boolean).join(' · ')) : null);
+    ].filter(Boolean).join(' · ')) : null,
+    lead ? link('#group/settings', 'Group settings', 'How your group scouts: who sees what, QR backup, checks') : null);
+
+  // Group settings live on their own screen (#group/settings), so the Group
+  // screen stays about the group: its pages and its members.
+  if (param === 'settings' && lead) {
+    return { el: h('div', { class: 'screen' },
+      topbar('Group settings', backHref('#group')),
+      h('main', { class: 'content' },
+        !isOnline() ? offlineNote('Settings change with signal. Scouting works as usual.') : null,
+        message.el,
+        settingsSection,
+        sortSetting,
+        sensitivitySetting),
+      await nowScoutingBar()) };
+  }
 
   const leave = h('button', { class: 'text-btn danger', type: 'button' }, 'Leave this group');
   leave.addEventListener('click', async () => {
@@ -278,7 +292,7 @@ export async function renderGroup() {
       h('h1', { class: 'group-name', tabindex: '-1' }, group.name),
       h('p', { class: 'now-sub' }, `${group.program} · You’re a ${lead ? 'Lead' : 'Scout'}`)),
     h('main', { class: 'content' },
-      lead && !isOnline() ? offlineNote('Your group is saved on this phone; scouting works as usual. Invites and settings change with signal.') : null,
+      lead && !isOnline() ? offlineNote('Invites and settings change with signal. Scouting works as usual.') : null,
       message.el,
       groupLinks,
       inviteForm,
@@ -286,9 +300,6 @@ export async function renderGroup() {
       h('h2', { class: 'section-h' }, 'Members'),
       membersNote,
       membersList,
-      settingsSection,
-      sortSetting,
-      sensitivitySetting,
       h('div', { class: 'danger-zone group-footer' },
         h('a', { class: 'pill secondary block', href: '#groups' }, 'Switch group'),
         leave)),

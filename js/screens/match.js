@@ -10,7 +10,7 @@
 // Endgame) appears inside another section's tab, so there are fewer steps.
 
 import { backHref, returnTo } from '../nav.js';
-import { h, icon, savedStatus, confirmDialog, infoDialog, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
+import { h, icon, savedStatus, confirmDialog, infoDialog, scrollBehavior, setThemeColor, lineup, station, topbar, fill, bumper } from '../ui.js';
 import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
@@ -359,6 +359,12 @@ export async function renderMatch({ param }) {
   }
 
   function showSection(i) {
+    // The new period slides in from the side you moved towards.
+    if (i !== current) {
+      panel.classList.remove('slide-next', 'slide-prev');
+      void panel.offsetWidth;
+      panel.classList.add(i > current ? 'slide-next' : 'slide-prev');
+    }
     current = i;
     const section = tabSections[i];
     tabButtons.forEach((b, j) => {
@@ -372,7 +378,7 @@ export async function renderMatch({ param }) {
     if (guests.length) {
       const pointer = h('a', { class: 'guest-link', href: `#guest-${guests[0].id}`, onclick: (e) => {
         e.preventDefault();
-        panel.querySelector(`#guest-${guests[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.querySelector(`#guest-${guests[0].id}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
       } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
       host.splice(section.note ? 2 : 1, 0, pointer);
     }
@@ -444,7 +450,7 @@ export async function renderMatch({ param }) {
     } else if (guest) {
       action = h('button', { class: 'pill', type: 'button', onclick: () => {
         seenGuests.add(`guest-${guest.id}`);
-        panel.querySelector(`#guest-${guest.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.querySelector(`#guest-${guest.id}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
         renderBottombar();
       } }, `Next: ${guest.label}`, icon('next', 20));
     } else {
@@ -556,25 +562,40 @@ export async function renderMatch({ param }) {
     fill(panel, 
       h('section', { class: 'finish' },
         h('div', { class: 'finish-head' },
-          h('h2', { class: 'finish-title', tabindex: '-1' }, `${code} saved`),
+          h('h2', { class: 'finish-title', tabindex: '-1' }, h('span', { class: 'finish-check', 'aria-hidden': 'true' }, icon('check', 28)), `${code} saved`),
           submission.summary.position ? station(positionLabel(submission.summary.position), 'on') : null),
         // Laid out like the results screen after a match: each period, then the total.
         h('dl', { class: 'parts' }, breakdown,
           h('div', { class: 'part total' },
             h('dt', { class: 'part-label' }, 'Estimated points'),
-            h('dd', { class: 'part-value num' }, submission.estimatedPoints))),
+            h('dd', { class: 'part-value num finish-total' }, submission.estimatedPoints))),
         h('p', { class: 'finish-note' }, 'Estimated from your taps, not the official score.'),
         statusEl),
       h('div', { class: 'finish-actions' },
         h('button', { class: 'pill big block', type: 'button', onclick: () => (planned ? startPlannedMatch(planned.items) : startNext()) },
           nextCode ? `Scout ${nextCode}${nextTeam ? ` · ${nextTeam}` : ''}` : 'Scout the next match', icon('next', 22)),
-        h('div', { class: 'two' },
-          h('a', { class: 'pill secondary block', href: `#match/${submission.id}` }, `Edit ${code}`),
-          h('a', { class: 'pill secondary block', href: '#saved' }, 'My matches')),
-        planned ? h('button', { class: 'link-btn', type: 'button', onclick: startNext }, 'Scout a different match') : null),
+        // One main button; the rest are quiet links in a row.
+        h('div', { class: 'finish-links' },
+          h('a', { class: 'link-btn', href: `#match/${submission.id}` }, `Edit ${code}`),
+          h('a', { class: 'link-btn', href: '#saved' }, 'Matches'),
+          planned ? h('button', { class: 'link-btn', type: 'button', onclick: startNext }, 'A different match') : null)),
     );
     bottombar.remove(); // the status is in the result above
     panel.querySelector('h2').focus();
+    countUp(panel.querySelector('.finish-total'), submission.estimatedPoints);
+  }
+
+  // The total counts up from 0 (about half a second), like a scoreboard.
+  // Shown at once when the phone asks for less motion.
+  function countUp(el, total) {
+    if (!el || !total || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / 500);
+      el.textContent = Math.round(total * (1 - (1 - t) ** 3));
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   async function startNext() {
