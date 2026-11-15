@@ -7,7 +7,7 @@
 // group's), so it works offline. It shows data; it never ranks for a pick.
 
 import { backHref } from '../nav.js';
-import { h, icon, bumper, station, topbar, fill } from '../ui.js';
+import { h, icon, bumper, station, topbar, fill, emptyState } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -271,10 +271,12 @@ export async function renderTeam({ param }) {
     cover,
     h('main', { class: 'content' },
       !ev ? h('p', { class: 'plain' }, 'Pick your event to see this team’s matches.') : null,
+      // Nothing scouted yet: say so first, not at the very bottom.
+      !mine.length && ev ? emptyState('Not scouted yet', 'No one in your group has scouted this team here.') : null,
       checksEl, averages, schedule, details, list,
       // Straight to Assignments with this team ready for a Team watch.
       isLead(group) ? h('a', { class: 'pill secondary block team-plan', href: `#assign/${team}` }, `Plan who watches ${team}`, icon('next', 20)) : null,
-      !mine.length && ev ? h('p', { class: 'plain teams-empty' }, 'No one in your group has scouted this team here yet.') : null),
+    ),
     await nowScoutingBar(),
   );
   return { el };

@@ -124,7 +124,8 @@ const TAB_OF = {
   home: 'home', saved: 'matches', qr: 'matches',
   teams: 'teams', team: 'teams', checks: 'teams',
   assign: 'plan',
-  group: 'group', event: 'group', questions: 'group', announcements: 'group', scan: 'group', settings: 'group',
+  group: 'group', event: 'group', questions: 'group', announcements: 'group', scan: 'group',
+  settings: 'home', // opened from Home's account icon
 };
 
 // The tab bar goes in a dock at the bottom of the screen, under the screen's
@@ -146,7 +147,7 @@ async function addTabBar(screen, name) {
     screen.querySelector(':is(.topbar, .now-top) > a.icon-btn[aria-label="Back"]')?.remove();
   }
 }
-const ROOTS = ['#home', '#saved', '#teams', '#assign', '#group'];
+const ROOTS = ['#home', '#saved', '#saved/everyone', '#teams', '#assign', '#group'];
 
 function redirect(hash) {
   // Replaced, not added, so the back button doesn't bounce between screens.

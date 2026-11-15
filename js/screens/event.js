@@ -181,8 +181,11 @@ export async function renderEvent() {
   const el = h('div', { class: 'screen' },
     cover,
     h('main', { class: 'content' }, message.el,
+      // Leads' things to do come first, as rows; then the schedule.
+      lead && ev ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#assign' },
+        h('span', { class: 'row-main' }, h('span', { class: 'title' }, 'Plan who watches what'),
+          h('span', { class: 'sub' }, 'Position shifts and Team watches')), icon('next', 20)))) : null,
       schedule,
-      lead && ev ? h('a', { class: 'pill block', href: '#assign' }, 'Plan assignments', icon('next', 20)) : null,
       teams, refreshBtn, picker),
   );
   return { el };

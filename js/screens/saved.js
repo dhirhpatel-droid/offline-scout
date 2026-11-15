@@ -57,20 +57,22 @@ export async function renderSaved({ param }) {
   // Phones often *think* they have signal in a gym (venue wifi, one bar) when
   // sending fails, so with QR backup on, Show as QR is always there too.
   const sendBtn = unsent && isOnline() ? h('button', { class: 'pill', type: 'button' }, 'Send now') : null;
-  const qrBtn = unsent && group?.settings?.qrBackup
-    ? h('a', { class: `pill${sendBtn ? ' secondary' : ''}`, href: '#qr' }, 'Show my matches as QR') : null;
+  // Show as QR is a row at the top of the list (the bottom bar stays calm:
+  // the status and, with signal, Send now).
+  const qrRow = unsent && group?.settings?.qrBackup ? h('ul', { class: 'rows' }, h('li', {}, h('a', { class: 'row', href: '#qr' },
+    h('span', { class: 'row-main' }, h('span', { class: 'title' }, 'Show my matches as QR'),
+      h('span', { class: 'sub' }, `${unsent} waiting · for your Lead to scan`)), icon('next', 20)))) : null;
   sendBtn?.addEventListener('click', () => busy(sendBtn, 'Sending…', async () => {
     const r = await syncNow();
     if (r.error) statusEl.replaceChildren(icon('device', 18), h('span', {}, sendStatus({ unsent: r.waiting, result: r }).text));
   }));
 
   const el = h('div', { class: 'screen' },
-    topbar(everyone ? 'Everyone’s matches' : 'My matches', backHref('#home')),
-    h('main', { class: 'content' }, switcher, body),
+    topbar(everyone ? 'Everyone’s matches' : 'Matches', backHref('#home')),
+    h('main', { class: 'content' }, switcher, qrRow, body),
     bar,
     h('footer', { class: 'bottombar' },
       statusEl,
-      qrBtn,
       sendBtn),
   );
   return { el };
