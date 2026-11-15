@@ -258,7 +258,7 @@ export async function renderAssign({ param } = {}) {
         const code = matchCode({ level: clash.level, match: clash.number });
         formMsg.show(twoTeams
           ? `That gives ${m.display_name} three teams in ${code}. Two at once is the most one person can watch.`
-          : `That gives ${m.display_name} two teams in ${code}. Watching two teams at once is turned off in Group settings.`, 'error');
+          : `That gives ${m.display_name} two teams in ${code}, which is turned off in Group settings.`, 'error');
         return;
       }
 
@@ -491,7 +491,7 @@ export async function renderAssign({ param } = {}) {
     header,
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, lede),
-      watchTeam && online ? h('p', { class: 'notice' }, `Choose who watches ${watchTeam}: tap Add for them below. The form starts on a Team watch for ${watchTeam}.`) : null,
+      watchTeam && online ? h('p', { class: 'notice' }, `Tap Add for whoever should watch ${watchTeam}.`) : null,
       online ? null : offlineNote('Your plan is saved on this phone and still shows here. Adding and removing happen with signal.'),
       showGrid ? coverageEl : null,
       grid.length && !showGrid ? h('p', { class: 'assign-gaps' }, 'No one is assigned yet, so every position is open.') : null,

@@ -61,7 +61,7 @@ export async function renderEvent() {
           h('p', { class: 'now-sub' }, program !== 'FTC'
             ? 'FRC events arrive with the FRC game after kickoff in January.'
             : lead
-              ? 'Pick the event your team is at. Its teams and schedule download to everyone’s phone, so team numbers fill in by themselves.'
+              ? 'Pick your event. Its teams and schedule go to everyone’s phone.'
               : 'Your Lead picks the event. Its schedule then downloads to your phone.'),
         ]);
 

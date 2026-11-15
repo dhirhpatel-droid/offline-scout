@@ -43,9 +43,9 @@ export async function load() {
 const bar = (title, fallback = '#home') => topbar(title, backHref(fallback));
 
 // Why there's nothing to show, as a screen.
-function notice(title, text, link) {
+function notice(title, heading, text, link) {
   return { el: h('div', { class: 'screen' }, bar(title),
-    h('main', { class: 'content' }, h('p', { class: 'plain teams-empty' }, text), link)) };
+    h('main', { class: 'content' }, emptyState(heading, text, link))) };
 }
 
 // ---------- All Teams ----------
@@ -61,9 +61,9 @@ const COLUMNS = (config) => [
 export async function renderTeams() {
   const { group, ev, config, data, subs, canSeeAll, lastSyncAt, noEvent } = await load();
   if (!canSeeAll) {
-    return notice('Teams', 'The Teams table is for Leads. A Lead can let Scouts see it by turning on “Scouts see everyone’s matches” in Group settings.');
+    return notice('Teams', 'For Leads', 'A Lead can let Scouts see it in Group settings.');
   }
-  if (!ev) return notice('Teams', 'The Teams table follows your event. Pick it first.', h('a', { class: 'pill block', href: '#event' }, 'Pick your event'));
+  if (!ev) return notice('Teams', 'No event yet', 'The Teams table follows your event.', h('a', { class: 'pill', href: '#event' }, 'Pick your event'));
 
   const rows = teamRows(config, subs, data?.teams ?? []);
   const columns = COLUMNS(config);
@@ -160,7 +160,7 @@ export async function renderTeams() {
 export async function renderTeam({ param }) {
   const team = Number(param);
   const { group, ev, config, data, subs, canSeeAll } = await load();
-  if (!canSeeAll) return notice(`Team ${team}`, 'Team pages are for Leads, unless a Lead turns on “Scouts see everyone’s matches”.');
+  if (!canSeeAll) return notice(`Team ${team}`, 'For Leads', 'A Lead can let Scouts see Team pages in Group settings.');
   const mine = subs.filter((s) => s.summary?.team === team);
   const [row] = teamRows(config, mine, (data?.teams ?? []).filter((t) => t.team_number === team));
   const name = row?.name;

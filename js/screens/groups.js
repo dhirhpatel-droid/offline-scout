@@ -53,7 +53,7 @@ export async function renderGroups({ param }) {
   // "Check for invites": asks the server again, with feedback either way.
   const check = h('button', { class: `pill ${empty ? 'big' : 'secondary'} block`, type: 'button' }, 'Check for invites');
   check.addEventListener('click', () => busy(check, 'Checking…', async () => {
-    if (!isOnline()) return message.show('This phone has no signal right now. Try again once it does: in the hallway or parking lot usually works.', 'error');
+    if (!isOnline()) return message.show('No signal right now. Try again in the hallway or parking lot.', 'error');
     const invites = await myPendingInvites().catch((err) => { message.show(friendlyError(err), 'error'); return null; });
     if (invites === null) return;
     showInvites(invites);

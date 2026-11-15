@@ -2039,3 +2039,21 @@ dialog.sheet .assign-form-h { font-size: var(--fs-xl); font-weight: 800; font-st
 /* Group: a member's actions in a sheet */
 .member-more { margin-right: calc(-1 * var(--s3)); }
 .pill.danger-text { color: var(--danger); }
+/* ONE FOLD. "What the columns mean", "Saved (3)", "All 30 teams": every
+   fold-out is a ruled row with its label on the left and the chevron on the
+   right, like the help answers. */
+.team-list { margin: var(--s4) 0 0; border-bottom: var(--rule) solid var(--line); }
+.team-list summary { justify-content: space-between; }
+.team-list > :not(summary) { padding-bottom: var(--s4); }
+/* Teams table: the header label ends where its numbers end (no inner
+   padding on the right), and the team column stays on the grid line when
+   the table scrolls sideways. */
+.teams-table .sort { padding: 0; }
+.teams-table td.num { padding-inline: var(--s2) 0; }
+.teams-wrap { margin: 0 calc(-1 * var(--gutter)); padding: 0; }
+.teams-table thead th:first-child, .teams-table tbody th { padding-left: var(--gutter); }
+.teams-table th:last-child, .teams-table td:last-child { padding-right: var(--gutter); }
+/* Settings and Group settings: sections on the same rhythm as everywhere */
+.group { margin-top: var(--s6); }
+.group h2 { margin-bottom: var(--s2); }
+.setting-note { margin-top: var(--s2); }

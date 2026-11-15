@@ -3,7 +3,7 @@
 // Submissions involved. Nothing here changes data; the Lead looks and decides.
 
 import { backHref } from '../nav.js';
-import { h, icon, topbar } from '../ui.js';
+import { h, icon, topbar, emptyState } from '../ui.js';
 import { matchCode } from '../submissions.js';
 import { load } from './teams.js';
 import { dataChecks, openChecks, checkKey } from '../data-checks.js';
@@ -62,8 +62,8 @@ export async function renderChecks() {
   const header = topbar('Data checks', backHref('#home'));
   if (!canSeeAll || !ev) {
     return { el: h('div', { class: 'screen' }, header, h('main', { class: 'content' },
-      h('p', { class: 'plain teams-empty' }, !ev ? 'Data checks follow your event’s schedule, so pick your event first.' : 'Data checks are for Leads.'),
-      !ev ? h('a', { class: 'pill block', href: '#event' }, 'Pick your event') : null)) };
+      !ev ? emptyState('No event yet', 'Data checks follow your event’s schedule.', h('a', { class: 'pill', href: '#event' }, 'Pick your event'))
+        : emptyState('For Leads', 'Data checks are for your group’s Leads.'))) };
   }
   const sensitivity = group.settings?.checkSensitivity ?? 'normal';
   const all = dataChecks(config, subs, data ?? {}, sensitivity);
@@ -94,7 +94,7 @@ export async function renderChecks() {
         : `${ev.name} · nothing looks off`),
       // One line before the checks: how picky they are, and where to change it.
       h('p', { class: 'plain teams-note' }, 'Sensitivity ', h('strong', {}, word), ' · ', h('a', { href: '#group' }, 'change')),
-      checks.length ? sections : h('p', { class: 'plain teams-empty' }, 'Nothing looks off. Checks never change your data.'),
+      checks.length ? sections : emptyState('Nothing looks off', 'Checks never change your data.'),
       marked.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Marked right on this phone (${marked.length})`, icon('next', 18)),
         h('ul', { class: 'checks' }, marked.map((c) => item(c, false, false)))) : null),

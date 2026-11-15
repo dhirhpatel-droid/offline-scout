@@ -4,7 +4,7 @@
 // wording. Changes need signal; the list itself shows offline.
 
 import { backHref } from '../nav.js';
-import { h, icon, formField, formMessage, busy, offlineNote, topbar } from '../ui.js';
+import { h, icon, formField, formMessage, busy, offlineNote, topbar, emptyState } from '../ui.js';
 import { currentGroup, setGroupSetting } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { loadConfig } from '../config.js';
@@ -134,12 +134,12 @@ export async function renderQuestions() {
     h('main', { class: 'content' },
       h('p', { class: 'group-lede' }, 'Extra questions in the match. They never add to points.'),
       message.el,
-      visible.length ? lists : h('p', { class: 'plain' }, 'No questions yet.'),
+      visible.length ? lists : emptyState('No questions yet', 'Add one below, or hide the game’s.'),
       hidden.length ? h('details', { class: 'team-list' },
         h('summary', {}, `Hidden (${hidden.length})`, icon('next', 18)),
         h('ul', { class: 'rows' }, hidden.map(row))) : null,
       gameList,
-      online ? form : offlineNote('Your questions are saved on this phone and still show in matches. Adding and hiding happen with signal.')),
+      online ? form : offlineNote('Your questions still show in matches. Adding and hiding need signal.')),
   );
   return { el };
 }

@@ -252,11 +252,26 @@ A neutral near-black world with one alliance colour poured over it.
 
 ## Layout
 
-A single column, max 640px wide and centred, so tablets keep controls in thumb reach. Spacing is on a 4px grid (4, 8, 12, 16, 24, 32). Content has 16px side padding.
+A single column, max 640px wide and centred, so tablets keep controls in thumb reach. Spacing is on a 4px grid (4, 8, 12, 16, 24, 32).
 
-The match screen is three stacked bands: a sticky alliance-coloured header (team number, match, points, period tabs), the current period's rows, and a sticky bottom bar with "Saved on this device" and the next-step pill. Only one period shows at a time, so a period fits without scrolling.
+### The system (redesign, Nov 2026)
+Every screen is built from the same few pieces, so things line up everywhere. Use them; don't invent a new one.
 
-A counter row is a grid: label on the left, then minus (56px), the number (4.5rem), and plus (64px). Rows are split by 1px lines. Short fields (match number, team number) sit two to a row.
+- **One grid.** Every band (top bar, cover, match header, content, bottom bar) has `--gutter` (16px) at the sides, so all text starts on one line. Nothing sits inside an inset grey card: announcement strips, Data checks, install tips and forms are full-width bands or ruled rows. A Back arrow hangs into the gutter so its arrow sits on that same line, and the title after it always starts at 60px. Heavy display digits get a `-0.04em` nudge onto the line.
+- **Two headers.** A *title bar* (`topbar()` in js/ui.js): a tab's own screen has a 32px title and no Back; a screen inside a tab has Back and a 24px title. A *cover* (`cover()`): the big coloured block, only where the screen is about one thing (Home's next match, a Team, the Group, the match header, sign-in). Titles match their tab names (Matches, Teams, Plan, Group).
+- **One rhythm.** 32px above a section heading (`.section-h`, 24px condensed), 8px below; 16px between blocks.
+- **One row** (`row()` / `.row`): 64px, a 1px rule underneath, an optional fixed first column (`--col-code` for a match code, `--col-plate` for a station sign) so second columns line up from row to row, the title with one quiet line, and the right side (a chevron, a number, a word, small buttons). Opening another screen is always a row with a chevron.
+- **Fields line up.** Counters and Yes/No tiles are both ruled rows; the + button and the tile's check box share the right-hand 64px column; a hint runs full width under the row.
+- **One empty state** (`emptyState()`): a heading, one short line, maybe one button.
+- **One fold.** Every fold-out is a ruled row: label left, chevron right.
+- **Sheets for side tasks.** Plan's Add form and a member's actions open in a bottom sheet (the confirm sheet's look), so the list behind doesn't jump.
+- **Buttons by job.** Primary pill: the one main action. Secondary pill: the alternative. Small button: an action on a row. Text button: quiet links, Undo, and destructive (red). Icon button: Back, account, a row's ⋯.
+- **Words.** At most one short line before a screen's content; anything longer goes in a fold or in Help. Empty states say one sentence.
+- **Motion.** Screen changes cross-fade (150ms); period tabs slide in from the side you moved to; saving a match draws a check and counts the total up. All of it is off when the phone asks for reduced motion.
+
+The match screen is three stacked bands: a sticky alliance-coloured header (team number, match, points, period tabs), the current period's rows, and a sticky bottom bar with "Saved on this phone" and the next-step pill. Only one period shows at a time, so a period fits without scrolling.
+
+A counter row is a grid: label on the left, then minus (56px), the number (4.5rem), and plus (64px), with the hint on its own line underneath. Rows are split by 1px lines. Short fields (match number, team number) sit two to a row.
 
 Touch targets are at least 56px for anything tapped during a match; 64px for the add button and big pills. Small helper buttons (back, settings, text buttons) are 48px.
 

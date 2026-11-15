@@ -5,7 +5,7 @@
 // Both work with no signal at all: that's the point.
 
 import { backHref } from '../nav.js';
-import { h, icon, buzz, keepScreenOn, topbar } from '../ui.js';
+import { h, icon, buzz, keepScreenOn, topbar, emptyState } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { listSubmissions, getSubmission, putSubmission } from '../db.js';
@@ -28,7 +28,7 @@ export async function renderShowQr() {
   const list = unsent.length ? unsent : mine.filter((s) => s.eventId === group.currentEvent?.id);
   if (!list.length) {
     return { el: h('div', { class: 'screen' }, bar('Show my matches as QR', '#saved'), h('main', { class: 'content' },
-      h('p', { class: 'plain teams-empty' }, 'No matches to show yet. Matches you save show up here.'))) };
+      emptyState('No matches yet', 'Matches you save show up here.'))) };
   }
   const configs = new Map();
   for (const s of list) if (!configs.has(s.configId)) configs.set(s.configId, await loadConfig(s.configId));

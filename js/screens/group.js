@@ -145,10 +145,11 @@ export async function renderGroup({ param } = {}) {
   // Invite form (Leads only)
   let inviteForm = null;
   if (lead && isOnline()) {
-    const email = formField('Invite a scout', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'name@school.org' },
-      'They get an email with a link. They join as a Scout; you can make them a Lead after.');
+    const email = formField('Their email', { type: 'email', inputmode: 'email', autocomplete: 'off', autocapitalize: 'off', placeholder: 'name@school.org' },
+      'They join as a Scout; you can make them a Lead after.');
     const send = h('button', { class: 'pill block', type: 'submit' }, 'Send invite');
-    inviteForm = h('form', { class: 'form', novalidate: true }, email.el, h('div', { class: 'actions' }, send));
+    inviteForm = h('form', { class: 'form invite-form', novalidate: true },
+      h('h2', { class: 'section-h' }, 'Invite'), email.el, h('div', { class: 'actions' }, send));
     inviteForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!isEmail(email.input.value)) return email.setError('Enter a valid email address.');
@@ -159,7 +160,7 @@ export async function renderGroup({ param } = {}) {
           await sendInvite(group.id, address);
           email.input.value = '';
           message.show(
-            `Invite saved for ${address}. New to Offline Scout? They get an email with a link. Already have an account? They see it next time they open the app.`,
+            `Invite sent to ${address}. They’ll see it by email, or in the app if they already have an account.`,
             'info');
           await load();
         } catch (err) {
@@ -174,7 +175,7 @@ export async function renderGroup({ param } = {}) {
     ['scoutsSeeAll', false, 'Scouts see everyone’s matches', 'When off, Scouts see only their own matches.'],
     ['leadsCanEdit', true, 'Leads can edit scouts’ matches', 'Every change is kept, so nothing is lost.'],
     ['twoTeams', true, 'Scouts can watch two teams at once', 'Lets a Lead assign one Scout two teams in the same match.'],
-    ['qrBackup', false, 'QR backup', 'For gyms where nobody has signal: scouts show their matches as QR codes, and a Lead scans them.'],
+    ['qrBackup', false, 'QR backup', 'With no signal, Scouts show matches as QR codes for a Lead to scan.'],
   ];
   const settingsSection = lead ? h('section', { class: 'settings-first' },
     ...SETTINGS.map(([key, fallback, label, hint]) => {

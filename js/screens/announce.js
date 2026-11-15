@@ -3,7 +3,7 @@
 // ones at the top and can remove any. Opening this screen marks them read.
 
 import { backHref } from '../nav.js';
-import { h, icon, formMessage, busy, offlineNote, topbar } from '../ui.js';
+import { h, icon, formMessage, busy, offlineNote, topbar, emptyState } from '../ui.js';
 import { currentGroup, currentUser } from '../account.js';
 import { isLead } from '../group-rules.js';
 import { checkBody, unread, whenLabel, MAX_LENGTH } from '../announcement-rules.js';
@@ -124,9 +124,7 @@ export async function renderAnnouncements() {
       lead && !online ? offlineNote('You can post when this phone has signal.') : null,
       list.length
         ? h('ul', { class: 'announce-list', 'aria-label': 'Announcements, newest first' }, list.map((a, i) => item(a, i)))
-        : h('p', { class: 'plain teams-empty' }, lead
-          ? 'Nothing posted yet. What you post here shows on everyone’s Home screen.'
-          : 'Nothing from your Leads yet. Their announcements show here and on Home.')),
+        : emptyState('Nothing posted yet', lead ? 'What you post shows on everyone’s Home.' : 'Your Leads’ messages show here and on Home.')),
     await nowScoutingBar(),
   );
   // Just posted: focus the new one so the Lead sees (and hears) it went up.
