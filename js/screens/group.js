@@ -91,7 +91,25 @@ export async function renderGroup({ param } = {}) {
           await load();
         } catch (err) { message.show(friendlyError(err), 'error'); }
       });
-      actions.append(roleBtn, removeBtn);
+      // One small button on the row opens a sheet with the two actions, so
+      // the name keeps the room (two buttons per row crowded it out).
+      const more = h('button', { class: 'icon-btn member-more', type: 'button', 'aria-label': `Change ${m.display_name}` }, icon('more', 24));
+      more.addEventListener('click', () => {
+        const dialog = h('dialog', { class: 'sheet', 'aria-labelledby': 'member-sheet-h' },
+          h('h2', { id: 'member-sheet-h' }, m.display_name),
+          h('p', {}, m.role === 'lead' ? 'A Lead of this group.' : 'A Scout in this group.'),
+          h('div', { class: 'actions' }, roleBtn, removeBtn,
+            h('button', { class: 'pill secondary block', type: 'button', onclick: () => close() }, 'Close')));
+        const close = () => { dialog.close(); dialog.remove(); more.focus(); };
+        dialog.addEventListener('cancel', close);
+        // Each action closes the sheet first; it asks again (confirm) before doing anything.
+        [roleBtn, removeBtn].forEach((b) => b.addEventListener('click', close, { capture: true }));
+        roleBtn.className = 'pill secondary block';
+        removeBtn.className = 'pill secondary block danger-text';
+        document.body.append(dialog);
+        dialog.showModal();
+      });
+      actions.append(more);
     }
     const lastLead = isLastLead(members, m.user_id);
     return h('li', { class: 'row' },

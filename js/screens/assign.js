@@ -140,12 +140,16 @@ export async function renderAssign({ param } = {}) {
       changed && note.where !== 'grid' ? noteEl(note) : null,
       rows.length ? h('ul', { class: 'rows' }, rows) : null,
       addBtn);
+    // The Add form opens in a sheet from the bottom (like the confirm
+    // sheet), so the plan behind it doesn't jump around.
     addBtn?.addEventListener('click', () => {
-      addBtn.replaceWith(addForm(m, { shifts, watches }, () => {
-        section.querySelector('form').replaceWith(addBtn);
-        addBtn.focus();
-      }));
-      section.querySelector('form button[aria-pressed]')?.focus();
+      const dialog = h('dialog', { class: 'sheet', 'aria-labelledby': `add-for-${m.user_id}` });
+      const close = () => { dialog.close(); dialog.remove(); addBtn.focus(); };
+      dialog.append(addForm(m, { shifts, watches }, close));
+      dialog.addEventListener('cancel', close);
+      document.body.append(dialog);
+      dialog.showModal();
+      dialog.querySelector('form button[aria-pressed]')?.focus();
     });
     return section;
   }
@@ -222,7 +226,7 @@ export async function renderAssign({ param } = {}) {
     const formMsg = formMessage(); // problems show here, next to the Add button
 
     const form = h('form', { class: 'form assign-form', novalidate: true, 'aria-labelledby': `add-for-${m.user_id}` },
-      h('h3', { class: 'assign-form-h', id: `add-for-${m.user_id}` }, `New assignment for ${m.display_name}`),
+      h('h2', { class: 'assign-form-h', id: `add-for-${m.user_id}` }, `New assignment for ${m.display_name}`),
       h('div', { class: 'segmented', role: 'group', 'aria-label': 'Kind of assignment' }, kindBtns),
       shiftPart, watchPart,
       formMsg.el,
@@ -267,6 +271,7 @@ export async function renderAssign({ param } = {}) {
             const w = added.watches.at(-1);
             await addAndNote(m.user_id, 'watch', w, `Added: Team watch on ${w.team_number}, every match they play.`);
           }
+          close();
         } catch (err) { formMsg.show(friendlyError(err), 'error'); }
       });
     });

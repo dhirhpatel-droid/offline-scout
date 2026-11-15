@@ -2031,3 +2031,11 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
   .finish-check svg path { animation: check-draw 420ms 120ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
 }
 @media (prefers-reduced-motion: reduce) { .period.slide-next, .period.slide-prev { animation: none; } }
+/* A form in a sheet (Plan's Add form): the confirm sheet's look, taller,
+   scrolls if the phone is short. */
+dialog.sheet { max-height: calc(100dvh - var(--s6)); overflow-y: auto; }
+dialog.sheet .assign-form { margin: 0; padding: 0; border: 0; }
+dialog.sheet .assign-form-h { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1.05; }
+/* Group: a member's actions in a sheet */
+.member-more { margin-right: calc(-1 * var(--s3)); }
+.pill.danger-text { color: var(--danger); }
