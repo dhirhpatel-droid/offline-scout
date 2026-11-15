@@ -78,7 +78,12 @@ async function route(opts = {}) {
   try {
     const view = await render({ param });
     await addTabBar(view.el, name || 'home');
-    root.replaceChildren(view.el);
+    // A quick cross-fade between screens where the browser can (not for a
+    // quiet redraw of the same screen, and not when less motion is asked for).
+    const swap = () => root.replaceChildren(view.el);
+    if (!quiet && document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      await document.startViewTransition(swap).updateCallbackDone;
+    } else swap();
     cleanup = view.cleanup ?? null;
     if (quiet) {
       window.scrollTo(0, scrollY);

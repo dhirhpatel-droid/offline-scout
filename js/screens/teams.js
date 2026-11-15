@@ -79,8 +79,17 @@ export async function renderTeams() {
   const scouted = rows.filter((r) => r.scouted).length;
 
   const table = h('table', { class: 'teams-table', style: `--cols: ${columns.length}` });
+  // Find a team: type a number to narrow the table (faster than scrolling
+  // 30-60 rows); an exact match opens that team when you press Go.
+  let find = '';
+  const findInput = h('input', { class: 'input find-input', type: 'search', inputmode: 'numeric', autocomplete: 'off',
+    placeholder: 'Find a team', 'aria-label': 'Find a team by number' });
+  findInput.addEventListener('input', () => { find = findInput.value.replace(/\D/g, ''); draw(); });
+  findInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && rows.some((r) => String(r.team) === find)) location.hash = `#team/${find}`;
+  });
   function draw() {
-    const sorted = sortRows(rows, sort.key, sort.dir ?? undefined);
+    const sorted = sortRows(rows, sort.key, sort.dir ?? undefined).filter((r) => !find || String(r.team).includes(find));
     const dir = sort.dir ?? (sort.key === 'team' ? 'asc' : 'desc');
     fill(table, 
       h('caption', { class: 'visually-hidden' }, `Teams at ${ev.name}. Matches: how many matches your group scouted. Tap a column heading to sort.`),
@@ -132,6 +141,7 @@ export async function renderTeams() {
         lastSyncAt ? ` As of ${timeAgo(lastSyncAt)}.` : ' Not synced yet: only what’s on this phone.',
       ].join('')),
       noEvent ? h('p', { class: 'plain teams-note' }, `${noEvent} saved ${noEvent === 1 ? 'match isn’t' : 'matches aren’t'} counted here: ${noEvent === 1 ? 'it was' : 'they were'} scouted before your event was picked.`) : null,
+      findInput,
       wrap,
       h('details', { class: 'help-item teams-help' },
         h('summary', {}, h('span', {}, 'What the columns mean'), icon('next', 18)),

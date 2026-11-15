@@ -1995,3 +1995,20 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 .assign-member > .pill.secondary.block { display: inline-flex; width: auto; min-height: var(--tap-sm); margin-top: var(--s2); }
 /* Install tip and the Add form: on the grid line too. */
 .install-tip:not(.first), .assign-form { padding: var(--s4) 0; background: none; border-radius: 0; border-top: var(--rule) solid var(--line); border-bottom: var(--rule) solid var(--line); }
+/* Home: the event at a glance (under the cover, before your Assignments) */
+.glance { display: grid; gap: var(--s1); padding: var(--s4) 0; border-bottom: var(--rule) solid var(--line); }
+.glance-event { font-size: var(--fs-xl); font-weight: 800; font-stretch: 75%; line-height: 1.1; }
+.glance-now { color: var(--text-2); font-weight: 600; }
+.glance-progress { display: grid; gap: var(--s2); margin-top: var(--s2); color: inherit; text-decoration: none; min-height: var(--tap-sm); align-content: center; }
+.glance-count { font-weight: 700; }
+.glance-count .num { font-size: var(--fs-xl); font-weight: 800; }
+.glance-bar { height: 6px; border-radius: var(--pill); background: var(--surface-2); overflow: hidden; }
+.glance-bar > span { display: block; height: 100%; background: var(--text); border-radius: inherit; }
+.glance .status { margin-top: var(--s2); }
+.glance:only-child, .content > .glance:first-child { padding-top: var(--s4); }
+/* Teams: Find a team */
+.find-input { margin: var(--s3) 0 var(--s2); }
+/* Screen changes: a short cross-fade (js/app.js). The tab bar stays still. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 150ms; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.tabbar { view-transition-name: tabbar; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }

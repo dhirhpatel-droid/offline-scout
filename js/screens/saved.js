@@ -45,7 +45,7 @@ export async function renderSaved({ param }) {
         h('h2', {}, everyone ? 'No matches from your group yet' : 'No matches yet'),
         h('p', {}, everyone
           ? 'Matches your scouts save show up here once their phones have had signal.'
-          : 'Every match you save shows up here, newest first. They stay on this phone even with no signal.'),
+          : 'Matches you save show up here, even with no signal.'),
         everyone ? null : h('a', { class: 'pill', href: '#match' }, 'Start scouting'));
 
   // Footer: where my matches are, and a way to send now that says what happened.
