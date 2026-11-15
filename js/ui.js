@@ -119,11 +119,59 @@ export function offlineNote(text) {
   return h('p', { class: 'offline-note', role: 'note' }, icon('device', 18), h('span', {}, text));
 }
 
-// The standard top bar: Back (to where you came from) and the screen's name.
-export function topbar(title, backTo) {
+// ---------- The shared pieces every screen is built from ----------
+// There are two kinds of header, one kind of list row and one kind of empty
+// state. Screens use these so edges, columns and spacing match everywhere.
+
+// Title bar: Back (to where you came from) and the screen's name. On a tab's
+// own screen the app removes Back (js/app.js), leaving a big title.
+// `end` is an optional control on the right (Home's account icon).
+export function topbar(title, backTo, end = null) {
   return h('header', { class: 'topbar' },
-    h('a', { class: 'icon-btn', href: backTo, 'aria-label': 'Back' }, icon('back')),
-    h('h1', { tabindex: '-1' }, title));
+    backTo ? h('a', { class: 'icon-btn', href: backTo, 'aria-label': 'Back' }, icon('back')) : null,
+    h('h1', { tabindex: '-1' }, title),
+    end);
+}
+
+// Cover: the big block at the top of a screen that is about one thing (the
+// next match, a Team, the Group). `top` is the row above the big number:
+// Back + a small title, or the wordmark + an icon. Everything after goes in.
+export function cover({ alliance = null, cls = '', top = null, title = null, back = null, end = null }, ...body) {
+  const topRow = top ?? h('div', { class: 'now-top' },
+    back ? h('a', { class: 'icon-btn', href: back, 'aria-label': 'Back' }, icon('back')) : null,
+    title ? h('span', { class: 'now-top-title', 'aria-hidden': 'true' }, title) : null,
+    end);
+  return h('section', { class: `now ${cls}`.trim(), 'data-alliance': alliance ?? 'none' }, topRow, ...body);
+}
+
+// A list row: 64px, a divider under it. Columns are fixed so rows line up:
+//   lead   – what sits in the first column (a match code, a plate, nothing)
+//   title  – the main text (a string or elements)
+//   sub    – one quieter line under it
+//   end    – the right-hand side: a number, a word, buttons, or (href) a chevron
+//   href / onclick – the whole row opens something
+// Pass `leadKind: 'code' | 'plate'` so the first column has a fixed width.
+export function row({ lead = null, leadKind = null, title, sub = null, end = null, href = null, onclick = null, cls = '', attrs = {} } = {}) {
+  const inner = [
+    lead != null ? h('span', { class: `row-lead${leadKind ? ` row-lead-${leadKind}` : ''}` }, lead) : null,
+    h('span', { class: 'row-main' }, h('span', { class: 'title' }, title), sub ? h('span', { class: 'sub' }, sub) : null),
+    href && end == null ? icon('next', 20) : end != null ? h('span', { class: 'row-end' }, end) : null,
+  ];
+  const classes = `row${lead != null ? ' has-lead' : ''}${cls ? ` ${cls}` : ''}`;
+  if (href) return h('a', { class: classes, href, ...attrs }, ...inner);
+  if (onclick) return h('button', { class: classes, type: 'button', onclick, ...attrs }, ...inner);
+  return h('div', { class: classes, ...attrs }, ...inner);
+}
+
+// A list of rows (the <ul> every list uses).
+export const rows = (...items) => h('ul', { class: 'rows' }, items.flat().filter(Boolean).map((r) => h('li', {}, r)));
+
+// Nothing here yet: a heading, one short line, and maybe one thing to do.
+export function emptyState(title, text = null, action = null) {
+  return h('div', { class: 'empty-state' },
+    h('h2', {}, title),
+    text ? h('p', {}, text) : null,
+    action);
 }
 
 // An alliance station sign: "Red 1" on the alliance colour, square-cornered
