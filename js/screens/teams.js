@@ -209,8 +209,10 @@ export async function renderTeam({ param }) {
   // How many of this Team's Submissions those checks are about: the averages
   // below include them, and the Lead should know.
   const flagged = new Set(mineChecks.flatMap((c) => c.subs).filter((id) => byId.get(id)?.summary?.team === team)).size;
-  const checksEl = mineChecks.length ? h('section', { class: 'team-checks' },
-    h('h2', { class: 'section-h' }, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'}`),
+  // The team's data checks, folded under the averages (the numbers come
+  // first; the checks open in place when the Lead wants them).
+  const checksEl = mineChecks.length ? h('details', { class: 'team-list team-checks' },
+    h('summary', {}, `${mineChecks.length} data ${mineChecks.length === 1 ? 'check' : 'checks'} about this team`, icon('next', 18)),
     h('ul', { class: 'checks' }, mineChecks.map((c) => h('li', { class: `check ${c.kind}` },
       h('h3', { class: 'check-title' }, c.title), checkBody(c),
       checkButtons(c, byId, okButton(c, byId, group.id, ok))))),
@@ -273,7 +275,7 @@ export async function renderTeam({ param }) {
       !ev ? h('p', { class: 'plain' }, 'Pick your event to see this team’s matches.') : null,
       // Nothing scouted yet: say so first, not at the very bottom.
       !mine.length && ev ? emptyState('Not scouted yet', 'No one in your group has scouted this team here.') : null,
-      checksEl, averages, schedule, details, list,
+      averages, checksEl, schedule, details, list,
       // Straight to Assignments with this team ready for a Team watch.
       isLead(group) ? h('a', { class: 'pill secondary block team-plan', href: `#assign/${team}` }, `Plan who watches ${team}`, icon('next', 20)) : null,
     ),

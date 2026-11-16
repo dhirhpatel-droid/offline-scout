@@ -22,7 +22,7 @@
   --surface: #1a1a1e;
   --surface-2: #27272c;
   --line: #36363d;
-  --control-line: #6b6b75; /* outlines of buttons: 3:1 against --bg (WCAG 1.4.11) */
+  --control-line: #77777f; /* outlines of buttons: ≥ 3:1 on --bg, --surface and --surface-2 (WCAG 1.4.11) */
   --control-line-strong: #82828c; /* outlines on --surface / --surface-2: ≥ 3:1 there too */
   --text: #ffffff;
   --text-2: #b9b9c2;

@@ -82,6 +82,12 @@ export async function renderChecks() {
     return h('section', {},
       h('h2', { class: 'section-h' }, `${title} (${mine.length})`),
       h('p', { class: 'plain checks-about' }, about),
+      // Several of one kind that are all fine (say, a wrong team typed the
+      // same way all day): mark them in one tap, still undoable one by one.
+      mine.length > 1 ? h('button', { class: 'small-btn checks-all', type: 'button', onclick: async () => {
+        await setSetting(`checksOk:${group.id}`, [...ok, ...mine.map((c) => checkKey(c, byId))]);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      } }, icon('check', 18), `Looks right: all ${mine.length}`) : null,
       h('ul', { class: 'checks' }, mine.map((c) => item(c, true, true))));
   });
 

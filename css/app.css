@@ -369,6 +369,8 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
 .switch-pos { font-size: var(--fs-sm); font-weight: 600; }
 
 .team-switch button[aria-current='true'] { background: var(--on-alliance); color: var(--alliance); }
+/* The other team's card: filled with its own alliance colour */
+.team-switch button:not([aria-current='true']) { background: var(--alliance); }
 
 /* Home: two Teams in your next match ("23810 + 16012") needs a smaller number */
 .now-hero.two { font-size: var(--fs-hero); }
@@ -752,16 +754,20 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
 .counter {
   display: grid;
   grid-template-columns: 1fr var(--tap) var(--col-code) var(--tap-lg);
-  grid-template-areas: "label minus value plus" "hint hint hint hint";
+  grid-template-areas: "label minus value plus" "hint minus value plus";
+  grid-template-rows: auto auto;
   align-items: center;
   gap: 0 var(--s2);
 }
-.counter > div:first-child { grid-area: label; }
+/* The label and its hint stack in the first column, like a Yes/No tile;
+   the buttons span both lines, centred. */
+.counter > div:first-child { grid-area: label; align-self: end; }
 .counter > .round:not(.add) { grid-area: minus; }
 .counter > .value { grid-area: value; }
 .counter > .round.add { grid-area: plus; }
 .counter > div:first-child .field-hint { display: none; }
-.counter > .field-hint { grid-area: hint; margin-top: var(--s1); }
+.counter > .field-hint { grid-area: hint; align-self: start; margin-top: 2px; }
+.counter > div:first-child:last-of-type { grid-row: 1 / 3; align-self: center; }
 
 .counter .value {
   font-size: var(--fs-num);
@@ -2057,3 +2063,18 @@ dialog.sheet .assign-form-h { font-size: var(--fs-xl); font-weight: 800; font-st
 .group { margin-top: var(--s6); }
 .group h2 { margin-bottom: var(--s2); }
 .setting-note { margin-top: var(--s2); }
+.coming-state.missed { font-weight: 700; color: var(--text-2); }
+.coming-state.started { color: var(--text); }
+
+/* Data checks: the buttons sit in one row (wrapping only when they must) */
+.check-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.check-open { display: contents; }
+.checks-all { display: inline-flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); }
+/* Plan: "Remove" ends on the grid line */
+.assign-member .small-btn.plain-remove { margin-right: calc(-1 * var(--s3)); }
+/* Event: each key item keeps its chip and its words together */
+.schedule-key { flex-wrap: wrap; row-gap: var(--s2); }
+.schedule-key-item { display: inline-flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+.schedule-key-played .bumper.mine, .schedule tr.played .bumper.mine { box-shadow: none; outline: var(--border) dashed var(--text); outline-offset: calc(-1 * var(--border)); }
+/* Group: no empty rule after the members list */
+.group-footer { border-top: 0; }

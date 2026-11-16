@@ -320,7 +320,8 @@ export async function renderAssign({ param } = {}) {
           onclick: (e) => fillOpen(row, p, members, e.currentTarget) }, plate));
       }
       return h('td', {}, h('span', { class: `bumper ${color}` },
-        h('span', { 'aria-hidden': 'true' }, ids.map((id) => labels.get(id) ?? '?').join(' ')),
+        // Two Scouts on one station: "Dhir +1", so it fits the cell.
+        h('span', { 'aria-hidden': 'true' }, ids.length > 1 ? `${labels.get(ids[0]) ?? '?'} +${ids.length - 1}` : (labels.get(ids[0]) ?? '?')),
         h('span', { class: 'visually-hidden' }, ids.map(nameOf).join(' and '))));
     };
     const showAllBtn = more ? h('button', { class: 'pill secondary block', type: 'button', onclick: () => {

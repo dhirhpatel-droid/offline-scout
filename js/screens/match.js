@@ -15,7 +15,7 @@ import { renderField } from '../fields.js';
 import { loadConfig } from '../config.js';
 import { pointsBySection } from '../scoring.js';
 import {
-  newSubmission, refresh, missingRequired, nextMatchCarry, positionLabel, matchCode, syncStatus,
+  newSubmission, refresh, missingRequired, allianceOf, nextMatchCarry, positionLabel, matchCode, syncStatus,
 } from '../submissions.js';
 import * as db from '../db.js';
 import { currentGroup, cachedProfile, currentUser } from '../account.js';
@@ -115,7 +115,9 @@ export async function renderMatch({ param }) {
   if (handover?.tab) current = Math.max(0, tabSections.findIndex((t) => t.id === handover.tab));
   // The two Teams become the big numbers (the plain team number is then only
   // for screen readers), with the position under each.
-  const pill = (sub, active) => h('button', { type: 'button', ...(active ? { 'aria-current': 'true' } : {}),
+  // Each card wears its own team's alliance colour (a Blue 2 team is blue,
+  // even on a red header).
+  const pill = (sub, active) => h('button', { type: 'button', 'data-alliance': allianceOf(sub.summary.position) ?? 'none', ...(active ? { 'aria-current': 'true' } : {}),
     'aria-label': active ? `${sub.summary.team ?? 'This team'}, ${positionLabel(sub.summary.position)}, showing now`
       : `Switch to ${sub.summary.team ?? 'the other team'}, ${positionLabel(sub.summary.position)}` },
     h('span', { class: 'num switch-team' }, sub.summary.team ?? '?'),

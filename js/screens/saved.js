@@ -68,7 +68,7 @@ export async function renderSaved({ param }) {
   }));
 
   const el = h('div', { class: 'screen' },
-    topbar(everyone ? 'Everyone’s matches' : 'Matches', backHref('#home')),
+    topbar('Matches', backHref('#home')),
     h('main', { class: 'content' }, switcher, qrRow, body),
     bar,
     h('footer', { class: 'bottombar' },

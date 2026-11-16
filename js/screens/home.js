@@ -134,16 +134,25 @@ function myAssignments(plan, next) {
   if (!plan.assigned) return null;
   const todo = plan.groups.filter((g) => !g.saved);
   const saved = plan.groups.filter((g) => g.saved);
+  // One word per row, never two that disagree:
+  //   Saved   – this phone has your saved match for it
+  //   Started – it's the match you're scouting right now (unfinished)
+  //   Missed  – the results say it was played, and you didn't save it
+  //   To do   – still to come
+  const stateOf = (g) => (g.saved ? 'Saved'
+    : next.kind === 'draft' && next.code === g.code ? 'Started'
+      : g.played ? 'Missed' : 'To do');
   const row = (g) => {
+    const state = stateOf(g);
     const go = h('button', { class: 'coming-row', type: 'button',
-      'aria-label': `${g.saved ? 'Saved' : 'To do'}: ${g.code}, ${g.items.map((a) => `${positionLabel(a.position)}${a.team ? ` team ${a.team}` : ''}`).join(' and ')}. Scout it.` },
+      'aria-label': `${state}: ${g.code}, ${g.items.map((a) => `${positionLabel(a.position)}${a.team ? ` team ${a.team}` : ''}`).join(' and ')}. Scout it.` },
       h('span', { class: 'coming-when' },
         h('span', { class: 'num coming-code' }, g.code),
-        h('span', { class: 'coming-time' }, next.kind === 'assigned' && g.code === next.code ? 'Next' : g.played && !g.saved ? 'Played' : g.time ?? '')),
+        h('span', { class: 'coming-time' }, next.kind === 'assigned' && g.code === next.code ? 'Next' : g.time ?? '')),
       h('span', { class: 'coming-what' }, g.items.map((a) => h('span', { class: 'coming-item' },
         station(positionLabel(a.position), a.position.replace(/\d/, '')),
         a.team ? bumper(a.team, a.position.replace(/\d/, ''), { mine: true }) : h('span', { class: 'coming-tbd' }, 'team not out yet')))),
-      h('span', { class: `coming-state${g.saved ? ' saved' : ''}` }, g.saved ? [icon('check', 18), 'Saved'] : 'To do', icon('next', 18)));
+      h('span', { class: `coming-state ${state.toLowerCase().replace(' ', '-')}` }, state === 'Saved' ? icon('check', 18) : null, state, icon('next', 18)));
     go.addEventListener('click', async () => {
       // An unfinished match would be replaced: ask first.
       if (next.kind === 'draft') {
