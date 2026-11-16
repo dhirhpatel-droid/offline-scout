@@ -384,11 +384,9 @@ export async function renderMatch({ param }) {
       } }, `${guests.map((g) => g.label).join(', ')} is further down`, icon('next', 16));
       host.splice(section.note ? 2 : 1, 0, pointer);
     }
-    // Two Teams in this match: the counters below are for this one.
-    const scoringFor = pair && i > 0 ? h('p', { class: 'scoring-for' },
-      bumper(submission.summary.team, submission.summary.alliance),
-      `Scoring ${submission.summary.team ?? 'this team'} · ${positionLabel(submission.summary.position)}`) : null;
-    fill(panel, scoringFor, ...host, ...guests.flatMap((g) => sectionBlock(g, true)));
+    // (Two Teams in this match: the filled card in the header already says
+    // which one these counters are for, so nothing is repeated here.)
+    fill(panel, ...host, ...guests.flatMap((g) => sectionBlock(g, true)));
     if (i === 0 && submission.summary.scout) {
       panel.append(h('p', { class: 'plain scouting-as' }, `Scouting as ${submission.summary.scout}`));
     }

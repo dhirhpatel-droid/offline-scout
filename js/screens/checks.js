@@ -71,6 +71,15 @@ export async function renderChecks() {
   const ok = await okKeys(group.id);
   const checks = openChecks(all, ok, byId);
   const marked = all.filter((c) => !checks.includes(c));
+  // Just marked several as right in one tap? Say so, with Undo (once).
+  const bulk = await getSetting('checksUndo');
+  if (bulk) await setSetting('checksUndo', null);
+  const undoNote = bulk?.groupId === group.id ? h('div', { class: 'form-message info assign-note', role: 'status' },
+    h('span', {}, `Marked ${bulk.keys.length} as right.`),
+    h('button', { class: 'small-btn', type: 'button', onclick: async () => {
+      await setSetting(`checksOk:${group.id}`, ok.filter((k) => !bulk.keys.includes(k)));
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } }, 'Undo')) : null;
   const item = (c, on, short) => h('li', { class: `check ${c.kind}` },
     h('h3', { class: 'check-title' }, short ? c.short ?? c.title : c.title),
     checkBody(c),
@@ -85,7 +94,9 @@ export async function renderChecks() {
       // Several of one kind that are all fine (say, a wrong team typed the
       // same way all day): mark them in one tap, still undoable one by one.
       mine.length > 1 ? h('button', { class: 'small-btn checks-all', type: 'button', onclick: async () => {
-        await setSetting(`checksOk:${group.id}`, [...ok, ...mine.map((c) => checkKey(c, byId))]);
+        const keys = mine.map((c) => checkKey(c, byId));
+        await setSetting(`checksOk:${group.id}`, [...ok, ...keys]);
+        await setSetting('checksUndo', { groupId: group.id, keys });
         window.dispatchEvent(new HashChangeEvent('hashchange'));
       } }, icon('check', 18), `Looks right: all ${mine.length}`) : null,
       h('ul', { class: 'checks' }, mine.map((c) => item(c, true, true))));
@@ -95,6 +106,7 @@ export async function renderChecks() {
   const el = h('div', { class: 'screen' },
     header,
     h('main', { class: 'content' },
+      undoNote,
       h('p', { class: 'group-lede' }, checks.length
         ? `${ev.name} · ${checks.length} to look at`
         : `${ev.name} · nothing looks off`),

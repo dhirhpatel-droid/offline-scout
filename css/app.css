@@ -225,14 +225,14 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
   display: flex;
   gap: var(--s1);
   padding: var(--s1);
-  border-radius: 999px;
+  border-radius: var(--pill);
   background: var(--tab-track);
 }
 
 .tabs button {
   flex: 1;
   min-height: var(--tap);
-  border-radius: 999px;
+  border-radius: var(--pill);
   font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--on-alliance);
@@ -314,7 +314,7 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
   gap: var(--s1);
   min-height: var(--tap);
   padding: 0 var(--s3);
-  border-radius: 999px;
+  border-radius: var(--pill);
   font-weight: 700;
 }
 
@@ -513,7 +513,7 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
   text-decoration: none;
 }
 
-.tab-mark { display: grid; place-items: center; width: min(56px, 100%); height: 32px; border-radius: 999px; }
+.tab-mark { display: grid; place-items: center; width: min(56px, 100%); height: 32px; border-radius: var(--pill); }
 
 .tab[aria-current='page'] { color: var(--text); font-weight: 800; }
 
@@ -596,7 +596,7 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
   gap: var(--s2);
   min-height: var(--tap);
   padding: 0 var(--s5);
-  border-radius: 999px;
+  border-radius: var(--pill);
   font-weight: 700;
   font-size: var(--fs-md);
   background: var(--primary-bg);
@@ -679,7 +679,7 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
 .small-btn {
   min-height: var(--tap);
   padding: 0 var(--s3);
-  border-radius: 999px;
+  border-radius: var(--pill);
   border: 2px solid var(--control-line-strong); /* ≥ 3:1 on its own grey fill */
   background: var(--surface-2);
   font-weight: 700;
@@ -717,7 +717,7 @@ html:has(.match-head) { scroll-padding-top: 220px; scroll-padding-bottom: 100px;
 .link-btn.on-alliance { color: var(--on-alliance); min-height: var(--tap); margin-top: var(--s1); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 /* "Looks right": its own row under the Open buttons, a real (secondary) button with a check, not grey text */
-.check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: 999px; color: var(--text); font-weight: 700; }
+.check-ok { justify-self: start; display: inline-flex; align-items: center; gap: var(--s2); min-height: 48px; padding: 0 var(--s3); border: 2px solid var(--control-line-strong); border-radius: var(--pill); color: var(--text); font-weight: 700; }
 
 .install-actions .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
 
@@ -1153,7 +1153,7 @@ a.row { color: inherit; }
   gap: var(--s2);
   margin-top: var(--s4);
   padding: var(--s2) var(--s3);
-  border-radius: 999px;
+  border-radius: var(--pill);
   background: var(--tab-track);
   font-size: var(--fs-sm);
   font-weight: 700;
@@ -1254,7 +1254,7 @@ a.row { color: inherit; }
 
 .team-match-games { display: block; font-size: var(--fs-xs); font-weight: 600; font-stretch: 100%; color: var(--text-2); }
 
-.team-matches li.off-schedule { grid-template-columns: 3.5rem 1fr auto; }
+.team-matches .station { min-width: var(--col-plate); justify-content: center; }
 
 .team-match-when.off { color: var(--text); font-weight: 600; }
 
@@ -1799,7 +1799,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 
 .qr-video { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 
-.qr-aim { position: absolute; inset: 18%; border: 3px solid var(--on-alliance); border-radius: var(--radius); box-shadow: 0 0 0 999px var(--aim-dim); }
+.qr-aim { position: absolute; inset: 18%; border: 3px solid var(--on-alliance); border-radius: var(--radius); box-shadow: 0 0 0 var(--pill) var(--aim-dim); }
 
 .qr-status { font-weight: 700; min-height: 1.4em; }
 
@@ -1857,7 +1857,7 @@ dialog .actions { display: grid; gap: var(--s2); margin-top: var(--s5); }
 .how-count { font-size: var(--fs-2xl); line-height: 1; min-width: 1ch; text-align: center; }
 
 /* The save line, as a chip */
-.how-saved { display: inline-flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s3) var(--s1) var(--s2); border-radius: 999px; background: var(--surface); font-weight: 800; }
+.how-saved { display: inline-flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s3) var(--s1) var(--s2); border-radius: var(--pill); background: var(--surface); font-weight: 800; }
 
 /* A results row */
 .how-result { display: grid; gap: 2px; }
@@ -2078,3 +2078,9 @@ dialog.sheet .assign-form-h { font-size: var(--fs-xl); font-weight: 800; font-st
 .schedule-key-played .bumper.mine, .schedule tr.played .bumper.mine { box-shadow: none; outline: var(--border) dashed var(--text); outline-offset: calc(-1 * var(--border)); }
 /* Group: no empty rule after the members list */
 .group-footer { border-top: 0; }
+/* A link on a neutral cover (light mode, no alliance): the text colour, not white */
+.now[data-alliance='none'] .link-btn.on-alliance { color: var(--text); }
+/* Back arrows: the arrow itself (drawn 8px inside its 24px box) sits on the grid line */
+:is(.topbar, .now-top, .row1) > .icon-btn:first-child { margin-left: calc(-1 * var(--gutter) - var(--s2)); }
+/* Data checks: every button on a check has the same text size */
+.check-actions .small-btn, .check-ok { font-size: var(--fs-sm); }

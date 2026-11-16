@@ -228,7 +228,7 @@ export async function renderTeam({ param }) {
         h('dt', { class: 'part-label' }, `Estimated, over ${row.matches} ${row.matches === 1 ? 'match' : 'matches'}`),
         h('dd', { class: 'part-value num' }, formatAvg(row.avg)))),
     flagged ? h('p', { class: 'plain teams-note flagged-note' },
-      `Includes ${flagged} ${flagged === 1 ? 'Submission' : 'Submissions'} with a data check above.`) : null) : null;
+      `Includes ${flagged} ${flagged === 1 ? 'Submission' : 'Submissions'} with a data check (open them below).`) : null) : null;
 
   // Every field in the Game config, summed up.
   const summary = mine.length ? fieldSummary(config, mine) : [];
@@ -245,25 +245,30 @@ export async function renderTeam({ param }) {
 
   const schedule = matches.length || offSchedule.length ? h('section', {},
     h('h2', { class: 'section-h' }, 'Matches here'),
-    h('ul', { class: 'team-matches' }, matches.map((m) => {
-      const pos = positionOf(m, team);
-      const n = scoutedIn(m);
-      const pts = perMatchPoints(m);
-      const code = matchCode({ level: m.level, match: m.number });
-      return h('li', {},
-        h('span', { class: 'num team-match-code' }, code, m.games > 1 ? h('span', { class: 'team-match-games' }, `${m.games} games`) : null),
-        station(positionLabel(pos), pos.replace(/\d/, '')),
-        h('span', { class: 'team-match-when' }, outcome(m, pos, fieldScores(config, subs, m.level, m.number))),
-        h('span', { class: `team-match-scouted${n ? '' : ' none'}` },
-          pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : n ? 'No-show' : m.played ? 'Not scouted' : ''));
-    }),
-    offSchedule.map((m) => {
-      const pts = perMatchPoints(m);
-      return h('li', { class: 'off-schedule' },
-        h('span', { class: 'num team-match-code' }, matchCode({ level: m.level, match: m.number })),
-        h('span', { class: 'team-match-when off' }, `Not in ${team}’s schedule: check the match and team number`),
-        h('span', { class: 'team-match-scouted' }, pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : 'No-show'));
-    }))) : null;
+    // Every match in match order: scheduled ones and ones scouted for a
+    // match this team isn't in (shown with a "?" plate, so columns line up).
+    h('ul', { class: 'team-matches' }, [
+      ...matches.map((m) => ({ m, el: (() => {
+        const pos = positionOf(m, team);
+        const n = scoutedIn(m);
+        const pts = perMatchPoints(m);
+        const code = matchCode({ level: m.level, match: m.number });
+        return h('li', {},
+          h('span', { class: 'num team-match-code' }, code, m.games > 1 ? h('span', { class: 'team-match-games' }, `${m.games} games`) : null),
+          station(positionLabel(pos), pos.replace(/\d/, '')),
+          h('span', { class: 'team-match-when' }, outcome(m, pos, fieldScores(config, subs, m.level, m.number))),
+          h('span', { class: `team-match-scouted${n ? '' : ' none'}` },
+            pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : n ? 'No-show' : m.played ? 'Not scouted' : ''));
+      })() })),
+      ...offSchedule.map((m) => ({ m, el: (() => {
+        const pts = perMatchPoints(m);
+        return h('li', { class: 'off-schedule' },
+          h('span', { class: 'num team-match-code' }, matchCode({ level: m.level, match: m.number })),
+          station('?', null),
+          h('span', { class: 'team-match-when off' }, `Not in ${team}’s schedule`),
+          h('span', { class: 'team-match-scouted' }, pts != null ? h('span', { class: 'num team-match-pts' }, `${formatAvg(pts)} pts`) : 'No-show'));
+      })() })),
+    ].sort((a, b) => (a.m.level === b.m.level ? a.m.number - b.m.number : a.m.level === 'qual' ? -1 : 1)).map((x) => x.el))) : null;
 
   const list = mine.length ? h('section', {},
     h('h2', { class: 'section-h' }, 'Submissions'),
