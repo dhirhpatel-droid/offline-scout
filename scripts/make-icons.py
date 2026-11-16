@@ -1,3 +1,6 @@
+"""OLD: the first icon (two bars). The app icon now comes from brand/logo-square.svg
+and brand/logo-maskable.svg (rendered to icons/ with headless Chrome). Kept for history.
+"""
 """Draws the app icons into icons/. Run: python3 scripts/make-icons.py (needs Pillow).
 
 The mark is two rounded bars, one red and one blue, for the two alliances,
