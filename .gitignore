@@ -10,3 +10,7 @@ node_modules/
 .env
 .env.*
 .impeccable/critique/
+# The "In This Town" short (video project, not part of the app)
+in-this-town/
+*.mp4
+four-things/
