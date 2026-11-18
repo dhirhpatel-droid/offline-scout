@@ -923,56 +923,24 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
 
-/* Alliance position: a drawing of the field above the buttons; your robot lights up. */
-.field-map { margin-top: var(--s2); }
+/* Alliance position: the manual's field picture above the buttons; your robot lights up. */
+.field-map { position: relative; margin-top: var(--s2); border-radius: var(--radius-md); overflow: hidden; background: var(--qr-light); border: var(--rule) solid var(--line); }
 
-.field-map svg { display: block; width: 100%; height: auto; }
+.field-map img { display: block; width: 100%; height: auto; }
 
-.map-field { fill: var(--surface-2); stroke: var(--control-line-strong); stroke-width: 2; }
+.map-bot {
+  position: absolute; transform: translate(-50%, -50%);
+  padding: 2px var(--s1); border-radius: var(--radius-sm); border: var(--border) solid;
+  background: var(--qr-light); font-size: var(--fs-xs); font-weight: 800; white-space: nowrap; cursor: pointer;
+}
 
-.map-tiles line { stroke: var(--line); stroke-width: 1; }
+.map-bot[data-color='red'] { border-color: var(--red); color: var(--red); }
 
-.map-side[data-color='red'] { fill: var(--red); }
+.map-bot[data-color='blue'] { border-color: var(--blue); color: var(--blue); }
 
-.map-side[data-color='blue'] { fill: var(--blue); }
+.map-bot.picked[data-color='red'] { background: var(--red); color: var(--on-alliance); }
 
-.map-side-label { fill: var(--on-alliance); font: 700 13px var(--font); text-anchor: middle; dominant-baseline: middle; }
-
-.map-half[data-color='red'] { fill: var(--red); opacity: .12; }
-
-.map-half[data-color='blue'] { fill: var(--blue); opacity: .12; }
-
-.map-midline { stroke: var(--control-line-strong); stroke-width: 1.5; stroke-dasharray: 4 4; }
-
-.map-frame { stroke: var(--text-2); stroke-width: 3; stroke-linecap: round; }
-
-.map-hive-bar { fill: var(--text-3); }
-
-.map-pivot { fill: var(--text); }
-
-.map-hive[data-color='red'] .map-cell { fill: var(--red); stroke: var(--text); stroke-width: 1.5; }
-
-.map-hive[data-color='blue'] .map-cell { fill: var(--blue); stroke: var(--text); stroke-width: 1.5; }
-
-.map-tip, .map-tip-head { fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-.map-note { fill: var(--text-2); font: 700 12px var(--font); text-anchor: middle; }
-
-.map-bot { cursor: pointer; }
-
-.map-bot rect { fill: var(--bg); stroke-width: 3; }
-
-.map-bot[data-color='red'] rect { stroke: var(--red); }
-
-.map-bot[data-color='blue'] rect { stroke: var(--blue); }
-
-.map-bot text { fill: var(--text-2); font: 700 14px var(--font); text-anchor: middle; }
-
-.map-bot.picked[data-color='red'] rect { fill: var(--red); }
-
-.map-bot.picked[data-color='blue'] rect { fill: var(--blue); }
-
-.map-bot.picked text { fill: var(--on-alliance); }
+.map-bot.picked[data-color='blue'] { background: var(--blue); color: var(--on-alliance); }
 
 /* Mine / Everyone on the matches list */
 .list-switch { margin: var(--s2) 0 var(--s3); }

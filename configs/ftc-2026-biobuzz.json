@@ -11,11 +11,29 @@
     ],
     "robotsPerAlliance": 2,
     "fieldMap": {
-      "left": "red",
-      "right": "blue"
+      "image": "configs/ftc-2026-biobuzz-field.png",
+      "source": "BIOBUZZ Competition Manual, Figure 9-2",
+      "spots": {
+        "red1": [
+          31,
+          32
+        ],
+        "red2": [
+          31,
+          70
+        ],
+        "blue1": [
+          69,
+          32
+        ],
+        "blue2": [
+          69,
+          70
+        ]
+      }
     }
   },
-  "notes": "FLOWERS score only in the last minute (G410), so FLOWER scoring is on the Endgame tab (1:00). CELLS still score in the last minute, so Endgame has CELL rows too. POLLEN and NECTAR are counted apart (some robots only handle one). FLOWER ownership is alliance-level: scouts count only this robot's pieces that ended in a FLOWER its alliance owns, and its Bottom NECTAR bonuses. Penalty points go to the other alliance, so they are recorded but not taken off. The field map in the position picker (alliance.fieldMap) shows where each station stands.",
+  "notes": "FLOWERS score only in the last minute (G410), so FLOWER scoring is on the Endgame tab (1:00). CELLS still score in the last minute, so Endgame has CELL rows too. POLLEN and NECTAR are counted apart (some robots only handle one). FLOWER ownership is alliance-level: scouts count only this robot's pieces that ended in a FLOWER its alliance owns, and its Bottom NECTAR bonuses. Penalty points go to the other alliance, so they are recorded but not taken off. The position picker shows the field picture from the manual (alliance.fieldMap.image) with each robot's spot as % of its width and height (spots).",
   "sections": [
     {
       "id": "pre",

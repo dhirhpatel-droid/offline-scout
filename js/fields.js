@@ -124,59 +124,20 @@ const RENDERERS = {
       }
       return row;
     });
-    // With a field map in the config, a drawing of the field sits above the
-    // buttons and the robot you pick lights up, so a Scout can see which robot
-    // is theirs. Tapping a robot in the drawing picks it too (the buttons stay
-    // for screen readers). Drawn from the BIOBUZZ manual, section 9: a 6 by 6
-    // field of tiles; seen from the audience, red's ALLIANCE AREA is on the
-    // left and blue's on the right, and columns A to C are red's side. The
-    // HIVE structure in the middle holds a red HIVE and a blue HIVE, each with
-    // a CELL toward the audience and one at the far end, and each HIVE tips
-    // both ways on its pivot.
+    // With a field map in the config, the game manual's top-down picture of
+    // the field sits above the buttons, with a marker for each robot. The one
+    // you pick lights up, so a Scout can see which robot is theirs. Tapping a
+    // marker picks it too (the buttons stay for screen readers). Marker spots
+    // are in the config as % of the picture's width and height.
     const map = config.alliance.fieldMap;
     let drawing = null;
-    if (map?.left && map?.right) {
-      const all = alliancePositions(config);
-      const sideOf = (color) => all.filter((p) => allianceOf(p) === color);
-      const name = (color) => positionLabel(sideOf(color)[0]).replace(/\s*\d+$/, '');
-      const X0 = 60, SIZE = 210, T = SIZE / 6; // field left edge, width, one tile
-      const tiles = [1, 2, 3, 4, 5].map((i) => `<line x1="${X0 + i * T}" y1="0" x2="${X0 + i * T}" y2="${SIZE}"/>`
-        + `<line x1="${X0}" y1="${i * T}" x2="${X0 + SIZE}" y2="${i * T}"/>`).join('');
-      const halves = `<rect class="map-half" data-color="${map.left}" x="${X0}" y="0" width="${SIZE / 2}" height="${SIZE}"/>`
-        + `<rect class="map-half" data-color="${map.right}" x="${X0 + SIZE / 2}" y="0" width="${SIZE / 2}" height="${SIZE}"/>`;
-      // a HIVE: a bar with a CELL at each end, a pivot in the middle, and a
-      // two-way arrow on its outer side to show it tips either way
-      const hive = (color, cx, out) => {
-        const top = 58, bot = 152, mid = (top + bot) / 2, ax = cx + out * 17;
-        return `<g class="map-hive" data-color="${color}">`
-          + `<rect class="map-hive-bar" x="${cx - 4}" y="${top}" width="8" height="${bot - top}" rx="4"/>`
-          + `<rect class="map-cell" x="${cx - 11}" y="${top - 6}" width="22" height="18" rx="4"/>`
-          + `<rect class="map-cell" x="${cx - 11}" y="${bot - 12}" width="22" height="18" rx="4"/>`
-          + `<circle class="map-pivot" cx="${cx}" cy="${mid}" r="4"/>`
-          + `<path class="map-tip" d="M ${ax} ${top + 18} Q ${ax + out * 10} ${mid} ${ax} ${bot - 18}"/>`
-          + `<path class="map-tip-head" d="M ${ax - 4} ${top + 25} L ${ax} ${top + 17} L ${ax + 4} ${top + 25} M ${ax - 4} ${bot - 25} L ${ax} ${bot - 17} L ${ax + 4} ${bot - 25}"/>`
-          + `</g>`;
-      };
-      const cx = X0 + SIZE / 2;
-      const hives = `<line class="map-frame" x1="${cx - 15}" y1="${105}" x2="${cx + 15}" y2="${105}"/>`
-        + hive(map.left, cx - 15, -1) + hive(map.right, cx + 15, 1)
-        + `<text class="map-note" x="${cx}" y="${40}">HIVES</text>`;
-      // robots start on their own side, against the wall nearest their drive team
-      const per = config.alliance.robotsPerAlliance, gap = SIZE / per;
-      const bots = [[map.left, X0 + 36], [map.right, X0 + SIZE - 36]].flatMap(([color, x]) => sideOf(color).map((pos, i) => {
-        const y = gap * i + gap / 2;
-        return `<g class="map-bot" data-color="${color}" data-value="${pos}" transform="translate(${x} ${y})">`
-          + `<rect x="-29" y="-19" width="58" height="38" rx="8"/><text y="5">${positionLabel(pos)}</text></g>`;
-      })).join('');
-      drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' });
-      drawing.innerHTML = `<svg viewBox="0 0 ${X0 * 2 + SIZE} ${SIZE + 24}" xmlns="http://www.w3.org/2000/svg">`
-        + `<rect class="map-side" data-color="${map.left}" x="0" y="0" width="${X0 - 6}" height="${SIZE}" rx="8"/>`
-        + `<rect class="map-side" data-color="${map.right}" x="${X0 + SIZE + 6}" y="0" width="${X0 - 6}" height="${SIZE}" rx="8"/>`
-        + `<text class="map-side-label" transform="translate(${(X0 - 6) / 2 + 2} ${SIZE / 2}) rotate(-90)">${name(map.left)} drive team</text>`
-        + `<text class="map-side-label" transform="translate(${X0 + SIZE + 6 + (X0 - 6) / 2 - 2} ${SIZE / 2}) rotate(90)">${name(map.right)} drive team</text>`
-        + `<rect class="map-field" x="${X0}" y="0" width="${SIZE}" height="${SIZE}" rx="6"/>${halves}<g class="map-tiles">${tiles}</g>`
-        + `<line class="map-midline" x1="${cx}" y1="0" x2="${cx}" y2="${SIZE}"/>`
-        + hives + `<text class="map-note" x="${cx}" y="${SIZE + 17}">Audience</text>${bots}</svg>`;
+    if (map?.image && map?.spots) {
+      const marks = alliancePositions(config).filter((pos) => map.spots[pos]).map((pos) => {
+        const [x, y] = map.spots[pos];
+        return h('span', { class: 'map-bot', 'data-color': allianceOf(pos), 'data-value': pos, style: `left:${x}%;top:${y}%` }, positionLabel(pos));
+      });
+      drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' },
+        h('img', { src: map.image, alt: '', width: '663', height: '422' }), ...marks);
       const show = () => drawing.querySelectorAll('.map-bot').forEach((g) => g.classList.toggle('picked', g.dataset.value === current));
       drawing.addEventListener('click', (e) => {
         const bot = e.target.closest('.map-bot');
