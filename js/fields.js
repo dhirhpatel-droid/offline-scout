@@ -136,8 +136,15 @@ const RENDERERS = {
         const [x, y] = map.spots[pos];
         return h('span', { class: 'map-bot', 'data-color': allianceOf(pos), 'data-value': pos, style: `left:${x}%;top:${y}%` }, positionLabel(pos));
       });
+      // Each alliance's drive team stands on its side of the field (seen from
+      // the audience), drawn as a band in its colour like the station signs.
+      const side = (color) => color && h('span', { class: 'map-side', 'data-color': color },
+        `${positionLabel(alliancePositions(config).find((p) => allianceOf(p) === color)).replace(/\s*\d+$/, '')} drive team`);
       drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' },
-        h('img', { src: map.image, alt: '', width: '663', height: '422' }), ...marks);
+        side(map.left),
+        h('div', { class: 'map-field' }, h('img', { src: map.image, alt: '', width: '560', height: '560' }), ...marks),
+        side(map.right),
+        h('span', { class: 'map-audience' }, 'Audience'));
       const show = () => drawing.querySelectorAll('.map-bot').forEach((g) => g.classList.toggle('picked', g.dataset.value === current));
       drawing.addEventListener('click', (e) => {
         const bot = e.target.closest('.map-bot');
