@@ -938,11 +938,23 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .map-side-label { fill: var(--on-alliance); font: 700 13px var(--font); text-anchor: middle; dominant-baseline: middle; }
 
-.map-hive { stroke: var(--text); stroke-width: 2; }
+.map-half[data-color='red'] { fill: var(--red); opacity: .12; }
 
-.map-hive[data-color='red'] { fill: var(--red); }
+.map-half[data-color='blue'] { fill: var(--blue); opacity: .12; }
 
-.map-hive[data-color='blue'] { fill: var(--blue); }
+.map-midline { stroke: var(--control-line-strong); stroke-width: 1.5; stroke-dasharray: 4 4; }
+
+.map-frame { stroke: var(--text-2); stroke-width: 3; stroke-linecap: round; }
+
+.map-hive-bar { fill: var(--text-3); }
+
+.map-pivot { fill: var(--text); }
+
+.map-hive[data-color='red'] .map-cell { fill: var(--red); stroke: var(--text); stroke-width: 1.5; }
+
+.map-hive[data-color='blue'] .map-cell { fill: var(--blue); stroke: var(--text); stroke-width: 1.5; }
+
+.map-tip, .map-tip-head { fill: none; stroke: var(--text-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 .map-note { fill: var(--text-2); font: 700 12px var(--font); text-anchor: middle; }
 
