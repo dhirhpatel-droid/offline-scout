@@ -155,10 +155,6 @@ form would not even open, so we lost scouting data when we needed it most.
   (5 each, max 4). Auto notes and Teleop notes added. Counters accept a config `max`. Test matches
   saved before v7 keep their FLOWER count under the old key (teleop.flower), so it no longer
   shows; no real event data existed yet.
-- **BIOBUZZ config v8 (Nov 18, 2026), from Justine (Lead):** POLLEN and NECTAR counted apart
-  (GARDEN and CELL rows), HIVE TIPs below them, CELL rows on Endgame too; Red/Blue final score and
-  foul counters replaced by "Penalty points caused". Alliance position picker shows a field map
-  (`alliance.fieldMap`, red left / blue right: check against the BIOBUZZ field).
 - **Next:** a real event; later items in docs/roadmap.md. Re-run the impeccable
   critique (two isolated reviewers) after every milestone.
 

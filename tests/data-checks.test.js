@@ -27,7 +27,7 @@ test('two Scouts far apart on points disagree; close ones don\'t', () => {
   assert.deepEqual(c.rows[0], { label: 'est. pts', values: [20, 60], total: true });
   assert.ok(c.rows.some((r) => r.label === 'Auto' && r.values.join() === '20,60'));
   assert.equal(c.subs.length, 2);
-  const close = [sub(1, 1, { 'teleop.gardenPollen': 1 }), sub(1, 1, { 'teleop.gardenPollen': 3 })]; // 1 vs 3
+  const close = [sub(1, 1, { 'teleop.garden': 1 }), sub(1, 1, { 'teleop.garden': 3 })]; // 1 vs 3
   assert.equal(disagreements(config, close).length, 0);
 });
 
@@ -60,18 +60,13 @@ test('an alliance total far from the official score is flagged, only when every 
 test('with no official score yet, the final score Scouts typed in is used instead', () => {
   const unplayed = [{ level: 'qual', number: 1, red: [1, 2], blue: [3, 4], played: false }];
   // Scouts read 60–20 (and one 64–20) off the field screen; their taps add up to 20.
-  // BIOBUZZ v8 dropped these questions, but a config may still ask for them.
-  const withScores = structuredClone(config);
-  withScores.sections.find((s) => s.id === 'post').fields.push(
-    { id: 'redScore', type: 'number', label: 'Red final score', role: 'redScore' },
-    { id: 'blueScore', type: 'number', label: 'Blue final score', role: 'blueScore' });
   const red = [sub(1, 1, { 'auto.hiveTips': 1, 'post.redScore': 60, 'post.blueScore': 20 }),
     sub(2, 1, { 'post.redScore': 64, 'post.blueScore': 20 })];
-  assert.deepEqual(fieldScores(withScores, red, 'qual', 1), { red: 60, blue: 20 });
-  const [c] = scoreGaps(withScores, red, unplayed);
+  assert.deepEqual(fieldScores(config, red, 'qual', 1), { red: 60, blue: 20 });
+  const [c] = scoreGaps(config, red, unplayed);
   assert.match(c.title, /20 scouted, 60 on the field screen/);
   // Nobody typed a score: nothing to compare with.
-  assert.equal(scoreGaps(withScores, [sub(1, 1, { 'auto.hiveTips': 1 }), sub(2, 1, {})], unplayed).length, 0);
+  assert.equal(scoreGaps(config, [sub(1, 1, { 'auto.hiveTips': 1 }), sub(2, 1, {})], unplayed).length, 0);
 });
 
 test('impossible values: not at the event, not in the schedule, not in the match, wrong position', () => {

@@ -124,20 +124,6 @@ const RENDERERS = {
       }
       return row;
     });
-    // With a field map in the config, the buttons stand where those drive
-    // stations are: one alliance on each side of a little drawing of the field.
-    const map = config.alliance.fieldMap;
-    if (map?.left && map?.right) {
-      const side = (color) => rows[config.alliance.colors.indexOf(color)];
-      const left = side(map.left), right = side(map.right);
-      if (left && right) {
-        left.classList.add('station-col'); right.classList.add('station-col');
-        const tiles = h('div', { class: 'field-map', 'aria-hidden': 'true', 'data-left': map.left, 'data-right': map.right },
-          h('span', { class: 'field-map-label' }, 'Field'));
-        return h('div', { class: 'field' }, labelBlock(field, labelId),
-          h('div', { class: 'position-map', role: 'group', 'aria-labelledby': labelId }, left, tiles, right));
-      }
-    }
     return h('div', { class: 'field' }, labelBlock(field, labelId),
       h('div', { class: 'position-grid', role: 'group', 'aria-labelledby': labelId }, rows));
   },
