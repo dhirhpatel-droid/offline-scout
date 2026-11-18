@@ -141,13 +141,24 @@ const RENDERERS = {
           + `<rect x="-30" y="-20" width="60" height="40" rx="8"/><text y="5">${positionLabel(pos)}</text></g>`;
       })).join('');
       const tiles = [1, 2, 3, 4, 5].map((i) => `<line x1="${60 + i * 40}" y1="0" x2="${60 + i * 40}" y2="180"/><line x1="60" y1="${i * 30}" x2="260" y2="${i * 30}"/>`).join('');
+      // The HIVE structure stands in the middle of the field: one frame, a red
+      // HIVE and a blue HIVE (BIOBUZZ manual, section 9). Seen from the
+      // audience, the red alliance stands on the left.
+      const hex = (cx, cy, r) => [0, 1, 2, 3, 4, 5].map((k) => {
+        const a = Math.PI / 3 * k + Math.PI / 6;
+        return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+      }).join(' ');
+      const hive = `<polygon class="map-hive" data-color="${map.left}" points="${hex(145, 82, 16)}"/>`
+        + `<polygon class="map-hive" data-color="${map.right}" points="${hex(175, 82, 16)}"/>`
+        + `<text class="map-note" x="160" y="114">HIVE</text>`;
       drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' });
-      drawing.innerHTML = `<svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">`
+      drawing.innerHTML = `<svg viewBox="0 0 320 202" xmlns="http://www.w3.org/2000/svg">`
         + `<rect class="map-side" data-color="${map.left}" x="0" y="0" width="54" height="180" rx="8"/>`
         + `<rect class="map-side" data-color="${map.right}" x="266" y="0" width="54" height="180" rx="8"/>`
         + `<text class="map-side-label" transform="translate(32 90) rotate(-90)">${positionLabel(sideOf(map.left)[0]).replace(/\s*\d+$/, '')} side</text>`
         + `<text class="map-side-label" transform="translate(288 90) rotate(90)">${positionLabel(sideOf(map.right)[0]).replace(/\s*\d+$/, '')} side</text>`
-        + `<rect class="map-field" x="60" y="0" width="200" height="180" rx="6"/><g class="map-tiles">${tiles}</g>${bots}</svg>`;
+        + `<rect class="map-field" x="60" y="0" width="200" height="180" rx="6"/><g class="map-tiles">${tiles}</g>`
+        + hive + `<text class="map-note" x="160" y="196">Audience</text>${bots}</svg>`;
       const show = () => drawing.querySelectorAll('.map-bot').forEach((g) => g.classList.toggle('picked', g.dataset.value === current));
       drawing.addEventListener('click', (e) => {
         const bot = e.target.closest('.map-bot');

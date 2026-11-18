@@ -938,6 +938,14 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .map-side-label { fill: var(--on-alliance); font: 700 13px var(--font); text-anchor: middle; dominant-baseline: middle; }
 
+.map-hive { stroke: var(--text); stroke-width: 2; }
+
+.map-hive[data-color='red'] { fill: var(--red); }
+
+.map-hive[data-color='blue'] { fill: var(--blue); }
+
+.map-note { fill: var(--text-2); font: 700 12px var(--font); text-anchor: middle; }
+
 .map-bot { cursor: pointer; }
 
 .map-bot rect { fill: var(--bg); stroke-width: 3; }
