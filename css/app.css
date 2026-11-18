@@ -923,36 +923,35 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
 
-/* Alliance position: a drawing of the field above the buttons; your robot lights up. */
-.field-map { margin-top: var(--s2); }
+/* Alliance position as a field map: each alliance's stations stand on its side of the field. */
+.position-map { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: var(--s2); align-items: stretch; margin-top: var(--s2); }
 
-.field-map svg { display: block; width: 100%; height: auto; }
+.position-map .station-col { display: flex; flex-direction: column; justify-content: space-between; gap: var(--s2); padding: 0; border: 0; border-radius: 0; }
 
-.map-field { fill: var(--surface-2); stroke: var(--control-line-strong); stroke-width: 2; }
+.position-map .station-col button { flex: 1; min-height: var(--tap-lg); min-width: 0; padding: 0 var(--s1); border-radius: var(--radius-md); }
 
-.map-tiles line { stroke: var(--line); stroke-width: 1; }
+.position-map .station-col button[data-color='red'] { border-color: var(--red); }
 
-.map-side[data-color='red'] { fill: var(--red); }
+.position-map .station-col button[data-color='blue'] { border-color: var(--blue); }
 
-.map-side[data-color='blue'] { fill: var(--blue); }
+.field-map {
+  position: relative; aspect-ratio: 1; align-self: center; width: 100%;
+  border: var(--border) solid var(--control-line-strong); border-radius: var(--radius-sm);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 calc(100% / 6 - 1px), var(--line) calc(100% / 6 - 1px) calc(100% / 6)),
+    repeating-linear-gradient(90deg, transparent 0 calc(100% / 6 - 1px), var(--line) calc(100% / 6 - 1px) calc(100% / 6)),
+    var(--surface-2);
+}
 
-.map-side-label { fill: var(--on-alliance); font: 700 13px var(--font); text-anchor: middle; dominant-baseline: middle; }
+.field-map[data-left='red'] { border-left: calc(var(--border) * 3) solid var(--red); }
 
-.map-bot { cursor: pointer; }
+.field-map[data-left='blue'] { border-left: calc(var(--border) * 3) solid var(--blue); }
 
-.map-bot rect { fill: var(--bg); stroke-width: 3; }
+.field-map[data-right='red'] { border-right: calc(var(--border) * 3) solid var(--red); }
 
-.map-bot[data-color='red'] rect { stroke: var(--red); }
+.field-map[data-right='blue'] { border-right: calc(var(--border) * 3) solid var(--blue); }
 
-.map-bot[data-color='blue'] rect { stroke: var(--blue); }
-
-.map-bot text { fill: var(--text-2); font: 700 14px var(--font); text-anchor: middle; }
-
-.map-bot.picked[data-color='red'] rect { fill: var(--red); }
-
-.map-bot.picked[data-color='blue'] rect { fill: var(--blue); }
-
-.map-bot.picked text { fill: var(--on-alliance); }
+.field-map-label { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); }
 
 /* Mine / Everyone on the matches list */
 .list-switch { margin: var(--s2) 0 var(--s3); }

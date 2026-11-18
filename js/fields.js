@@ -124,39 +124,21 @@ const RENDERERS = {
       }
       return row;
     });
-    // With a field map in the config, a drawing of the field sits above the
-    // buttons: each alliance's robots on its own side, and the one you pick
-    // lights up, so a Scout can see which robot is theirs. Tapping a robot in
-    // the drawing picks it too (the buttons stay for screen readers).
+    // With a field map in the config, the buttons stand where those drive
+    // stations are: one alliance on each side of a little drawing of the field.
     const map = config.alliance.fieldMap;
-    let drawing = null;
     if (map?.left && map?.right) {
-      const per = config.alliance.robotsPerAlliance;
-      const all = alliancePositions(config);
-      const sideOf = (color) => all.filter((p) => allianceOf(p) === color);
-      const gap = 180 / per;
-      const bots = [[map.left, 100], [map.right, 220]].flatMap(([color, x]) => sideOf(color).map((pos, i) => {
-        const y = gap * i + gap / 2;
-        return `<g class="map-bot" data-color="${color}" data-value="${pos}" transform="translate(${x} ${y})">`
-          + `<rect x="-30" y="-20" width="60" height="40" rx="8"/><text y="5">${positionLabel(pos)}</text></g>`;
-      })).join('');
-      const tiles = [1, 2, 3, 4, 5].map((i) => `<line x1="${60 + i * 40}" y1="0" x2="${60 + i * 40}" y2="180"/><line x1="60" y1="${i * 30}" x2="260" y2="${i * 30}"/>`).join('');
-      drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' });
-      drawing.innerHTML = `<svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">`
-        + `<rect class="map-side" data-color="${map.left}" x="0" y="0" width="54" height="180" rx="8"/>`
-        + `<rect class="map-side" data-color="${map.right}" x="266" y="0" width="54" height="180" rx="8"/>`
-        + `<text class="map-side-label" transform="translate(32 90) rotate(-90)">${positionLabel(sideOf(map.left)[0]).replace(/\s*\d+$/, '')} side</text>`
-        + `<text class="map-side-label" transform="translate(288 90) rotate(90)">${positionLabel(sideOf(map.right)[0]).replace(/\s*\d+$/, '')} side</text>`
-        + `<rect class="map-field" x="60" y="0" width="200" height="180" rx="6"/><g class="map-tiles">${tiles}</g>${bots}</svg>`;
-      const show = () => drawing.querySelectorAll('.map-bot').forEach((g) => g.classList.toggle('picked', g.dataset.value === current));
-      drawing.addEventListener('click', (e) => {
-        const bot = e.target.closest('.map-bot');
-        if (bot) buttons.find((b) => b.dataset.value === bot.dataset.value)?.click();
-      });
-      buttons.forEach((b) => b.addEventListener('click', show));
-      show();
+      const side = (color) => rows[config.alliance.colors.indexOf(color)];
+      const left = side(map.left), right = side(map.right);
+      if (left && right) {
+        left.classList.add('station-col'); right.classList.add('station-col');
+        const tiles = h('div', { class: 'field-map', 'aria-hidden': 'true', 'data-left': map.left, 'data-right': map.right },
+          h('span', { class: 'field-map-label' }, 'Field'));
+        return h('div', { class: 'field' }, labelBlock(field, labelId),
+          h('div', { class: 'position-map', role: 'group', 'aria-labelledby': labelId }, left, tiles, right));
+      }
     }
-    return h('div', { class: 'field' }, labelBlock(field, labelId), drawing,
+    return h('div', { class: 'field' }, labelBlock(field, labelId),
       h('div', { class: 'position-grid', role: 'group', 'aria-labelledby': labelId }, rows));
   },
 
