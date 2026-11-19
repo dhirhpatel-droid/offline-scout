@@ -923,6 +923,38 @@ textarea.input { min-height: 120px; padding: var(--s3) var(--s4); resize: vertic
 
 .position-grid .segmented button[data-color='blue'] { border-color: var(--blue); }
 
+/* Alliance position: the field (from the manual) between the two drive teams; your robot lights up. */
+.field-map { display: grid; grid-template-columns: 1fr 5fr 1fr; gap: var(--s1); margin-top: var(--s2); }
+
+.map-side {
+  display: grid; place-items: center; border-radius: var(--radius-md);
+  writing-mode: vertical-rl; font-size: var(--fs-xs); font-weight: 800; color: var(--on-alliance);
+}
+
+.map-side[data-color='red'] { background: var(--red); transform: rotate(180deg); }
+
+.map-side[data-color='blue'] { background: var(--blue); }
+
+.map-field { position: relative; border-radius: var(--radius-sm); overflow: hidden; border: var(--border) solid var(--control-line-strong); }
+
+.map-field img { display: block; width: 100%; height: auto; }
+
+.map-audience { grid-column: 2; text-align: center; font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+
+.map-bot {
+  position: absolute; transform: translate(-50%, -50%);
+  padding: 2px var(--s1); border-radius: var(--radius-sm); border: var(--border) solid;
+  background: var(--bg); font-size: var(--fs-xs); font-weight: 800; white-space: nowrap; cursor: pointer;
+}
+
+.map-bot[data-color='red'] { border-color: var(--red); color: var(--text); }
+
+.map-bot[data-color='blue'] { border-color: var(--blue); color: var(--text); }
+
+.map-bot.picked[data-color='red'] { background: var(--red); color: var(--on-alliance); }
+
+.map-bot.picked[data-color='blue'] { background: var(--blue); color: var(--on-alliance); }
+
 /* Mine / Everyone on the matches list */
 .list-switch { margin: var(--s2) 0 var(--s3); }
 

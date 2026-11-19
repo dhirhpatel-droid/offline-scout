@@ -12,7 +12,7 @@
 // To ship an update: change files, then bump VERSION. Phones download the new
 // files next time they are online, and use them from the next launch.
 
-const VERSION = 'v62';
+const VERSION = 'v64';
 const CACHE = `offline-scout-${VERSION}`;
 
 // Every file the app needs. Paths are relative to this file, so the app works
@@ -69,6 +69,7 @@ const APP_FILES = [
   'js/screens/qr.js',
   'configs/index.json',
   'configs/ftc-2026-biobuzz.json',
+  'configs/ftc-2026-biobuzz-field.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',

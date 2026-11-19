@@ -124,7 +124,36 @@ const RENDERERS = {
       }
       return row;
     });
-    return h('div', { class: 'field' }, labelBlock(field, labelId),
+    // With a field map in the config, the game manual's top-down picture of
+    // the field sits above the buttons, with a marker for each robot. The one
+    // you pick lights up, so a Scout can see which robot is theirs. Tapping a
+    // marker picks it too (the buttons stay for screen readers). Marker spots
+    // are in the config as % of the picture's width and height.
+    const map = config.alliance.fieldMap;
+    let drawing = null;
+    if (map?.image && map?.spots) {
+      const marks = alliancePositions(config).filter((pos) => map.spots[pos]).map((pos) => {
+        const [x, y] = map.spots[pos];
+        return h('span', { class: 'map-bot', 'data-color': allianceOf(pos), 'data-value': pos, style: `left:${x}%;top:${y}%` }, positionLabel(pos));
+      });
+      // Each alliance's drive team stands on its side of the field (seen from
+      // the audience), drawn as a band in its colour like the station signs.
+      const side = (color) => color && h('span', { class: 'map-side', 'data-color': color },
+        `${positionLabel(alliancePositions(config).find((p) => allianceOf(p) === color)).replace(/\s*\d+$/, '')} drive team`);
+      drawing = h('div', { class: 'field-map', 'aria-hidden': 'true' },
+        side(map.left),
+        h('div', { class: 'map-field' }, h('img', { src: map.image, alt: '', width: '560', height: '560' }), ...marks),
+        side(map.right),
+        h('span', { class: 'map-audience' }, 'Audience'));
+      const show = () => drawing.querySelectorAll('.map-bot').forEach((g) => g.classList.toggle('picked', g.dataset.value === current));
+      drawing.addEventListener('click', (e) => {
+        const bot = e.target.closest('.map-bot');
+        if (bot) buttons.find((b) => b.dataset.value === bot.dataset.value)?.click();
+      });
+      buttons.forEach((b) => b.addEventListener('click', show));
+      show();
+    }
+    return h('div', { class: 'field' }, labelBlock(field, labelId), drawing,
       h('div', { class: 'position-grid', role: 'group', 'aria-labelledby': labelId }, rows));
   },
 

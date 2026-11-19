@@ -16,14 +16,17 @@ test('a full BIOBUZZ match adds up every point value', () => {
     'auto.park': true, //             5
     'teleop.hiveTips': 2, //         40
     'end.flower': 5, //           10
-    'teleop.garden': 3, //            3
-    'teleop.cell': 4, //              8
+    'teleop.gardenPollen': 2, //      2
+    'teleop.gardenNectar': 1, //      1
+    'teleop.cellPollen': 3, //        6
+    'teleop.cellNectar': 1, //        2
+    'end.cellNectar': 2, //           4
     'teleop.defense': 'heavy', //     0
     'end.park': true, //              5
-    'post.minorFouls': 2, //          0 (fouls give points to the other alliance)
+    'post.penaltyPoints': 15, //      0 (penalty points go to the other alliance)
     'post.driverSkill': 4, //         0
   };
-  assert.equal(estimatePoints(biobuzz, values), 94);
+  assert.equal(estimatePoints(biobuzz, values), 98);
 });
 
 test('toggles set to No score nothing', () => {
@@ -36,7 +39,7 @@ test('a no-show robot scores 0 even if buttons were tapped', () => {
 });
 
 test('negative or broken counter values never subtract points', () => {
-  assert.equal(estimatePoints(biobuzz, { 'end.flower': -4, 'teleop.cell': 'abc' }), 0);
+  assert.equal(estimatePoints(biobuzz, { 'end.flower': -4, 'teleop.cellPollen': 'abc' }), 0);
 });
 
 test('choice options can carry points (for future games)', () => {

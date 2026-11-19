@@ -1,6 +1,6 @@
 {
   "id": "ftc-2026-biobuzz",
-  "version": 7,
+  "version": 8,
   "program": "FTC",
   "season": "2026–27",
   "game": "BIOBUZZ",
@@ -9,9 +9,33 @@
       "red",
       "blue"
     ],
-    "robotsPerAlliance": 2
+    "robotsPerAlliance": 2,
+    "fieldMap": {
+      "image": "configs/ftc-2026-biobuzz-field.png",
+      "source": "BIOBUZZ Competition Manual, Figure 9-2 (cropped to the field, labels removed)",
+      "left": "red",
+      "right": "blue",
+      "spots": {
+        "red1": [
+          22,
+          25
+        ],
+        "red2": [
+          22,
+          75
+        ],
+        "blue1": [
+          78,
+          25
+        ],
+        "blue2": [
+          78,
+          75
+        ]
+      }
+    }
   },
-  "notes": "FLOWERS score only in the last minute (G410), so FLOWER scoring is on the Endgame tab (1:00). FLOWER ownership is alliance-level: scouts count only this robot's pieces that ended in a FLOWER its alliance owns, and its Bottom NECTAR bonuses. Fouls give points to the other alliance, so they are recorded but not taken off.",
+  "notes": "FLOWERS score only in the last minute (G410), so FLOWER scoring is on the Endgame tab (1:00). CELLS still score in the last minute, so Endgame has CELL rows too. POLLEN and NECTAR are counted apart (some robots only handle one). FLOWER ownership is alliance-level: scouts count only this robot's pieces that ended in a FLOWER its alliance owns, and its Bottom NECTAR bonuses. Penalty points go to the other alliance, so they are recorded but not taken off. The position picker shows the field picture from the manual (alliance.fieldMap.image) with each robot's spot as % of its width and height (spots).",
   "sections": [
     {
       "id": "pre",
@@ -113,25 +137,36 @@
       "label": "Teleop",
       "title": "Teleop",
       "durationSec": 120,
-      "note": "Each row counts POLLEN and NECTAR together.",
       "fields": [
+        {
+          "id": "gardenPollen",
+          "type": "counter",
+          "label": "POLLEN into a GARDEN",
+          "points": 1
+        },
+        {
+          "id": "gardenNectar",
+          "type": "counter",
+          "label": "NECTAR into a GARDEN",
+          "points": 1
+        },
+        {
+          "id": "cellPollen",
+          "type": "counter",
+          "label": "POLLEN into a CELL",
+          "points": 2
+        },
+        {
+          "id": "cellNectar",
+          "type": "counter",
+          "label": "NECTAR into a CELL",
+          "points": 2
+        },
         {
           "id": "hiveTips",
           "type": "counter",
           "label": "HIVE TIPs",
           "points": 20
-        },
-        {
-          "id": "garden",
-          "type": "counter",
-          "label": "Into a GARDEN",
-          "points": 1
-        },
-        {
-          "id": "cell",
-          "type": "counter",
-          "label": "Into a CELL",
-          "points": 2
         },
         {
           "id": "defense",
@@ -181,6 +216,18 @@
           "hint": "Its NECTAR is the lowest in a FLOWER"
         },
         {
+          "id": "cellPollen",
+          "type": "counter",
+          "label": "POLLEN into a CELL",
+          "points": 2
+        },
+        {
+          "id": "cellNectar",
+          "type": "counter",
+          "label": "NECTAR into a CELL",
+          "points": 2
+        },
+        {
           "id": "park",
           "type": "toggle",
           "label": "PARK at the end",
@@ -190,30 +237,13 @@
       ],
       "durationSec": 60,
       "shortLabel": "End",
-      "note": "The last minute of Teleop (part of its 2:00). FLOWERS only score now."
+      "note": "The last minute of Teleop (part of its 2:00). FLOWERS only score now; CELLS still count."
     },
     {
       "id": "post",
       "label": "After",
       "title": "After the match",
       "fields": [
-        {
-          "id": "redScore",
-          "type": "number",
-          "label": "Red final score",
-          "role": "redScore",
-          "min": 0,
-          "max": 999,
-          "hint": "From the field screen after the match. Leave empty if you didn’t see it."
-        },
-        {
-          "id": "blueScore",
-          "type": "number",
-          "label": "Blue final score",
-          "role": "blueScore",
-          "min": 0,
-          "max": 999
-        },
         {
           "id": "driverSkill",
           "type": "rating",
@@ -233,14 +263,12 @@
           "label": "Robot broke or stopped moving"
         },
         {
-          "id": "minorFouls",
-          "type": "counter",
-          "label": "Minor fouls caused"
-        },
-        {
-          "id": "majorFouls",
-          "type": "counter",
-          "label": "Major fouls caused"
+          "id": "penaltyPoints",
+          "type": "number",
+          "label": "Penalty points caused",
+          "min": 0,
+          "max": 999,
+          "hint": "Points the refs gave the other alliance for this robot's fouls"
         },
         {
           "id": "card",
